@@ -3,6 +3,7 @@ package cli_test
 import (
 	"bytes"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -20,6 +21,45 @@ func TestHelpAndInvalidCommands(t *testing.T) {
 		if err := cli.Run(t.Context(), args, &output); err == nil {
 			t.Fatalf("accepted %v", args)
 		}
+	}
+}
+
+func TestInitAndGenWithPinnedFormatter(t *testing.T) {
+	t.Parallel()
+	rustup, lookErr := exec.LookPath("rustup")
+	if lookErr != nil {
+		t.Skip("Rust is needed only for source-generation integration")
+	}
+	probe := exec.CommandContext(t.Context(), rustup, "run", "1.97.0", "rustfmt", "--version") // #nosec G204 -- Invoke a resolved tool with fixed probe arguments.
+	if probeErr := probe.Run(); probeErr != nil {
+		t.Skip("pinned Rust formatter unavailable")
+	}
+	directory := t.TempDir()
+	if err := os.WriteFile(filepath.Join(directory, "go.mod"), []byte("// leading comment\nmodule example.com/consumer\ngo 1.26\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	guest, guestErr := filepath.Abs("../../rust/cocoon-guest")
+	if guestErr != nil {
+		t.Fatal(guestErr)
+	}
+	project := filepath.Join(directory, "project")
+	var output bytes.Buffer
+	if err := cli.Run(t.Context(), []string{"init", "--guest", guest, project}, &output); err != nil {
+		t.Fatal(err)
+	}
+	manifestPath := filepath.Join(project, "cocoon.toml")
+	data, err := os.ReadFile(manifestPath) // #nosec G304 -- Read the initialized fixture below t.TempDir.
+	if err != nil || !bytes.Contains(data, []byte("example.com/consumer/project/go/example")) {
+		t.Fatal("import inference", err)
+	}
+	if err := cli.Run(t.Context(), []string{"gen", "--manifest", manifestPath}, &output); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(project, "shim", "Cargo.lock")); err != nil {
+		t.Fatal(err)
+	}
+	if err := cli.Run(t.Context(), []string{"init", "--guest", guest, project}, &output); err == nil {
+		t.Fatal("existing initialized files overwritten")
 	}
 }
 

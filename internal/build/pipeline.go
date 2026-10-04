@@ -75,15 +75,11 @@ func (p pipeline) run(ctx context.Context, directory string, m *manifest.Manifes
 		return nil, err
 	}
 	work := filepath.Join(directory, ".cocoon-build")
-	if directoryErr := os.MkdirAll(work, 0o750); directoryErr != nil {
-		return nil, directoryErr
-	}
-	guardPath := filepath.Join(work, "lock")
-	guard, err := os.OpenFile(guardPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600) // #nosec G304 -- Fixed per-project build lock path.
+	release, err := gen.Guard(directory)
 	if err != nil {
-		return nil, fmt.Errorf("build already running or stale .cocoon-build/lock: %w", err)
+		return nil, err
 	}
-	defer func() { err = errors.Join(err, guard.Close(), os.Remove(guardPath)) }()
+	defer func() { err = errors.Join(err, release()) }()
 	identities, err := sourceIdentities(ctx, runner, directory, m)
 	if err != nil {
 		return nil, err

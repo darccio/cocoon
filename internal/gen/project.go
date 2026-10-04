@@ -4,6 +4,7 @@ package gen
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -14,7 +15,12 @@ import (
 )
 
 // Project generates the trait and facade; build finalizes the typed adapter.
-func Project(ctx context.Context, directory string, m *manifest.Manifest) error {
+func Project(ctx context.Context, directory string, m *manifest.Manifest) (err error) {
+	release, err := Guard(directory)
+	if err != nil {
+		return err
+	}
+	defer func() { err = errors.Join(err, release()) }()
 	rust, facade, err := Sources(ctx, m)
 	if err != nil {
 		return err
