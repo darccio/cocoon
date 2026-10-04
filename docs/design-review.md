@@ -26,10 +26,10 @@ not source code.
    methods never borrow a different pooled instance. Shared wrapper copies refer
    to the same ownership cell; closing any copy invalidates every copy.
 5. **Close must have one admission boundary.** Library admission and terminal
-   closing state share a lock. Close rejects new calls, waits for admitted calls,
-   then destroys resources and instances exactly once. Resource destructors run
-   outside ownership-cell locks. Cleanup is a fallback, attached to that shared
-   cell, with a token that does not retain the cell itself.
+   closing state share one atomic flag/count. Close rejects new calls, waits for
+   admitted calls, then destroys resources and instances exactly once. Resource
+   destructors run outside ownership-cell locks. Cleanup is a fallback, attached
+   to that shared cell, with a token that does not retain the cell itself.
 6. **Faults are terminal for an instance.** Call contains every recoverable guest
    panic, including unknown values. Host panics are shielded separately. A fault
    increments the instance epoch so existing handles fail consistently. A pool
@@ -42,7 +42,7 @@ not source code.
    Binaryen validates code before translation; the reader validates ABI sections.
 8. **Hardening must tolerate dead-code elimination without tolerating drift.**
    wasm2go emits only needed helpers. Derive the expected helper set from the
-   actual bulk instructions; require each expected helper exactly once, validate
+   translated calls; require each expected helper exactly once, validate
    its AST shape, and reject missing, duplicate, or unexpected memory helpers.
    Bound both memory and data slices by length. Exercise zero-length operations
    beyond the memory end, overlapping copies, memory growth, and spare capacity.
