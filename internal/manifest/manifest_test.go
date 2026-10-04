@@ -119,6 +119,37 @@ name="Empty"
 	}
 }
 
+func TestSourcePinsAndEmptyParameterNormalization(t *testing.T) {
+	t.Parallel()
+	const pins = `
+[[source]]
+name="upstream"
+path="../upstream"
+revision="0123456789012345678901234567890123456789"
+`
+	source := example + pins
+	m, err := manifest.Parse([]byte(source))
+	if err != nil || string(m.Content) != source {
+		t.Fatal(err)
+	}
+	for _, bad := range []string{strings.ReplaceAll(source, "revision=", "unknown="), strings.ReplaceAll(source, "0123456789012345678901234567890123456789", "main"), source + pins} {
+		if _, parseErr := manifest.Parse([]byte(bad)); parseErr == nil {
+			t.Fatal("invalid source pin accepted")
+		}
+	}
+	m.Functions[0].Params = nil
+	first, _, err := m.SchemaHash()
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Functions[0].Params = []manifest.Param{}
+	m.Sources = nil
+	second, _, err := m.SchemaHash()
+	if err != nil || first != second {
+		t.Fatal("nonsemantic source pins or empty slices changed schema")
+	}
+}
+
 func TestResourceValidation(t *testing.T) {
 	t.Parallel()
 	source := example + `

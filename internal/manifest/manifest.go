@@ -34,7 +34,17 @@ type Manifest struct {
 	Functions    []Function   `toml:"func" json:"functions"`
 	Resources    []Resource   `toml:"resource" json:"resources"`
 	Records      []Record     `toml:"record" json:"records"`
+	Sources      []SourcePin  `toml:"source" json:"-"`
+	Content      []byte       `toml:"-" json:"-"`
 	Capabilities Capabilities `toml:"capabilities" json:"capabilities"`
+}
+
+// SourcePin locks a local dependency repository; its content is also hashed.
+// Paths are relative to the manifest directory and never enter schema identity.
+type SourcePin struct {
+	Name     string `toml:"name" json:"name"`
+	Path     string `toml:"path" json:"-"`
+	Revision string `toml:"revision" json:"revision"`
 }
 
 // Package identifies generated Go and Rust packages.
@@ -103,12 +113,14 @@ func Parse(data []byte) (*Manifest, error) {
 	if err := m.Validate(); err != nil {
 		return nil, err
 	}
+	m.Content = bytes.Clone(data)
 	return &m, nil
 }
 
 var (
 	identifier = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*$`)
 	crateName  = regexp.MustCompile(`^[a-z][a-z0-9_-]*$`)
+	revision   = regexp.MustCompile(`^[0-9a-f]{40}$`)
 )
 
 // GoName converts snake case and common initialisms into exported Go identifiers.
@@ -201,6 +213,13 @@ func (m *Manifest) Validate() error {
 	}
 	if len(m.Functions)+len(m.Resources) == 0 {
 		return fmt.Errorf("manifest has no operations")
+	}
+	sources := make(map[string]bool)
+	for _, source := range m.Sources {
+		if !identifier.MatchString(source.Name) || sources[source.Name] || source.Path == "" || strings.ContainsRune(source.Path, 0) || !revision.MatchString(source.Revision) {
+			return fmt.Errorf("invalid or duplicate source pin %q", source.Name)
+		}
+		sources[source.Name] = true
 	}
 	names := make(map[string]bool)
 	for _, name := range strings.Fields("Library Options Open Close API State Error Result Slab RefCell String Bytes Bool Vec I32 U32 I64 U64 F32 F64 SliceI32 SliceU32 SliceI64 SliceU64 SliceF32 SliceF64") {
@@ -372,14 +391,23 @@ func (m *Manifest) SchemaHash() (schema uint64, full string, err error) {
 	normalized.Limits.MaxInput = strconv.FormatUint(input, 10)
 	normalized.Limits.MaxOutput = strconv.FormatUint(output, 10)
 	normalized.Limits.MaxMemory = strconv.FormatUint(memory, 10)
-	normalized.Functions = slices.Clone(m.Functions)
-	normalized.Records = slices.Clone(m.Records)
-	normalized.Resources = slices.Clone(m.Resources)
+	normalized.Functions = append([]Function{}, m.Functions...)
+	normalized.Records = append([]Record{}, m.Records...)
+	normalized.Resources = append([]Resource{}, m.Resources...)
+	for index := range normalized.Functions {
+		normalized.Functions[index].Params = append([]Param{}, normalized.Functions[index].Params...)
+	}
+	for index := range normalized.Records {
+		normalized.Records[index].Fields = append([]Param{}, normalized.Records[index].Fields...)
+	}
 	slices.SortFunc(normalized.Functions, func(a, b Function) int { return strings.Compare(a.Name, b.Name) })
 	slices.SortFunc(normalized.Records, func(a, b Record) int { return strings.Compare(a.Name, b.Name) })
 	slices.SortFunc(normalized.Resources, func(a, b Resource) int { return strings.Compare(a.Name, b.Name) })
 	for index := range normalized.Resources {
 		normalized.Resources[index].Methods = slices.Clone(normalized.Resources[index].Methods)
+		for method := range normalized.Resources[index].Methods {
+			normalized.Resources[index].Methods[method].Params = append([]Param{}, normalized.Resources[index].Methods[method].Params...)
+		}
 		slices.SortFunc(normalized.Resources[index].Methods, func(a, b Function) int { return strings.Compare(a.Name, b.Name) })
 	}
 	data, err := json.Marshal(normalized)
