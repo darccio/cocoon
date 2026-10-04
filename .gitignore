@@ -1,0 +1,6 @@
+/.cocoon-git/
+/.cache/
+/bin/
+/target/
+coverage.out
+*.prof
