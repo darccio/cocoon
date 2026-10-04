@@ -127,6 +127,11 @@ The build uses `--locked`, build-std, panic=abort, a bounded linear memory, exac
 manifest export roots, meta-DCE, `wasm-opt -O3`, structural/feature verification,
 and the unsafe translator followed by checked AST hardening. `RUSTC_BOOTSTRAP=1`
 is scoped to the pinned build-std subprocess, not a general nightly toolchain.
+Compiler source roots for the module, local dependencies, Rust sysroot, and
+Cargo cache are remapped to stable `/cocoon/...` paths. Encoded compiler flags
+also preserve paths containing spaces. These mappings normalize compiler
+output, not arbitrary strings emitted by your shim or a build script; see
+[Rust source path remapping](https://doc.rust-lang.org/rustc/remap-source-paths.html).
 If an offline machine lacks standard-library dependencies, fetch them on a
 networked machine with:
 

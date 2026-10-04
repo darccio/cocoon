@@ -29,6 +29,8 @@ module fetching disabled and Rust/Wasm tools unavailable. The consumer also
 exercises the checked-in Datadog package. Authenticated installation and a
 separate consumer of the published private module at `main` also pass without
 local replacements. Run the checkout smoke test with `make smoke`.
+The smoke test now also relocates both the author module and guest support
+crate into paths containing spaces and checks identical artifacts and locks.
 
 ## Deferred performance work
 
@@ -42,6 +44,8 @@ cache the fixed output descriptor address, and decode typed replies without an
 intermediate copy. SketchAdd improved from 114.4 to 103.2 nanoseconds; SQL remains
 about 2.30 microseconds while reducing Go allocations from two to one. Both
 original acceptance limits remain unmet: 2.2154 microseconds and 55.44 nanoseconds.
+Those measurements precede the source-path remapping fix; remeasure the release
+artifacts when performance work resumes.
 
 1. Add isolated measurements of direct guest execution, empty instance calls,
    and resource calls using identical workloads. The post-change SketchAdd
@@ -66,11 +70,14 @@ original acceptance limits remain unmet: 2.2154 microseconds and 55.44 nanosecon
   CI found an omitted Binaryen submodule checkout and a hardener rewrite that
   failed to supply an omitted slice upper bound. Both are fixed, with a
   regression test for the rewrite. CI is rerunning. Native amd64 and arm64
-  test, race, coverage, and cross-compilation jobs have started successfully.
+  test, race, coverage, cross-compilation, and fuzz jobs passed. The fresh build
+  then found absolute Rust source paths embedded in Wasm. Stable remapping is
+  implemented and both proof artifacts are regenerated; the new candidate is
+  awaiting its clean-checkout CI results.
 - Once CI is green, create the private `v0.1.0` release and verify installation
   and consumption by tag with authenticated Git and `GOPRIVATE` configured.
 - Expand error-path tests where coverage remains lower: generation/publication
-  now reaches 84.8 percent, CLI 72.3 percent, and build orchestration 81.6 percent.
+  now reaches 84.8 percent, CLI 72.3 percent, and build orchestration 81.9 percent.
   Runtime, hardening, and both generators already exceed 94 percent.
 - Consider upstreaming the translator's bulk-memory length-versus-capacity fix.
   Cocoon already applies and tests its own checked AST hardening.
