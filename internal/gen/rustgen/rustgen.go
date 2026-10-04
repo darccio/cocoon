@@ -41,7 +41,7 @@ func Generate(m *manifest.Manifest) ([]byte, error) {
 		}
 		fmt.Fprintf(&b, "],%d) } }\n", output)
 	}
-	b.WriteString("pub trait API {\n")
+	b.WriteString("#[allow(clippy::upper_case_acronyms)]\npub trait API {\n")
 	for _, resource := range m.Resources {
 		fmt.Fprintf(&b, "type %s;\n", resource.Name)
 	}
@@ -57,7 +57,7 @@ func Generate(m *manifest.Manifest) ([]byte, error) {
 	for _, resource := range m.Resources {
 		fmt.Fprintf(&b, "%s: Slab<<crate::Shim as API>::%s>,\n", strings.ToLower(resource.Name), resource.Name)
 	}
-	b.WriteString("}\nthread_local! { static STATE: RefCell<State> = RefCell::new(State { service: crate::Shim::default(),\n")
+	b.WriteString("}\nthread_local! { static STATE: RefCell<State> = RefCell::new(State { service: Default::default(),\n")
 	for _, resource := range m.Resources {
 		fmt.Fprintf(&b, "%s: Slab::default(),\n", strings.ToLower(resource.Name))
 	}
@@ -71,7 +71,11 @@ func Generate(m *manifest.Manifest) ([]byte, error) {
 		{"trim", "keep: usize", "()", "cocoon_guest::trim(keep)"},
 		{"alloc", "length: usize", "*mut u8", "cocoon_guest::alloc(length)"},
 	} {
-		fmt.Fprintf(&b, "#[unsafe(no_mangle)] pub extern \"C\" fn cocoon_%s(%s) -> %s { %s }\n", export.name, export.parameters, export.returns, export.body)
+		result := ""
+		if export.returns != "()" {
+			result = " -> " + export.returns
+		}
+		fmt.Fprintf(&b, "#[unsafe(no_mangle)] pub extern \"C\" fn cocoon_%s(%s)%s { %s }\n", export.name, export.parameters, result, export.body)
 	}
 	for _, function := range m.Functions {
 		exportMethod(&b, m, function, "")
@@ -108,6 +112,10 @@ func traitMethod(b *strings.Builder, function manifest.Function, resource string
 			result = "Self::" + resource
 		}
 	}
+	// The manifest deliberately permits wide typed APIs; keep the exemption local.
+	if len(function.Params)+1 > 7 || (resource != "" && function.Name != "new" && len(function.Params)+2 > 7) {
+		b.WriteString("#[allow(clippy::too_many_arguments)]\n")
+	}
 	fmt.Fprintf(b, "fn %s(&mut self", name)
 	if resource != "" && function.Name != "new" {
 		if function.Name == "close" {
@@ -122,7 +130,10 @@ func traitMethod(b *strings.Builder, function manifest.Function, resource string
 	if function.Fallible {
 		result = "Result<" + result + ">"
 	}
-	fmt.Fprintf(b, ") -> %s", result)
+	b.WriteString(")")
+	if result != "()" {
+		fmt.Fprintf(b, " -> %s", result)
+	}
 	if function.Name == "close" && resource != "" {
 		if function.Fallible {
 			b.WriteString(" { drop(resource); Ok(()) }\n")
@@ -154,7 +165,7 @@ func exportMethod(b *strings.Builder, m *manifest.Manifest, function manifest.Fu
 			fmt.Fprintf(b, "%s: %s,", argument, rustType(param.Type))
 		}
 	}
-	b.WriteString(") -> i32 { let __result=(|| -> Result<Vec<u8>> {\n")
+	b.WriteString(") -> i32 { let __result=STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {\n")
 	for index, param := range function.Params {
 		argument := fmt.Sprintf("arg%d", index)
 		if m.Variable(param.Type) {
@@ -163,7 +174,6 @@ func exportMethod(b *strings.Builder, m *manifest.Manifest, function manifest.Fu
 			fmt.Fprintf(b, "let %s=match %s { 0=>false,1=>true,_=>return Err(Error::argument(\"invalid bool\")) };\n", argument, argument)
 		}
 	}
-	b.WriteString("STATE.with_borrow_mut(|__state| {\n")
 	var arguments []string
 	if resource != "" && function.Name != "new" {
 		field := strings.ToLower(resource)
@@ -181,13 +191,21 @@ func exportMethod(b *strings.Builder, m *manifest.Manifest, function manifest.Fu
 	if function.Fallible {
 		suffix = "?"
 	}
-	fmt.Fprintf(b, "let __value=__state.service.%s(%s)%s;\n", name, strings.Join(arguments, ","), suffix)
-	if resource != "" && function.Name == "new" {
+	if function.Returns != "" {
+		b.WriteString("let __value=")
+	}
+	fmt.Fprintf(b, "__state.service.%s(%s)%s;\n", name, strings.Join(arguments, ","), suffix)
+	switch {
+	case resource != "" && function.Name == "new":
 		fmt.Fprintf(b, "let __handle=__state.%s.insert(__value)?; Ok(__handle.to_le_bytes().to_vec())\n", strings.ToLower(resource))
-	} else {
+	case function.Returns == "":
+		b.WriteString("Ok(Vec::new())\n")
+	case m.Variable(function.Returns) && function.Returns != "string" && function.Returns != "bytes" && !strings.HasPrefix(function.Returns, "[]"):
+		b.WriteString("__value.encode()\n")
+	default:
 		fmt.Fprintf(b, "Ok(%s)\n", encode(function.Returns, "__value"))
 	}
-	b.WriteString("}) })(); cocoon_guest::reply(__result) }\n")
+	b.WriteString("}); cocoon_guest::reply(__result) }\n")
 }
 
 func decode(name, data string) string {

@@ -26,6 +26,11 @@ func TestDatadogGeneration(t *testing.T) {
 	if !bytes.Contains(first, []byte("fn sketch_add_many")) || !bytes.Contains(first, []byte("cocoon_schema_hash")) {
 		t.Fatal("missing exports")
 	}
+	for _, forbidden := range []string{"-> ()", "let __value=__state.service.sketch_close", "(|| ->", "Ok(__value.encode()?)", "crate::Shim::default()"} {
+		if bytes.Contains(first, []byte(forbidden)) {
+			t.Fatalf("generated lint regression: %s", forbidden)
+		}
+	}
 	if rustfmt, lookErr := exec.LookPath("rustfmt"); lookErr == nil {
 		command := exec.CommandContext(t.Context(), rustfmt, "--edition", "2024", "--emit", "stdout") // #nosec G204 -- The executable is a resolved formatter path.
 		command.Stdin = bytes.NewReader(first)
