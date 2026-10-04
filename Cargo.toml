@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["rust/cocoon-guest"]
+members = ["rust/cocoon-guest", "rust/patches/getrandom"]
 
 [profile.release]
 opt-level = 3

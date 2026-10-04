@@ -5,3 +5,10 @@ version = 4
 [[package]]
 name = "cocoon-guest"
 version = "0.1.0"
+
+[[package]]
+name = "getrandom"
+version = "0.2.17"
+dependencies = [
+ "cocoon-guest",
+]
