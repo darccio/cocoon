@@ -7,6 +7,23 @@ bounded calls, terminal shutdown, and declared host capabilities. Async and HTTP
 are deliberately not implemented yet. The [roadmap](docs/roadmap.md) records
 remaining work and how to resume development in a later conversation.
 
+## Private repository access
+
+The repository is private and no license has been selected yet. Installation
+requires authorized GitHub access. Authenticate Git first, for example with
+`gh auth login` and `gh auth setup-git`, then exclude this private module from
+the public Go proxy and checksum service:
+
+```sh
+GOPRIVATE=github.com/darccio/cocoon go install github.com/darccio/cocoon/cmd/cocoon@main
+GOPRIVATE=github.com/darccio/cocoon go get github.com/darccio/cocoon@main
+```
+
+Use a release tag instead of `main` when one is available. Keep any other
+existing `GOPRIVATE` entries when configuring your environment. Consumers of
+checked-in Go packages need only Go; authoring a new Rust shim also requires
+a matching source checkout for `rust/cocoon-guest` and the tools below.
+
 ## Try the checked-in packages
 
 Go 1.26 or newer is sufficient for consumers:
@@ -38,13 +55,29 @@ scalar/slice, nested records, multiple input buffers, and a real safe Rust panic
 
 Generation requires Rust **1.97.0**, Binaryen **133**, and the Go tool dependency
 `github.com/ncruces/wasm2go` **v0.4.16**. This module already pins the translator.
-For a separate consumer module, first add that tool with
+For a separate author module, first add that tool with
 `go get -tool github.com/ncruces/wasm2go@v0.4.16` and add the Cocoon Go dependency.
 
 ```sh
 rustup toolchain install 1.97.0 --profile minimal
 rustup component add rust-src rustfmt clippy --toolchain 1.97.0
 rustup target add wasm32-unknown-unknown --toolchain 1.97.0
+```
+
+Install Binaryen 133 and put `wasm-opt`, `wasm-as`, and `wasm-metadce` on `PATH`.
+To build those tools from their pinned source:
+
+```sh
+git clone --branch version_133 --depth 1 --recurse-submodules \
+  https://github.com/WebAssembly/binaryen.git binaryen
+cmake -S binaryen -B binaryen/build -DCMAKE_BUILD_TYPE=Release
+cmake --build binaryen/build --target wasm-opt wasm-as wasm-metadce --parallel 2
+export PATH="$PWD/binaryen/build/bin:$PATH"
+```
+
+From a Cocoon source checkout, check the tools and initialize a project:
+
+```sh
 go run ./cmd/cocoon doctor
 go run ./cmd/cocoon init --name example testdata/my-example
 ```
@@ -54,6 +87,19 @@ go run ./cmd/cocoon init --name example testdata/my-example
 workspace, an echo manifest, safe implementation, generated trait/facade, and
 Cargo lockfile. It refuses existing authored files; it does not initialize Git
 or alter your module dependencies.
+
+For a separate author module, after installing the CLI and the pinned tools:
+
+```sh
+go mod init example.com/my-library
+GOPRIVATE=github.com/darccio/cocoon go get github.com/darccio/cocoon@main
+go get -tool github.com/ncruces/wasm2go@v0.4.16
+cocoon init --guest /absolute/path/to/cocoon/rust/cocoon-guest project
+cocoon doctor --manifest project/cocoon.toml
+cocoon build --manifest project/cocoon.toml
+go mod tidy
+CGO_ENABLED=0 go test ./project/go/example/...
+```
 
 Edit `cocoon.toml`, run `cocoon gen`, then implement the generated Rust `API`
 trait in `shim/src/implementation.rs`. That module has `forbid(unsafe_code)`;
@@ -114,15 +160,16 @@ make check       # tests, vet, and 49 explicitly selected strict linters
 make race        # runtime and generated consumers
 make rust        # native guest/getrandom tests and all-feature Clippy
 make cross       # compile tests + vet for arm64, 386, Darwin, Windows, js/wasm
+make smoke       # installed CLI, deterministic new shim, Go-only consumer
 make fuzz        # parsers, hardener, and generated wazero differential adapters
 make coverage
 make bench
 ```
 
 Use golangci-lint **2.13.1**; older analyzer builds cannot read newer Go export
-data. CI executes linux/amd64 and arm64 tests and rebuilds both proof packages
-with pinned tools. Wazero is test-only; production imports stay in the Go runtime
-and standard library. See [ABI and lifecycle](docs/abi.md),
+data. CI is configured to execute linux/amd64 and native arm64 tests and rebuild
+both proof packages with pinned tools. Wazero is test-only; production imports
+stay in the Go runtime and standard library. See [ABI and lifecycle](docs/abi.md),
 [security decisions](docs/design-review.md), and [performance/PGO](docs/performance.md).
 
 Cocoon targets trusted, reviewed Rust payloads. Recoverable traps poison the
