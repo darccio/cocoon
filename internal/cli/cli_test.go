@@ -2,6 +2,8 @@ package cli_test
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -141,5 +143,46 @@ func TestInitPreflight(t *testing.T) {
 	preserved, err := os.ReadFile(filepath.Join(directory, "cocoon.toml")) // #nosec G304 -- Read the known authored fixture below t.TempDir.
 	if err != nil || string(preserved) != "authored" {
 		t.Fatal("preflight modified authored manifest")
+	}
+}
+
+func TestInitRejectsInvalidModuleAndCanceledContext(t *testing.T) {
+	t.Parallel()
+	for _, scenario := range []string{"missing-module", "invalid-module", "canceled"} {
+		t.Run(scenario, func(t *testing.T) {
+			t.Parallel()
+			directory := t.TempDir()
+			guest := filepath.Join(directory, "guest")
+			if err := os.Mkdir(guest, 0o750); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(guest, "Cargo.toml"), []byte("[package]\nname=\"cocoon-guest\"\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			if scenario != "missing-module" {
+				module := "module example.com/author\ngo 1.26\n"
+				if scenario == "invalid-module" {
+					module = "go 1.26\n"
+				}
+				if err := os.WriteFile(filepath.Join(directory, "go.mod"), []byte(module), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			ctx := t.Context()
+			if scenario == "canceled" {
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithCancel(ctx)
+				cancel()
+			}
+			project := filepath.Join(directory, "project")
+			var output bytes.Buffer
+			err := cli.Run(ctx, []string{"init", "--guest", guest, project}, &output)
+			if err == nil || (scenario == "canceled" && !errors.Is(err, context.Canceled)) {
+				t.Fatal("invalid initialization accepted", err)
+			}
+			if _, statErr := os.Stat(project); !errors.Is(statErr, os.ErrNotExist) {
+				t.Fatal("preflight failure created project output", statErr)
+			}
+		})
 	}
 }
