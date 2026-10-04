@@ -68,3 +68,39 @@ func TestLifecycleZeroAndMisuse(t *testing.T) {
 		life.Leave()
 	}()
 }
+
+func TestLifecycleAdmissionShutdownRace(t *testing.T) {
+	t.Parallel()
+	for range 100 {
+		var life rt.Lifecycle
+		var active atomic.Int32
+		start := make(chan struct{})
+		var workers sync.WaitGroup
+		for range 8 {
+			workers.Go(func() {
+				<-start
+				for range 50 {
+					if err := life.Enter(); err != nil {
+						return
+					}
+					active.Add(1)
+					active.Add(-1)
+					life.Leave()
+				}
+			})
+		}
+		close(start)
+		if err := life.Close(func() error {
+			if active.Load() != 0 {
+				t.Error("cleanup raced an admitted call")
+			}
+			return nil
+		}); err != nil {
+			t.Fatal(err)
+		}
+		workers.Wait()
+		if !errors.Is(life.Enter(), rt.ErrClosed) {
+			t.Fatal("readmission after close")
+		}
+	}
+}
