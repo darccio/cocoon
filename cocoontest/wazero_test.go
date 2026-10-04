@@ -1,7 +1,11 @@
 package cocoontest_test
 
+//go:generate wasm-as testdata/reference.wat -o testdata/reference.wasm
+
 import (
+	"encoding/binary"
 	"errors"
+	"os"
 	"testing"
 
 	"cocoon.dev/cocoon/cocoontest"
@@ -35,5 +39,23 @@ func TestReferenceLifecycleAndMissingExports(t *testing.T) {
 	}
 	if _, err := cocoontest.Instantiate(t.Context(), []byte("malformed")); err == nil {
 		t.Fatal("malformed module accepted")
+	}
+}
+
+func TestI32ResultsAfterWideScalar(t *testing.T) {
+	t.Parallel()
+	wasm, err := os.ReadFile("testdata/reference.wasm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	guest := cocoontest.New(t, wasm)
+	for _, value := range []uint64{1 << 32, 0xffffffffffffffff, 7} {
+		status, output, err := guest.Operation(t.Context(), "store", []cocoontest.Arg{{Value: value}}, 64, 64)
+		if err != nil || status != rt.OK || len(output) != 8 || binary.LittleEndian.Uint64(output) != value {
+			t.Fatalf("wide scalar %x: %d %x %v", value, status, output, err)
+		}
+	}
+	if _, _, err := guest.Operation(t.Context(), "store", []cocoontest.Arg{{Value: 1}}, 64, 7); !errors.Is(err, rt.ErrTooLarge) {
+		t.Fatal(err)
 	}
 }

@@ -98,7 +98,18 @@ func (g *Guest) call(ctx context.Context, name string, args ...uint64) ([]uint64
 	if function == nil {
 		return nil, fmt.Errorf("%w: missing reference export %s", rt.ErrProtocol, name)
 	}
-	return function.Call(ctx, args...)
+	values, err := function.Call(ctx, args...)
+	if err != nil {
+		return nil, err
+	}
+	// Wasm i32 results are raw stack bits, not a promise about the upper half
+	// of the uint64 carrier (in particular after an i64-valued operation).
+	for index, typ := range function.Definition().ResultTypes() {
+		if typ == api.ValueTypeI32 {
+			values[index] = uint64(api.DecodeU32(values[index]))
+		}
+	}
+	return values, nil
 }
 
 // Operation reserves aggregate input, invokes a status export, and copies its
@@ -120,7 +131,7 @@ func (g *Guest) Operation(ctx context.Context, name string, args []Arg, inputLim
 		return 0, nil, err
 	}
 	if len(reserved) != 1 || reserved[0] > 0xffffffff {
-		return 0, nil, rt.ErrProtocol
+		return 0, nil, fmt.Errorf("%w: reserve returned %v", rt.ErrProtocol, reserved)
 	}
 	pointer := uint32(reserved[0])                            // #nosec G115 -- Explicitly checked wasm32 pointer above.
 	input, err := rt.Range(g.Memory(), pointer, uint32(size)) // #nosec G115 -- InputSize enforces wasm32 size.
@@ -143,7 +154,7 @@ func (g *Guest) Operation(ctx context.Context, name string, args []Arg, inputLim
 		return 0, nil, err
 	}
 	if len(values) != 1 || values[0] > 0xffffffff {
-		return 0, nil, rt.ErrProtocol
+		return 0, nil, fmt.Errorf("%w: status returned %v", rt.ErrProtocol, values)
 	}
 	status = rt.Status(int32(values[0])) // #nosec G115 -- Interpret the checked raw i32 bits as an ABI status.
 	descriptor, err := g.call(ctx, "cocoon_out")
@@ -151,7 +162,7 @@ func (g *Guest) Operation(ctx context.Context, name string, args []Arg, inputLim
 		return 0, nil, err
 	}
 	if len(descriptor) != 1 || descriptor[0] > 0xffffffff {
-		return 0, nil, rt.ErrProtocol
+		return 0, nil, fmt.Errorf("%w: output descriptor returned %v", rt.ErrProtocol, descriptor)
 	}
 	view, err := rt.Range(g.Memory(), uint32(descriptor[0]), 8) // #nosec G115 -- Checked wasm32 pointer above.
 	if err != nil {
