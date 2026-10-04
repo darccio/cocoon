@@ -1,0 +1,53 @@
+[package]
+name = "dd"
+go_import = "cocoon.dev/cocoon/examples/datadog/go/dd"
+rust_crate = "cocoon-dd-shim"
+
+[[source]]
+name = "libdatadog"
+path = "../../../libdatadog"
+revision = "7f3b16fe1b4bfc2a016ef869459e915ee02d6d6a"
+[toolchain]
+rust = "1.97.0"
+binaryen = "133"
+wasm2go = "v0.4.16"
+[limits]
+max_input = "64MiB"
+max_output = "64MiB"
+max_memory = "256MiB"
+instances = "gomaxprocs"
+[capabilities]
+log = true
+random = true
+[[func]]
+name = "obfuscate_sql"
+params = [{name="query", type="string"}]
+returns = "string"
+fallible = true
+[[func]]
+name = "obfuscate_traces"
+params = [{name="payload", type="bytes"}]
+returns = "bytes"
+fallible = true
+[[resource]]
+name = "Sketch"
+copy = "shared"
+[[resource.method]]
+name = "new"
+returns = "Sketch"
+[[resource.method]]
+name = "add"
+params = [{name="value", type="f64"}]
+fallible = true
+[[resource.method]]
+name = "add_many"
+params = [{name="values", type="[]f64"}]
+fallible = true
+[[resource.method]]
+name = "count"
+returns = "f64"
+[[resource.method]]
+name = "encode"
+returns = "bytes"
+[[resource.method]]
+name = "close"

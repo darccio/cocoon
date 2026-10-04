@@ -1,0 +1,41 @@
+{
+  "tools": {
+    "rust": "1.97.0",
+    "binaryen": "133",
+    "wasm2go": "v0.4.16"
+  },
+  "schema_sha256": "4199101d14b7569766d4fd8078bdbefe7e486ec7b8806d4969b0f8d6a4c1b3b2",
+  "manifest_sha256": "b5b075c1d3c890f687b911c6ac0a8845aea0a2ccf0cacbfe3331fb0a06ce2600",
+  "cargo_lock_sha256": "8e06e4d6f6c331fbe9088a56ee01c2ddf9aeba9cfb45f703d05e9d6e374661c3",
+  "shim_sha256": "a967b2a55a6d3c0a03c24fa9458372fbb8c392321a8c4e6c9e54bd4f689d6ca7",
+  "wasm_sha256": "a8e5bcb3b80de4d7761830fa6d4ded8ff28e1a1039bd4059224944013714f926",
+  "go_sha256": "1bb5517a058b2bffc5ee5cc17423f1c55d23df29c8c3a1f1afb92ac975bd12cb",
+  "facade_sha256": "867f646f06e24dc8395b8979a95aa5c7381662502566078508c5bd2730690fc6",
+  "adapter_sha256": "befaac5cd32b3f34cd15296d972113a91edacc05d25f39254cf012fdaac1dee1",
+  "contract_tests_sha256": "b59a0997a3709020211cb1ea96434f14bc27ba98cbc3863ced6fc51c76c1a92a",
+  "differential_tests_sha256": "32c40d72e7edb6b2c7b562b119c0bb27275aa68a803022b1388565d80f05937c",
+  "bulk_tests_sha256": "7e17688158ddaed29887e52764b467e850354ecb11fa92af56e56ba123fa644f",
+  "sources": [
+    {
+      "name": "cocoon-guest",
+      "sha256": "fc13249f09ac5bc0080da311f570e69b2500cbf468de6db213ab017f7113c8f4"
+    },
+    {
+      "name": "libdatadog",
+      "revision": "7f3b16fe1b4bfc2a016ef869459e915ee02d6d6a",
+      "sha256": "f4e2728e6fa1d254f66d3c41bdef592d426152f1cf3a7e6387cdc7f9978bcf42"
+    },
+    {
+      "name": "libdd-ddsketch",
+      "sha256": "1d543a24088d03201c516a756001e7944f1b33ccfaf2c09ad178c744dd5a701a"
+    },
+    {
+      "name": "libdd-trace-obfuscation",
+      "sha256": "9234e326aa6d463da598baf4c8e433be571b17702fdd4daf8258914cdf1969f7"
+    },
+    {
+      "name": "libdd-trace-utils",
+      "sha256": "5316912b419010dacfb93916fd94bbfe7b61e77e8619caaaaf36d77c405e249f"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[package]
+name = "cocoon-dd-shim"
+version = "0.1.0"
+edition = "2024"
+publish = false
+[workspace]
+[lib]
+crate-type = ["cdylib", "rlib"]
+[dependencies]
+cocoon-guest = { path = "../../../rust/cocoon-guest", features = ["log", "random"] }
+libdd-ddsketch = { path = "../../../../libdatadog/libdd-ddsketch" }
+libdd-trace-obfuscation = { path = "../../../../libdatadog/libdd-trace-obfuscation", default-features = false }
+libdd-trace-utils = { path = "../../../../libdatadog/libdd-trace-utils", default-features = false }
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "=0.2.17", features = ["custom"] }
+[patch.crates-io]
+getrandom = { path = "../../../rust/patches/getrandom" }
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
