@@ -1,0 +1,243 @@
+package rt
+
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"math"
+	"sync"
+	"sync/atomic"
+)
+
+// ABIVersion identifies the synchronous buffer and generation-handle protocol.
+const ABIVersion = 3
+
+// Module exposes the current linear memory, including after memory growth.
+type Module interface {
+	Memory() []byte
+}
+
+// ABI is implemented by generated adapters over typed wasm2go exports.
+type ABI interface {
+	Module
+	Version() uint32
+	Schema() uint64
+	Init()
+	Reserve(size uint32) uint32
+	Output() uint32
+	Trim(keep uint32)
+}
+
+// Limits bounds bytes per call; MaxMemory is a per-instance linear memory cap.
+type Limits struct {
+	MaxInput  uint64
+	MaxOutput uint64
+	MaxMemory uint64
+}
+
+// Validate rejects limits that cannot be represented by the wasm32 ABI.
+func (l Limits) Validate() error {
+	if l.MaxInput == 0 || l.MaxOutput == 0 || l.MaxMemory == 0 ||
+		l.MaxInput > math.MaxUint32 || l.MaxOutput > math.MaxUint32 ||
+		l.MaxMemory > uint64(math.MaxInt) || l.MaxInput > l.MaxMemory || l.MaxOutput > l.MaxMemory {
+		return fmt.Errorf("%w: invalid instance limits", ErrTooLarge)
+	}
+	return nil
+}
+
+// InputSize checks an aggregate input size before multiplication or allocation.
+func InputSize(limit, count, width uint64, other ...uint64) (uint64, error) {
+	if width != 0 && count > limit/width {
+		return 0, ErrTooLarge
+	}
+	size := count * width
+	for _, part := range other {
+		if part > limit || size > limit-part {
+			return 0, ErrTooLarge
+		}
+		size += part
+	}
+	if size > limit || size > math.MaxUint32 || size > uint64(math.MaxInt) {
+		return 0, ErrTooLarge
+	}
+	return size, nil
+}
+
+// Range bounds a view by logical memory length, including zero-length views.
+func Range(memory []byte, pointer, size uint32) ([]byte, error) {
+	end := uint64(pointer) + uint64(size)
+	if end > uint64(len(memory)) {
+		return nil, fmt.Errorf("%w: memory range [%d,%d) exceeds %d", ErrProtocol, pointer, end, len(memory))
+	}
+	return memory[pointer:end:end], nil
+}
+
+type instanceState uint8
+
+const (
+	instanceOpen instanceState = iota
+	instancePoisoned
+	instanceClosed
+)
+
+// Instance serializes guest execution and contains all recoverable guest panics.
+// Guest execution cannot be preempted. Callbacks must not reenter this instance.
+type Instance struct {
+	module ABI
+	limits Limits
+	epoch  atomic.Uint64
+	mu     sync.Mutex
+	state  instanceState
+}
+
+// NewInstance validates identity and contains traps during initialization.
+func NewInstance(module ABI, schema uint64, limits Limits) (*Instance, error) {
+	if err := limits.Validate(); err != nil {
+		return nil, err
+	}
+	i := &Instance{module: module, limits: limits}
+	i.epoch.Store(1)
+	err := i.Call("init", func(_ *Call) error {
+		if module.Version() != ABIVersion {
+			return ErrABI
+		}
+		if module.Schema() != schema {
+			return ErrSchema
+		}
+		module.Init()
+		if uint64(len(module.Memory())) > limits.MaxMemory {
+			return fmt.Errorf("%w: initial memory", ErrTooLarge)
+		}
+		return nil
+	})
+	if err != nil {
+		i.Close()
+		return nil, err
+	}
+	return i, nil
+}
+
+// Epoch binds resources to this instance's current uninterrupted lifetime.
+func (i *Instance) Epoch() uint64 { return i.epoch.Load() }
+
+// Call runs a callback while holding the instance's guest execution lock.
+func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	switch i.state {
+	case instanceClosed:
+		return ErrClosed
+	case instancePoisoned:
+		return ErrPoisoned
+	case instanceOpen:
+	}
+	defer func() {
+		if value := recover(); value != nil {
+			i.poison()
+			err = Classify(op, value, "")
+		}
+	}()
+	err = invoke(&Call{instance: i})
+	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
+		i.poison()
+		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+	}
+	if errors.Is(err, ErrProtocol) {
+		i.poison()
+	}
+	return err
+}
+
+func (i *Instance) poison() {
+	i.state = instancePoisoned
+	i.epoch.Add(1)
+}
+
+// Close permanently releases the module and invalidates every resource.
+func (i *Instance) Close() {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	if i.state != instanceClosed {
+		i.state = instanceClosed
+		i.epoch.Add(1)
+		i.module = nil
+	}
+}
+
+// Recycle trims buffers and reports whether this instance can return to a pool.
+func (i *Instance) Recycle(keep uint32, maximum uint64) bool {
+	return i.Call("trim", func(_ *Call) error {
+		i.module.Trim(keep)
+		if uint64(len(i.module.Memory())) > maximum {
+			return ErrTooLarge
+		}
+		return nil
+	}) == nil
+}
+
+// Call exposes memory only for the duration of Instance.Call.
+type Call struct {
+	instance *Instance
+	pointer  uint32
+	capacity uint32
+	used     uint32
+}
+
+// PrepareInput reserves all variable inputs together so their pointers stay stable.
+func (c *Call) PrepareInput(size uint64) error {
+	checked, err := InputSize(c.instance.limits.MaxInput, size, 1)
+	if err != nil {
+		return err
+	}
+	c.capacity = uint32(checked) // #nosec G115 -- InputSize checks the wasm32 bound.
+	c.pointer = c.instance.module.Reserve(c.capacity)
+	c.used = 0
+	_, err = c.Range(c.pointer, c.capacity)
+	return err
+}
+
+// PutBytes writes one input into the reservation and returns its guest pointer.
+func (c *Call) PutBytes(data []byte) (uint32, error) {
+	if uint64(len(data)) > uint64(c.capacity-c.used) {
+		return 0, ErrTooLarge
+	}
+	pointer := uint64(c.pointer) + uint64(c.used)
+	if pointer > math.MaxUint32 {
+		return 0, ErrProtocol
+	}
+	ptr := uint32(pointer) // #nosec G115 -- Pointer arithmetic is checked above.
+	n := uint32(len(data)) // #nosec G115 -- Input is bounded by the uint32 reservation.
+	view, err := c.Range(ptr, n)
+	if err != nil {
+		return 0, err
+	}
+	copy(view, data)
+	c.used += n
+	return ptr, nil
+}
+
+// Range re-reads memory after every possible guest allocation or growth.
+func (c *Call) Range(pointer, size uint32) ([]byte, error) {
+	return Range(c.instance.module.Memory(), pointer, size)
+}
+
+// Result checks and copies the guest reply before the call releases its lock.
+func (c *Call) Result(op string, status Status) ([]byte, error) {
+	descriptor, err := c.Range(c.instance.module.Output(), 8)
+	if err != nil {
+		return nil, err
+	}
+	pointer := binary.LittleEndian.Uint32(descriptor)
+	size := binary.LittleEndian.Uint32(descriptor[4:])
+	if uint64(size) > c.instance.limits.MaxOutput {
+		return nil, ErrTooLarge
+	}
+	view, err := c.Range(pointer, size)
+	if err != nil {
+		return nil, err
+	}
+	if err := FromStatus(op, status, view); err != nil {
+		return nil, err
+	}
+	return append([]byte(nil), view...), nil
+}
