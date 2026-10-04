@@ -27,6 +27,11 @@ func TestFacadeAndAdapter(t *testing.T) {
 			t.Fatalf("missing %s", expected)
 		}
 	}
+	countStart := bytes.Index(first, []byte("func (r *Sketch) Count"))
+	countEnd := bytes.Index(first[countStart:], []byte("func (r *Sketch) Encode"))
+	if countStart < 0 || countEnd < 0 || bytes.Contains(first[countStart:countStart+countEnd], []byte("PrepareInput")) {
+		t.Fatal("scalar-only operation reserves unused input")
+	}
 	for _, imports := range []bool{false, true} {
 		adapter, adapterErr := gogen.Adapter(m, imports)
 		if adapterErr != nil || !bytes.Contains(adapter, []byte("Xrandom_get")) {

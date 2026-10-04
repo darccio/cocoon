@@ -180,7 +180,16 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 		b.WriteString("_ctx:=context.Background();\n")
 	}
 	fmt.Fprintf(b, "if _err:=l.admission(_ctx); _err!=nil { %s }; defer l.life.Leave();\n", failure("_err"))
-	b.WriteString("var _size uint64; var _err error;\n")
+	hasBuffers := false
+	for _, param := range function.Params {
+		if m.Variable(param.Type) {
+			hasBuffers = true
+		}
+	}
+	if hasBuffers {
+		b.WriteString("var _size uint64;\n")
+	}
+	b.WriteString("var _err error;\n")
 	for index, param := range function.Params {
 		if m.Variable(param.Type) {
 			fmt.Fprintf(b, "_part%d,_err:=size%s(_arg%d,l.options.MaxInput); if _err!=nil { %s }; _size,_err=rt.InputSize(l.options.MaxInput,1,_size,_part%d); if _err!=nil { %s };\n", index, helperName(param.Type), index, failure("_err"), index, failure("_err"))
@@ -209,7 +218,10 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 	default:
 		fmt.Fprintf(b, "_err=r.owner.Use(%q,func(_instance *rt.Instance,_handle uint64) error { _guest:=r.guest; return _instance.Call(", function.Name)
 	}
-	fmt.Fprintf(b, "%q,func(_call *rt.Call) error { if _inputErr:=_call.PrepareInput(_size); _inputErr!=nil { return _inputErr };\n", function.Name)
+	fmt.Fprintf(b, "%q,func(_call *rt.Call) error {\n", function.Name)
+	if hasBuffers {
+		b.WriteString("if _inputErr:=_call.PrepareInput(_size); _inputErr!=nil { return _inputErr };\n")
+	}
 	var args []string
 	if resource != "" && !constructor {
 		args = append(args, "int64(_handle)")
