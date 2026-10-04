@@ -53,10 +53,11 @@ func (r ExecRunner) Run(ctx context.Context, directory, program string, args ...
 
 // ToolVersions records checked version identities without absolute paths or timestamps.
 type ToolVersions struct {
-	BinaryenDigests map[string]string `json:"binaryen_executable_sha256,omitempty"`
-	Rust            string            `json:"rust"`
-	Binaryen        string            `json:"binaryen"`
-	Wasm2Go         string            `json:"wasm2go"`
+	BinaryenDigests  map[string]string `json:"binaryen_executable_sha256,omitempty"`
+	CompilerMetadata string            `json:"compiler_metadata_sha256"`
+	Rust             string            `json:"rust"`
+	Binaryen         string            `json:"binaryen"`
+	Wasm2Go          string            `json:"wasm2go"`
 }
 
 // Doctor verifies every pinned executable and the required Rust target components.
@@ -90,7 +91,7 @@ func Doctor(ctx context.Context, runner Runner, directory string, pins manifest.
 	if !strings.Contains(string(components), "rust-src\n") || !strings.Contains(string(components), "rust-std-wasm32-unknown-unknown\n") {
 		return ToolVersions{}, fmt.Errorf("rust %s requires rust-src and wasm32-unknown-unknown", pins.Rust)
 	}
-	versions := ToolVersions{Rust: pins.Rust, Binaryen: pins.Binaryen, Wasm2Go: pins.Wasm2Go}
+	versions := ToolVersions{Rust: pins.Rust, Binaryen: pins.Binaryen, Wasm2Go: pins.Wasm2Go, CompilerMetadata: digest(compilerNormalizationSource)}
 	if _, executable := runner.(ExecRunner); executable {
 		versions.BinaryenDigests = make(map[string]string)
 		for _, program := range []string{"wasm-as", "wasm-metadce", "wasm-opt"} {

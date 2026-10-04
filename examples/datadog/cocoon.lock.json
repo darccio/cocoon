@@ -5,6 +5,7 @@
       "wasm-metadce": "1a47c3bb9e82fc0b49ab6a394eb76ac6470611764878a026d2ad5838d16b67a8",
       "wasm-opt": "8f25e9fd5db0fc5f210003aaa432922feb2e52d309e430def2f929e34da9466b"
     },
+    "compiler_metadata_sha256": "eb6c72b5ab6de28d90283c4bc002e5b0fec25003de05c04a39f6a96ef04699ca",
     "rust": "1.97.0",
     "binaryen": "133",
     "wasm2go": "v0.4.16"
@@ -13,8 +14,8 @@
   "manifest_sha256": "a3b1a897a5782f18655683143f4be91a2ab67be9a516f56c3207f3935da4e2cd",
   "cargo_lock_sha256": "8e06e4d6f6c331fbe9088a56ee01c2ddf9aeba9cfb45f703d05e9d6e374661c3",
   "shim_sha256": "e4ba9510be87ae6470a9eec2508693f10885259fb1140b461b5f73ec7ac8a159",
-  "wasm_sha256": "070c22ba81cca2f002cada22dcd4d019b0acb741dc526ce0392d903b500a3e64",
-  "go_sha256": "f09c6c58918a27dfcfa6bcc31bd51e7f5ca49e4ec1329fdd5816d0d4807bc181",
+  "wasm_sha256": "9af0f6a8dcf934b3eb977dfdabe11ef5224bc1cded91353ee5f6687b86fd9f95",
+  "go_sha256": "46e03c6c57b022bc2f5850638cc874225e171aa18ec650c7f95c7b722adf760e",
   "facade_sha256": "2c81cfcbe36e23dacac97bca4eb0960685b98bbde151d31953ed95211da8e187",
   "adapter_sha256": "d376c5270fc644ec61b468c62fa7cd502c6253417b36084fbced50079afdc248",
   "contract_tests_sha256": "6795900c0e8fee9eb84e3851a398956861b8422f28bf830d1e0ac8c56180de3e",

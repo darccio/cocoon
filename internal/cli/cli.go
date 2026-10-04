@@ -20,6 +20,9 @@ import (
 
 // Run executes one Cocoon command and returns errors for the caller to report.
 func Run(ctx context.Context, args []string, output io.Writer) (err error) {
+	if os.Getenv("COCOON_RUSTC_WRAPPER") == "1" {
+		return build.RustcWrapper(ctx, args, output, os.Stderr)
+	}
 	if len(args) == 0 || args[0] == "help" || args[0] == "--help" {
 		_, err = fmt.Fprintln(output, "usage: cocoon <init|gen|build|verify|doctor> [options]")
 		return err

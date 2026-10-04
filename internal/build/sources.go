@@ -46,12 +46,15 @@ func sourceIdentities(ctx context.Context, runner Runner, directory string, m *m
 		identities = append(identities, SourceHash{Name: source.Name, Revision: source.Revision, SHA256: hash})
 		paths = append(paths, sourcePath{name: "sources/" + source.Name, path: path})
 	}
-	metadata, err := runner.Run(ctx, filepath.Join(directory, "shim"), "rustup", "run", m.Toolchain.Rust, "cargo", "metadata", "--locked", "--offline", "--no-deps", "--format-version=1")
+	metadata, err := runner.Run(ctx, filepath.Join(directory, "shim"), "rustup", "run", m.Toolchain.Rust, "cargo", "metadata", "--locked", "--offline", "--format-version=1")
 	if err != nil {
 		return nil, nil, err
 	}
 	var cargo struct {
 		Packages []struct {
+			Name         string  `json:"name"`
+			ManifestPath string  `json:"manifest_path"`
+			Source       *string `json:"source"`
 			Dependencies []struct {
 				Name string `json:"name"`
 				Path string `json:"path"`
@@ -62,6 +65,9 @@ func sourceIdentities(ctx context.Context, runner Runner, directory string, m *m
 		return nil, nil, fmt.Errorf("read Cargo metadata: %w", decodeErr)
 	}
 	for _, pkg := range cargo.Packages {
+		if pkg.Name != "" && pkg.Name != m.Package.RustCrate {
+			continue
+		}
 		for _, dependency := range pkg.Dependencies {
 			if dependency.Path == "" {
 				continue
@@ -72,6 +78,23 @@ func sourceIdentities(ctx context.Context, runner Runner, directory string, m *m
 			}
 			identities = append(identities, SourceHash{Name: dependency.Name, SHA256: hash})
 			paths = append(paths, sourcePath{name: "crates/" + dependency.Name, path: dependency.Path})
+		}
+	}
+	// Cargo's complete graph also identifies patches and transitive local
+	// crates. They need canonical compiler identities even when their contents
+	// are already covered by a declared source repository.
+	localPaths := make(map[string]string)
+	for _, pkg := range cargo.Packages {
+		if pkg.Source != nil || pkg.ManifestPath == "" {
+			continue
+		}
+		path := filepath.Dir(pkg.ManifestPath)
+		if previous, exists := localPaths[pkg.Name]; exists && previous != path {
+			return nil, nil, fmt.Errorf("ambiguous local crate name %s", pkg.Name)
+		}
+		localPaths[pkg.Name] = path
+		if !slices.ContainsFunc(paths, func(source sourcePath) bool { return source.path == path }) {
+			paths = append(paths, sourcePath{name: "crates/" + pkg.Name, path: path})
 		}
 	}
 	if !slices.ContainsFunc(identities, func(source SourceHash) bool { return source.Name == "cocoon-guest" }) {

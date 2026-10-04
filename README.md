@@ -66,9 +66,8 @@ rustup target add wasm32-unknown-unknown --toolchain 1.97.0
 
 Install Binaryen 133 and put `wasm-opt`, `wasm-as`, and `wasm-metadce` on `PATH`.
 Use the [official release bundle](https://github.com/WebAssembly/binaryen/releases/tag/version_133)
-for reproducible proof artifacts: source builds can optimize differently even
-when they report the same version. On linux/amd64, install the exact bundle
-used by CI:
+so local proof rebuilds and CI use identical executables; a version number alone
+does not identify a binary. On linux/amd64, install the exact bundle used by CI:
 
 ```sh
 curl --fail --location https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz -o binaryen.tar.gz
@@ -134,6 +133,16 @@ Cargo cache are remapped to stable `/cocoon/...` paths. Encoded compiler flags
 also preserve paths containing spaces. These mappings normalize compiler
 output, not arbitrary strings emitted by your shim or a build script; see
 [Rust source path remapping](https://doc.rust-lang.org/rustc/remap-source-paths.html).
+Cargo also hashes absolute paths of dependencies outside the shim workspace
+into compiler metadata. Cocoon wraps target Rust compilation to derive stable
+crate identities from the locked graph, canonical source roots, package
+versions, and compiler settings. It preserves Cargo's expected output filenames
+and keeps host build scripts and compiler probes unchanged. Features and the
+standard-library compilation role remain distinct; diagnostic presentation
+does not affect artifact identity. The exact normalizer source is fingerprinted
+in the lock and compiler flags, so changing it invalidates Cargo's cached units.
+The build subprocess selects the pinned compiler explicitly and replaces
+ambient Cargo compiler wrappers; these changes do not affect your shell.
 If an offline machine lacks standard-library dependencies, fetch them on a
 networked machine with:
 
@@ -153,9 +162,9 @@ cargo fetch --manifest-path examples/datadog/shim/Cargo.toml
 make integration
 ```
 
-Locks record full schema/raw manifest hashes, exact tools and Binaryen executable
-hashes, local source content
-and revisions, Cargo lock and shim hashes, and hashes of Wasm, translated Go,
+Locks record full schema/raw manifest hashes, exact tools, compiler metadata
+normalizer and Binaryen executable hashes, local source content and revisions,
+Cargo lock and shim hashes, and hashes of Wasm, translated Go,
 facade, adapter, and generated tests. They contain no build-machine paths or
 timestamps. The independently authored getrandom 0.2 compatibility crate routes
 Wasm entropy through Cocoon even when a dependency enables its `js` feature;

@@ -3,7 +3,9 @@ package build
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -51,6 +53,12 @@ func (r sysrootRunner) Run(context.Context, string, string, ...string) ([]byte, 
 func TestCargoEnvironment(t *testing.T) {
 	root := t.TempDir()
 	project := filepath.Join(root, "project")
+	if err := os.MkdirAll(filepath.Join(project, "shim"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(project, "shim", "Cargo.lock"), []byte("locked graph"), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	t.Setenv("CARGO_HOME", "relative cache")
 	environment, err := cargoEnvironment(t.Context(), sysrootRunner{path: filepath.Join(root, "sysroot")}, project, root, "1.97.0", 16777216, nil)
 	if err != nil {
@@ -62,11 +70,25 @@ func TestCargoEnvironment(t *testing.T) {
 	if !strings.Contains(environment[2], "--remap-path-prefix="+filepath.Join(project, "shim", "relative cache")+"=/cocoon/cargo") {
 		t.Fatal("relative Cargo home was not resolved against the Cargo working directory")
 	}
+	seed := digest(append([]byte(digest(compilerNormalizationSource)+"\x001.97.0\x00"), []byte("locked graph")...))
+	if !slices.Contains(environment, "COCOON_METADATA_SEED="+seed) || !strings.Contains(environment[2], "-Cmetadata="+seed) || !slices.Contains(environment, "COCOON_RUSTC_WRAPPER=1") {
+		t.Fatal("compiler identity was not included in Cargo's cache fingerprint")
+	}
+	compiler := filepath.Join(root, "sysroot", "bin", "rustc")
+	if runtime.GOOS == "windows" {
+		compiler += ".exe"
+	}
+	if !slices.Contains(environment, "RUSTC="+compiler) || !slices.Contains(environment, "RUSTC_WORKSPACE_WRAPPER=") {
+		t.Fatal("ambient compiler overrides can bypass the pinned compiler wrapper")
+	}
 	t.Setenv("CARGO_HOME", "")
 	if _, err := cargoEnvironment(t.Context(), sysrootRunner{path: root}, project, root, "1.97.0", 16777216, nil); err != nil {
 		t.Fatal("default Cargo home unavailable", err)
 	}
 	if _, err := cargoEnvironment(t.Context(), sysrootRunner{fail: true}, project, root, "1.97.0", 16777216, nil); err == nil {
 		t.Fatal("missing sysroot accepted")
+	}
+	if _, err := cargoEnvironment(t.Context(), sysrootRunner{path: root}, filepath.Join(root, "missing"), root, "1.97.0", 16777216, nil); err == nil {
+		t.Fatal("missing locked graph accepted")
 	}
 }

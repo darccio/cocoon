@@ -33,7 +33,7 @@ func TestDoctor(t *testing.T) {
 	t.Parallel()
 	pins := manifest.Toolchain{Rust: manifest.RustVersion, Binaryen: manifest.BinaryenVersion, Wasm2Go: manifest.Wasm2GoVersion}
 	versions, err := build.Doctor(t.Context(), fakeRunner{}, ".", pins)
-	if err != nil || versions.Rust != manifest.RustVersion {
+	if err != nil || versions.Rust != manifest.RustVersion || len(versions.CompilerMetadata) != 64 {
 		t.Fatal(err)
 	}
 	for _, tool := range []string{"go", "rustup", "wasm-opt", "wasm-metadce", "wasm-as"} {
