@@ -224,22 +224,40 @@ func (c *Call) PrepareInput(size uint64) error {
 
 // PutBytes writes one input into the reservation and returns its guest pointer.
 func (c *Call) PutBytes(data []byte) (uint32, error) {
-	if uint64(len(data)) > uint64(c.capacity-c.used) {
-		return 0, ErrTooLarge
-	}
-	pointer := uint64(c.pointer) + uint64(c.used)
-	if pointer > math.MaxUint32 {
-		return 0, ErrProtocol
-	}
-	ptr := uint32(pointer) // #nosec G115 -- Pointer arithmetic is checked above.
-	n := uint32(len(data)) // #nosec G115 -- Input is bounded by the uint32 reservation.
-	view, err := c.Range(ptr, n)
+	pointer, view, err := c.inputRegion(len(data))
 	if err != nil {
 		return 0, err
 	}
 	copy(view, data)
+	return pointer, nil
+}
+
+// PutString copies directly from a string without a temporary byte allocation.
+func (c *Call) PutString(data string) (uint32, error) {
+	pointer, view, err := c.inputRegion(len(data))
+	if err != nil {
+		return 0, err
+	}
+	copy(view, data)
+	return pointer, nil
+}
+
+func (c *Call) inputRegion(length int) (regionPointer uint32, region []byte, regionErr error) {
+	if length < 0 || uint64(length) > uint64(c.capacity-c.used) {
+		return 0, nil, ErrTooLarge
+	}
+	pointer := uint64(c.pointer) + uint64(c.used)
+	if pointer > math.MaxUint32 {
+		return 0, nil, ErrProtocol
+	}
+	ptr := uint32(pointer) // #nosec G115 -- Pointer arithmetic is checked above.
+	n := uint32(length)    // #nosec G115 -- Input is bounded by the uint32 reservation.
+	view, err := c.Range(ptr, n)
+	if err != nil {
+		return 0, nil, err
+	}
 	c.used += n
-	return ptr, nil
+	return ptr, view, nil
 }
 
 // Range re-reads memory after every possible guest allocation or growth.

@@ -82,6 +82,34 @@ func TestCallResetsReservationWithoutAllocating(t *testing.T) {
 	}
 }
 
+func TestPutStringSharesBoundedInputReservation(t *testing.T) {
+	t.Parallel()
+	m := newModule()
+	i := newInstance(t, m)
+	if err := i.Call("strings", func(call *rt.Call) error {
+		if err := call.PrepareInput(5); err != nil {
+			return err
+		}
+		left, err := call.PutString("abc")
+		if err != nil {
+			return err
+		}
+		right, err := call.PutString("de")
+		if err != nil {
+			return err
+		}
+		if right != left+3 || string(m.memory[left:right+2]) != "abcde" {
+			t.Fatal("incorrect aggregate string copy")
+		}
+		if _, err := call.PutString("f"); !errors.Is(err, rt.ErrTooLarge) {
+			t.Fatal("string crossed reservation", err)
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestInputSize(t *testing.T) {
 	t.Parallel()
 	for _, test := range []struct {
