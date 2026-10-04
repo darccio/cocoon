@@ -84,19 +84,28 @@ const (
 // Guest execution cannot be preempted. Callbacks must not reenter this instance.
 type Instance struct {
 	module ABI
+	host   *Host
 	limits Limits
 	epoch  atomic.Uint64
 	mu     sync.Mutex
+	alive  atomic.Bool
 	state  instanceState
 }
 
 // NewInstance validates identity and contains traps during initialization.
-func NewInstance(module ABI, schema uint64, limits Limits) (*Instance, error) {
+func NewInstance(module ABI, schema uint64, limits Limits, hosts ...*Host) (*Instance, error) {
 	if err := limits.Validate(); err != nil {
 		return nil, err
 	}
 	i := &Instance{module: module, limits: limits}
+	if len(hosts) != 0 {
+		i.host = hosts[0]
+		if i.host != nil {
+			i.host.Bind(module)
+		}
+	}
 	i.epoch.Store(1)
+	i.alive.Store(true)
 	err := i.Call("init", func(_ *Call) error {
 		if module.Version() != ABIVersion {
 			return ErrABI
@@ -134,9 +143,16 @@ func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
 	defer func() {
 		if value := recover(); value != nil {
 			i.poison()
-			err = Classify(op, value, "")
+			var message string
+			if i.host != nil {
+				message = i.host.takePanic()
+			}
+			err = Classify(op, value, message)
 		}
 	}()
+	if i.host != nil {
+		i.host.takePanic()
+	}
 	err = invoke(&Call{instance: i})
 	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
 		i.poison()
@@ -149,6 +165,7 @@ func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
 }
 
 func (i *Instance) poison() {
+	i.alive.Store(false)
 	i.state = instancePoisoned
 	i.epoch.Add(1)
 }
@@ -158,9 +175,13 @@ func (i *Instance) Close() {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 	if i.state != instanceClosed {
+		i.alive.Store(false)
 		i.state = instanceClosed
 		i.epoch.Add(1)
 		i.module = nil
+		if i.host != nil {
+			i.host.module = nil
+		}
 	}
 }
 
