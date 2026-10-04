@@ -65,6 +65,9 @@ func TestRejectInvalidManifests(t *testing.T) {
 		{"fallible=true", "typo=true"},
 		{"example.com/example", "../escape"},
 		{"example-shim", "../bad"},
+		{"example.com/example", "."},
+		{"name=\"echo\"", "name=\"abi_version\""},
+		{"name=\"echo\"", "name=\"schema_hash\""},
 	} {
 		if _, err := manifest.Parse([]byte(strings.ReplaceAll(example, replacement.old, replacement.new))); err == nil {
 			t.Fatalf("accepted %q", replacement.new)
@@ -81,6 +84,37 @@ func TestRejectInvalidManifests(t *testing.T) {
 	} {
 		if _, err := manifest.Parse([]byte(example + extra)); err == nil {
 			t.Fatal("invalid declarations accepted")
+		}
+	}
+}
+
+func TestGeneratedNamesCannotCollide(t *testing.T) {
+	t.Parallel()
+	resource := `
+[[resource]]
+name="Sketch"
+[[resource.method]]
+name="new"
+returns="Sketch"
+[[resource.method]]
+name="close"
+`
+	for _, source := range []string{
+		strings.ReplaceAll(example, `name="echo"`, `name="sketch_new"`) + resource,
+		example + strings.ReplaceAll(resource, "Sketch", "Service"),
+		example + strings.ReplaceAll(resource, "Sketch", "sketch"),
+		example + `
+[[record]]
+name="String"
+fields=[{name="text",type="string"}]
+`,
+		example + `
+[[record]]
+name="Empty"
+`,
+	} {
+		if _, err := manifest.Parse([]byte(source)); err == nil {
+			t.Fatal("accepted generated name collision or unsupported empty record")
 		}
 	}
 }

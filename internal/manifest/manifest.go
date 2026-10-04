@@ -181,7 +181,7 @@ func (m *Manifest) Validate() error {
 	if !validName(m.Package.Name) || m.Package.Name != strings.ToLower(m.Package.Name) || !crateName.MatchString(m.Package.RustCrate) {
 		return fmt.Errorf("invalid package name or Rust crate")
 	}
-	if m.Package.GoImport == "" || path.Clean(m.Package.GoImport) != m.Package.GoImport || strings.HasPrefix(m.Package.GoImport, "/") || strings.ContainsAny(m.Package.GoImport, "\\ :\t\n") || slices.Contains(strings.Split(m.Package.GoImport, "/"), "..") {
+	if m.Package.GoImport == "" || m.Package.GoImport == "." || path.Clean(m.Package.GoImport) != m.Package.GoImport || strings.HasPrefix(m.Package.GoImport, "/") || strings.ContainsAny(m.Package.GoImport, "\\ :\t\n\r\"'`<>") || slices.Contains(strings.Split(m.Package.GoImport, "/"), "..") {
 		return fmt.Errorf("invalid Go import path")
 	}
 	if m.Toolchain == (Toolchain{}) {
@@ -202,7 +202,21 @@ func (m *Manifest) Validate() error {
 	if len(m.Functions)+len(m.Resources) == 0 {
 		return fmt.Errorf("manifest has no operations")
 	}
-	names := map[string]bool{"Library": true, "Options": true, "Open": true, "Close": true, "API": true}
+	names := make(map[string]bool)
+	for _, name := range strings.Fields("Library Options Open Close API State Error Result Slab RefCell String Bytes Bool Vec I32 U32 I64 U64 F32 F64 SliceI32 SliceU32 SliceI64 SliceU64 SliceF32 SliceF64") {
+		names[name] = true
+	}
+	exports := make(map[string]bool)
+	for _, name := range strings.Fields("abi_version schema_hash init in_reserve out trim alloc") {
+		exports[name] = true
+	}
+	claimExport := func(name string) error {
+		if exports[name] {
+			return fmt.Errorf("duplicate or reserved ABI export %q", name)
+		}
+		exports[name] = true
+		return nil
+	}
 	claim := func(name string) error {
 		if !validName(name) || names[GoName(name)] {
 			return fmt.Errorf("invalid, duplicate, or reserved name %q", name)
@@ -211,11 +225,17 @@ func (m *Manifest) Validate() error {
 		return nil
 	}
 	for _, record := range m.Records {
+		if record.Name != GoName(record.Name) || len(record.Fields) == 0 {
+			return fmt.Errorf("records need an exported canonical name and at least one field")
+		}
 		if err := claim(record.Name); err != nil {
 			return err
 		}
 	}
 	for _, resource := range m.Resources {
+		if resource.Name != GoName(resource.Name) || resource.Name == "Service" {
+			return fmt.Errorf("invalid generated resource name %q", resource.Name)
+		}
 		if err := claim(resource.Name); err != nil {
 			return err
 		}
@@ -228,6 +248,9 @@ func (m *Manifest) Validate() error {
 			return fmt.Errorf("operation names must be lowercase")
 		}
 		if err := claim(function.Name); err != nil {
+			return err
+		}
+		if err := claimExport(function.Name); err != nil {
 			return err
 		}
 		if err := m.validateFunction(function, ""); err != nil {
@@ -249,6 +272,9 @@ func (m *Manifest) Validate() error {
 		}
 		methods := make(map[string]bool)
 		for _, method := range resource.Methods {
+			if err := claimExport(strings.ToLower(resource.Name) + "_" + method.Name); err != nil {
+				return err
+			}
 			if methods[GoName(method.Name)] || !validName(method.Name) || method.Name != strings.ToLower(method.Name) {
 				return fmt.Errorf("invalid or duplicate method %q", method.Name)
 			}
