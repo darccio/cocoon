@@ -120,6 +120,9 @@ func Rewrite(source []byte, expected []string) ([]byte, error) {
 				return false
 			}
 			view.Slice3 = true
+			if view.High == nil {
+				view.High = &ast.CallExpr{Fun: ast.NewIdent("len"), Args: []ast.Expr{ast.NewIdent("mem")}}
+			}
 			view.Max = &ast.CallExpr{Fun: ast.NewIdent("len"), Args: []ast.Expr{ast.NewIdent("mem")}}
 			views++
 			return false

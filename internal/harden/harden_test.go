@@ -88,6 +88,25 @@ func TestInvalidSource(t *testing.T) {
 	}
 }
 
+func TestRewriteSuppliesOmittedSliceUpperBound(t *testing.T) {
+	t.Parallel()
+	source := strings.ReplaceAll(bulk, "x:x+uint64(n)", "x:")
+	names, err := harden.Required([]byte(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	output, err := harden.Rewrite([]byte(source), names)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(output, []byte("mem[x:len(mem):len(mem)]")) {
+		t.Fatal("omitted upper bound was not preserved as the memory length")
+	}
+	if _, err := harden.Required(output); err != nil {
+		t.Fatal("hardening emitted invalid Go", err)
+	}
+}
+
 func TestTableHardening(t *testing.T) {
 	t.Parallel()
 	source := `package wasm
@@ -132,6 +151,7 @@ return 2
 
 func FuzzRewrite(f *testing.F) {
 	f.Add([]byte(bulk))
+	f.Add([]byte(strings.ReplaceAll(bulk, "x:x+uint64(n)", "x:")))
 	f.Fuzz(func(t *testing.T, source []byte) {
 		if len(source) > 65536 {
 			return
