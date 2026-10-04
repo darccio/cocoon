@@ -27,8 +27,10 @@ func BenchmarkSketchAdd(b *testing.B) {
 	})
 	b.ReportAllocs()
 	b.ResetTimer()
+	value := float64(0)
 	for b.Loop() {
-		if err := sketch.Add(42); err != nil {
+		value++
+		if err := sketch.Add(value); err != nil {
 			b.Fatal(err)
 		}
 	}
