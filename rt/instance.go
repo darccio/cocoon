@@ -129,6 +129,9 @@ func NewInstance(module ABI, schema uint64, limits Limits, hosts ...*Host) (*Ins
 // Epoch binds resources to this instance's current uninterrupted lifetime.
 func (i *Instance) Epoch() uint64 { return i.epoch.Load() }
 
+// Healthy reports whether resources may still be created on this instance.
+func (i *Instance) Healthy() bool { return i.alive.Load() }
+
 // Call runs a callback while holding the instance's guest execution lock.
 func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
 	i.mu.Lock()

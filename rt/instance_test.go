@@ -146,9 +146,12 @@ func TestInstanceFaultAndClose(t *testing.T) {
 	t.Parallel()
 	i := newInstance(t, newModule())
 	epoch := i.Epoch()
+	if !i.Healthy() {
+		t.Fatal("new instance is unhealthy")
+	}
 	err := i.Call("fault", func(_ *rt.Call) error { panic(42) })
 	var fault *rt.FaultError
-	if !errors.As(err, &fault) || fault.Kind != rt.FaultUnknown || epoch == i.Epoch() {
+	if !errors.As(err, &fault) || fault.Kind != rt.FaultUnknown || epoch == i.Epoch() || i.Healthy() {
 		t.Fatalf("fault = %v", err)
 	}
 	if err := i.Call("again", func(_ *rt.Call) error { t.Fatal("executed after fault"); return nil }); !errors.Is(err, rt.ErrPoisoned) {
