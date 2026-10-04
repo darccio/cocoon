@@ -1,7 +1,8 @@
 /.cocoon-git/
 /.cache/
 /bin/
-/target/
+target/
+*.test
 coverage.out
 *.prof
 .cocoon-build/
