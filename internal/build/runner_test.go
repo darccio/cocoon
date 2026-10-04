@@ -2,8 +2,12 @@ package build
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 func TestBoundedDiagnostics(t *testing.T) {
@@ -33,5 +37,37 @@ func TestRunnerEnvironmentAndMissingExecutable(t *testing.T) {
 	}
 	if _, err := runner.Run(t.Context(), ".", "cocoon-nonexistent-test-tool"); err == nil {
 		t.Fatal("missing executable accepted")
+	}
+}
+
+func TestExecutableDigest(t *testing.T) {
+	t.Parallel()
+	path := filepath.Join(t.TempDir(), "tool")
+	content := []byte("version 133, build identity")
+	if err := os.WriteFile(path, content, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if hash, err := executableDigest(path); err != nil || hash != digest(content) {
+		t.Fatal("incorrect executable fingerprint", hash, err)
+	}
+	if _, err := executableDigest(filepath.Join(t.TempDir(), "missing")); err == nil {
+		t.Fatal("missing executable fingerprint accepted")
+	}
+}
+
+func TestPinnedDoctorFingerprints(t *testing.T) {
+	t.Parallel()
+	pins := manifest.Toolchain{Rust: manifest.RustVersion, Binaryen: manifest.BinaryenVersion, Wasm2Go: manifest.Wasm2GoVersion}
+	versions, err := Doctor(t.Context(), ExecRunner{}, ".", pins)
+	if err != nil {
+		t.Skip("the pinned toolchain is needed only for executable-fingerprint integration", err)
+	}
+	if len(versions.BinaryenDigests) != 3 {
+		t.Fatal("doctor omitted executable identities")
+	}
+	for _, program := range []string{"wasm-as", "wasm-metadce", "wasm-opt"} {
+		if len(versions.BinaryenDigests[program]) != 64 {
+			t.Fatalf("invalid fingerprint for %s", program)
+		}
 	}
 }

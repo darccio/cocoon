@@ -1,5 +1,10 @@
 {
   "tools": {
+    "binaryen_executable_sha256": {
+      "wasm-as": "d35bc5d4864a25fca3bb10d35054593e21a58e569824847c968eee762f45e7ca",
+      "wasm-metadce": "1a47c3bb9e82fc0b49ab6a394eb76ac6470611764878a026d2ad5838d16b67a8",
+      "wasm-opt": "8f25e9fd5db0fc5f210003aaa432922feb2e52d309e430def2f929e34da9466b"
+    },
     "rust": "1.97.0",
     "binaryen": "133",
     "wasm2go": "v0.4.16"

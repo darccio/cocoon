@@ -65,14 +65,16 @@ rustup target add wasm32-unknown-unknown --toolchain 1.97.0
 ```
 
 Install Binaryen 133 and put `wasm-opt`, `wasm-as`, and `wasm-metadce` on `PATH`.
-To build those tools from their pinned source:
+Use the [official release bundle](https://github.com/WebAssembly/binaryen/releases/tag/version_133)
+for reproducible proof artifacts: source builds can optimize differently even
+when they report the same version. On linux/amd64, install the exact bundle
+used by CI:
 
 ```sh
-git clone --branch version_133 --depth 1 --recurse-submodules \
-  https://github.com/WebAssembly/binaryen.git binaryen
-cmake -S binaryen -B binaryen/build -DCMAKE_BUILD_TYPE=Release
-cmake --build binaryen/build --target wasm-opt wasm-as wasm-metadce --parallel 2
-export PATH="$PWD/binaryen/build/bin:$PATH"
+curl --fail --location https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz -o binaryen.tar.gz
+echo '2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489  binaryen.tar.gz' | sha256sum --check
+tar -xzf binaryen.tar.gz
+export PATH="$PWD/binaryen-version_133/bin:$PATH"
 ```
 
 From a Cocoon source checkout, check the tools and initialize a project:
@@ -151,7 +153,8 @@ cargo fetch --manifest-path examples/datadog/shim/Cargo.toml
 make integration
 ```
 
-Locks record full schema/raw manifest hashes, exact tools, local source content
+Locks record full schema/raw manifest hashes, exact tools and Binaryen executable
+hashes, local source content
 and revisions, Cargo lock and shim hashes, and hashes of Wasm, translated Go,
 facade, adapter, and generated tests. They contain no build-machine paths or
 timestamps. The independently authored getrandom 0.2 compatibility crate routes

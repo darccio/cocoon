@@ -30,18 +30,13 @@ jobs:
         run: |
           rustup toolchain install 1.97.0 --profile minimal --component rust-src,rustfmt,clippy --target wasm32-unknown-unknown
           RUSTC_BOOTSTRAP=1 cargo +1.97.0 fetch --locked --manifest-path "$(rustc +1.97.0 --print sysroot)/lib/rustlib/src/rust/library/Cargo.toml"
-      - name: Check out pinned Binaryen
-        uses: actions/checkout@v4
-        with:
-          repository: WebAssembly/binaryen
-          ref: version_133
-          path: .cache/binaryen
-          submodules: recursive
-      - name: Build verification tools
+      - name: Install the exact official Binaryen bundle
         run: |
-          cmake -S .cache/binaryen -B .cache/binaryen/build -DCMAKE_BUILD_TYPE=Release
-          cmake --build .cache/binaryen/build --target wasm-opt wasm-as wasm-metadce --parallel 2
-          echo "$PWD/.cache/binaryen/build/bin" >> "$GITHUB_PATH"
+          mkdir -p .cache/binaryen
+          curl --fail --location --retry 3 https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz -o .cache/binaryen/bundle.tar.gz
+          echo '2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489  .cache/binaryen/bundle.tar.gz' | sha256sum --check
+          tar -xzf .cache/binaryen/bundle.tar.gz -C .cache/binaryen
+          echo "$PWD/.cache/binaryen/binaryen-version_133/bin" >> "$GITHUB_PATH"
       - name: Fetch exact proof dependency
         run: |
           git init ../libdatadog

@@ -3,7 +3,11 @@ package build
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"regexp"
@@ -49,9 +53,10 @@ func (r ExecRunner) Run(ctx context.Context, directory, program string, args ...
 
 // ToolVersions records checked version identities without absolute paths or timestamps.
 type ToolVersions struct {
-	Rust     string `json:"rust"`
-	Binaryen string `json:"binaryen"`
-	Wasm2Go  string `json:"wasm2go"`
+	BinaryenDigests map[string]string `json:"binaryen_executable_sha256,omitempty"`
+	Rust            string            `json:"rust"`
+	Binaryen        string            `json:"binaryen"`
+	Wasm2Go         string            `json:"wasm2go"`
 }
 
 // Doctor verifies every pinned executable and the required Rust target components.
@@ -85,5 +90,33 @@ func Doctor(ctx context.Context, runner Runner, directory string, pins manifest.
 	if !strings.Contains(string(components), "rust-src\n") || !strings.Contains(string(components), "rust-std-wasm32-unknown-unknown\n") {
 		return ToolVersions{}, fmt.Errorf("rust %s requires rust-src and wasm32-unknown-unknown", pins.Rust)
 	}
-	return ToolVersions{Rust: pins.Rust, Binaryen: pins.Binaryen, Wasm2Go: pins.Wasm2Go}, nil
+	versions := ToolVersions{Rust: pins.Rust, Binaryen: pins.Binaryen, Wasm2Go: pins.Wasm2Go}
+	if _, executable := runner.(ExecRunner); executable {
+		versions.BinaryenDigests = make(map[string]string)
+		for _, program := range []string{"wasm-as", "wasm-metadce", "wasm-opt"} {
+			path, pathErr := exec.LookPath(program)
+			if pathErr != nil {
+				return ToolVersions{}, pathErr
+			}
+			hash, hashErr := executableDigest(path)
+			if hashErr != nil {
+				return ToolVersions{}, hashErr
+			}
+			versions.BinaryenDigests[program] = hash
+		}
+	}
+	return versions, nil
+}
+
+func executableDigest(path string) (encoded string, err error) {
+	file, err := os.Open(path) // #nosec G304 -- Fingerprint the executable selected by the same PATH lookup used to invoke it.
+	if err != nil {
+		return "", err
+	}
+	defer func() { err = errors.Join(err, file.Close()) }()
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }

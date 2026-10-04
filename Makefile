@@ -2,6 +2,8 @@ SHELL := /bin/bash
 export GOCACHE := $(CURDIR)/.cache/go
 export GOLANGCI_LINT_CACHE := $(CURDIR)/.cache/lint
 export GOFLAGS := -buildvcs=false
+BINARYEN_BIN ?= $(CURDIR)/.cache/binaryen/binaryen-version_133/bin
+export PATH := $(BINARYEN_BIN):$(PATH)
 GOLANGCI_LINT ?= $(if $(wildcard $(CURDIR)/.cache/bin/golangci-lint),$(CURDIR)/.cache/bin/golangci-lint,golangci-lint)
 PACKAGES := ./... ./testdata/compute/go/compute/...
 
