@@ -118,6 +118,19 @@ pub fn reply(result: Result<Vec<u8>>) -> i32 {
     })
 }
 
+/// Publishes a canonical empty success reply without constructing a byte vector.
+pub fn reply_unit(result: Result<()>) -> i32 {
+    match result {
+        Ok(()) => BUFFERS.with_borrow_mut(|b| {
+            b.output.clear();
+            b.descriptor.pointer = b.output.as_ptr() as usize as u32;
+            b.descriptor.length = 0;
+            OK
+        }),
+        Err(error) => reply(Err(error)),
+    }
+}
+
 pub fn trim(keep: usize) {
     BUFFERS.with_borrow_mut(|b| {
         if b.input.capacity() > keep {
@@ -365,6 +378,35 @@ mod tests {
         assert_eq!(reply(Ok(vec![0; 5])), ERR_LIMIT);
         assert_eq!(reply(Err(Error::new(ERR_APP, "err"))), ERR_APP);
         trim(0);
+        assert_eq!(BUFFERS.with_borrow(|b| b.descriptor.length), 0);
+    }
+    #[test]
+    fn unit_reply_clears_previous_output_and_preserves_errors() {
+        init(64, 32);
+        let descriptor = output();
+        for previous in [Ok(vec![1, 2, 3]), Err(Error::application("previous error"))] {
+            reply(previous);
+            assert!(BUFFERS.with_borrow(|b| b.descriptor.length > 0));
+            assert_eq!(reply_unit(Ok(())), OK);
+            assert_eq!(output(), descriptor);
+            BUFFERS.with_borrow(|b| {
+                assert!(b.output.is_empty());
+                assert_eq!(b.descriptor.length, 0);
+                assert_eq!(b.descriptor.pointer, b.output.as_ptr() as usize as u32);
+            });
+        }
+        assert_eq!(reply_unit(Err(Error::argument("bad"))), ERR_ARG);
+        BUFFERS.with_borrow(|b| {
+            assert_eq!(b.output, b"bad");
+            assert_eq!(b.descriptor.length, 3);
+        });
+        init(64, 2);
+        assert_eq!(reply_unit(Err(Error::application("too long"))), ERR_LIMIT);
+        assert_eq!(BUFFERS.with_borrow(|b| b.descriptor.length), 0);
+        trim(0);
+        init(64, 0);
+        assert_eq!(reply_unit(Ok(())), OK);
+        assert_eq!(output(), descriptor);
         assert_eq!(BUFFERS.with_borrow(|b| b.descriptor.length), 0);
     }
     #[test]

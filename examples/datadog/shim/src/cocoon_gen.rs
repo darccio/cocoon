@@ -82,16 +82,16 @@ pub extern "C" fn cocoon_sketch_new() -> i32 {
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_sketch_add(__handle: u64, arg0: f64) -> i32 {
-    let __result = STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {
+    let __result = STATE.with_borrow_mut(|__state| -> Result<()> {
         let __resource = __state.sketch.get_mut(__handle)?;
         __state.service.sketch_add(__resource, arg0)?;
-        Ok(Vec::new())
+        Ok(())
     });
-    cocoon_guest::reply(__result)
+    cocoon_guest::reply_unit(__result)
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_sketch_add_many(__handle: u64, arg0_ptr: usize, arg0_len: usize) -> i32 {
-    let __result = STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {
+    let __result = STATE.with_borrow_mut(|__state| -> Result<()> {
         let __arg0 = cocoon_guest::input(arg0_ptr, arg0_len)?;
         let arg0 = {
             if !__arg0.as_slice().len().is_multiple_of(8) {
@@ -111,9 +111,9 @@ pub extern "C" fn cocoon_sketch_add_many(__handle: u64, arg0_ptr: usize, arg0_le
         };
         let __resource = __state.sketch.get_mut(__handle)?;
         __state.service.sketch_add_many(__resource, arg0)?;
-        Ok(Vec::new())
+        Ok(())
     });
-    cocoon_guest::reply(__result)
+    cocoon_guest::reply_unit(__result)
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_sketch_count(__handle: u64) -> i32 {
@@ -135,10 +135,10 @@ pub extern "C" fn cocoon_sketch_encode(__handle: u64) -> i32 {
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_sketch_close(__handle: u64) -> i32 {
-    let __result = STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {
+    let __result = STATE.with_borrow_mut(|__state| -> Result<()> {
         let __resource = __state.sketch.remove(__handle)?;
         __state.service.sketch_close(__resource);
-        Ok(Vec::new())
+        Ok(())
     });
-    cocoon_guest::reply(__result)
+    cocoon_guest::reply_unit(__result)
 }

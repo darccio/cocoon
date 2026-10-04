@@ -165,7 +165,11 @@ func exportMethod(b *strings.Builder, m *manifest.Manifest, function manifest.Fu
 			fmt.Fprintf(b, "%s: %s,", argument, rustType(param.Type))
 		}
 	}
-	b.WriteString(") -> i32 { let __result=STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {\n")
+	replyType, replyFunction := "Vec<u8>", "reply"
+	if function.Returns == "" {
+		replyType, replyFunction = "()", "reply_unit"
+	}
+	fmt.Fprintf(b, ") -> i32 { let __result=STATE.with_borrow_mut(|__state| -> Result<%s> {\n", replyType)
 	for index, param := range function.Params {
 		argument := fmt.Sprintf("arg%d", index)
 		if m.Variable(param.Type) {
@@ -206,13 +210,13 @@ func exportMethod(b *strings.Builder, m *manifest.Manifest, function manifest.Fu
 	case resource != "" && function.Name == "new":
 		fmt.Fprintf(b, "let __handle=__state.%s.insert(__value)?; Ok(__handle.to_le_bytes().to_vec())\n", strings.ToLower(resource))
 	case function.Returns == "":
-		b.WriteString("Ok(Vec::new())\n")
+		b.WriteString("Ok(())\n")
 	case m.Variable(function.Returns) && function.Returns != "string" && function.Returns != "bytes" && !strings.HasPrefix(function.Returns, "[]"):
 		b.WriteString("__value.encode()\n")
 	default:
 		fmt.Fprintf(b, "Ok(%s)\n", encode(function.Returns, "__value"))
 	}
-	b.WriteString("}); cocoon_guest::reply(__result) }\n")
+	fmt.Fprintf(b, "}); cocoon_guest::%s(__result) }\n", replyFunction)
 }
 
 func decode(name, data string) string {

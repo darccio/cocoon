@@ -7,9 +7,9 @@
   "schema_sha256": "4199101d14b7569766d4fd8078bdbefe7e486ec7b8806d4969b0f8d6a4c1b3b2",
   "manifest_sha256": "b5b075c1d3c890f687b911c6ac0a8845aea0a2ccf0cacbfe3331fb0a06ce2600",
   "cargo_lock_sha256": "8e06e4d6f6c331fbe9088a56ee01c2ddf9aeba9cfb45f703d05e9d6e374661c3",
-  "shim_sha256": "a967b2a55a6d3c0a03c24fa9458372fbb8c392321a8c4e6c9e54bd4f689d6ca7",
-  "wasm_sha256": "a8e5bcb3b80de4d7761830fa6d4ded8ff28e1a1039bd4059224944013714f926",
-  "go_sha256": "1bb5517a058b2bffc5ee5cc17423f1c55d23df29c8c3a1f1afb92ac975bd12cb",
+  "shim_sha256": "e4ba9510be87ae6470a9eec2508693f10885259fb1140b461b5f73ec7ac8a159",
+  "wasm_sha256": "2b0b48e84f8d38f705ce49ee52609a49a7e5112dfc59d68d0d257ce3d7becef6",
+  "go_sha256": "8181083147cde7802715c8fc898d6225c756a93097725eb6a416dfcc1d82c5e6",
   "facade_sha256": "867f646f06e24dc8395b8979a95aa5c7381662502566078508c5bd2730690fc6",
   "adapter_sha256": "befaac5cd32b3f34cd15296d972113a91edacc05d25f39254cf012fdaac1dee1",
   "contract_tests_sha256": "b59a0997a3709020211cb1ea96434f14bc27ba98cbc3863ced6fc51c76c1a92a",
@@ -18,7 +18,7 @@
   "sources": [
     {
       "name": "cocoon-guest",
-      "sha256": "fc13249f09ac5bc0080da311f570e69b2500cbf468de6db213ab017f7113c8f4"
+      "sha256": "bb992ee751ef62cac549dd7e599e09117d363d53b7fdec0970638764a89e6f45"
     },
     {
       "name": "libdatadog",

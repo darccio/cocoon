@@ -337,11 +337,11 @@ pub extern "C" fn cocoon_scalar_values(
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_test_trap(arg0: u32) -> i32 {
-    let __result = STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {
+    let __result = STATE.with_borrow_mut(|__state| -> Result<()> {
         __state.service.test_trap(arg0);
-        Ok(Vec::new())
+        Ok(())
     });
-    cocoon_guest::reply(__result)
+    cocoon_guest::reply_unit(__result)
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_counter_new(arg0: u64) -> i32 {
@@ -372,10 +372,10 @@ pub extern "C" fn cocoon_counter_count(__handle: u64) -> i32 {
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_counter_close(__handle: u64) -> i32 {
-    let __result = STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {
+    let __result = STATE.with_borrow_mut(|__state| -> Result<()> {
         let __resource = __state.counter.remove(__handle)?;
         __state.service.counter_close(__resource);
-        Ok(Vec::new())
+        Ok(())
     });
-    cocoon_guest::reply(__result)
+    cocoon_guest::reply_unit(__result)
 }

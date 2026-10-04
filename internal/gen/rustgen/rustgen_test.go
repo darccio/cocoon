@@ -3,6 +3,7 @@ package rustgen_test
 import (
 	"bytes"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"cocoon.dev/cocoon/internal/gen/rustgen"
@@ -43,6 +44,37 @@ func TestDatadogGeneration(t *testing.T) {
 		command.Stdin = bytes.NewReader(first)
 		if output, runErr := command.CombinedOutput(); runErr != nil {
 			t.Fatalf("Rust syntax: %v: %s", runErr, output)
+		}
+	}
+}
+
+func TestUnitExportsUseTypedEmptyReplies(t *testing.T) {
+	t.Parallel()
+	m, err := manifest.Parse([]byte(apiManifest))
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Functions = append(m.Functions,
+		manifest.Function{Name: "notify"},
+		manifest.Function{Name: "try_notify", Fallible: true},
+	)
+	generated, err := rustgen.Generate(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"notify", "try_notify", "sketch_add_many", "sketch_close"} {
+		_, body, found := strings.Cut(string(generated), "fn cocoon_"+name+"(")
+		if !found {
+			t.Fatalf("missing unit export %s", name)
+		}
+		body, _, _ = strings.Cut(body, "#[unsafe(no_mangle)]")
+		for _, required := range []string{"-> Result<()>", "Ok(())", "cocoon_guest::reply_unit(__result)"} {
+			if !strings.Contains(body, required) {
+				t.Errorf("%s missing %s", name, required)
+			}
+		}
+		if strings.Contains(body, "Vec::new()") || strings.Contains(body, "Result<Vec<u8>>") {
+			t.Errorf("%s constructs a byte-vector reply", name)
 		}
 	}
 }
