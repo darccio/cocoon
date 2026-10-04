@@ -1,4 +1,6 @@
 github.com/ncruces/wasm2go v0.4.16 h1:4e5botfxJNsp/0VnZ2wt4lNP6nbN1cbKYxGYdT8Kaug=
 github.com/ncruces/wasm2go v0.4.16/go.mod h1:pbXo7pYbrOO+DnngLFKr+Dqh5FiWWlxiAKcfHD9XzEY=
+github.com/pelletier/go-toml/v2 v2.4.3 h1:GTRvJQutkOSftxIFD5xw9aepkYNuPWmVJpffdDPYVpY=
+github.com/pelletier/go-toml/v2 v2.4.3/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 golang.org/x/tools v0.50.0 h1:c2ifzfcuY7L90lZ2aKd8S4K2NpASF08SZx9ZuJkHmSU=
 golang.org/x/tools v0.50.0/go.mod h1:7ulVMw3831Mwi5EZD6RomGyffr4VFjuNYXf2BbCEAV0=
