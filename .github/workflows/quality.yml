@@ -17,3 +17,44 @@ jobs:
         with:
           version: v2.13.1
       - run: make test race coverage cross
+      - run: make fuzz
+  end-to-end:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install pinned Rust
+        run: |
+          rustup toolchain install 1.97.0 --profile minimal --component rust-src,rustfmt,clippy --target wasm32-unknown-unknown
+          RUSTC_BOOTSTRAP=1 cargo +1.97.0 fetch --locked --manifest-path "$(rustc +1.97.0 --print sysroot)/lib/rustlib/src/rust/library/Cargo.toml"
+      - name: Check out pinned Binaryen
+        uses: actions/checkout@v4
+        with:
+          repository: WebAssembly/binaryen
+          ref: version_133
+          path: .cache/binaryen
+      - name: Build verification tools
+        run: |
+          cmake -S .cache/binaryen -B .cache/binaryen/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build .cache/binaryen/build --target wasm-opt wasm-as wasm-metadce --parallel 2
+          echo "$PWD/.cache/binaryen/build/bin" >> "$GITHUB_PATH"
+      - name: Fetch exact proof dependency
+        run: |
+          git init ../libdatadog
+          git -C ../libdatadog fetch --depth=1 https://github.com/DataDog/libdatadog.git 7f3b16fe1b4bfc2a016ef869459e915ee02d6d6a
+          git -C ../libdatadog checkout --detach FETCH_HEAD
+          go mod download
+          cargo fetch --locked --manifest-path examples/datadog/shim/Cargo.toml
+      - name: Rebuild and exercise both proof packages
+        run: make integration
+      - name: Verify generated artifacts are reproducible
+        run: |
+          git diff --exit-code -- testdata/compute examples/datadog
+          go run ./cmd/cocoon build --manifest testdata/compute/cocoon.toml
+          go run ./cmd/cocoon build --manifest examples/datadog/cocoon.toml
+          git diff --exit-code -- testdata/compute examples/datadog
+          go generate ./rt/internal/trapfix ./cocoontest
+          git diff --exit-code -- rt/internal/trapfix cocoontest/testdata
