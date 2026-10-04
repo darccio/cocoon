@@ -15,6 +15,10 @@ func TestDatadogGeneration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	m.Functions = append(m.Functions,
+		manifest.Function{Name: "echo_bytes", Params: []manifest.Param{{Name: "data", Type: "bytes"}}, Returns: "bytes"},
+		manifest.Function{Name: "echo_text", Params: []manifest.Param{{Name: "data", Type: "string"}}, Returns: "string"},
+	)
 	first, err := rustgen.Generate(m)
 	if err != nil {
 		t.Fatal(err)
@@ -30,6 +34,9 @@ func TestDatadogGeneration(t *testing.T) {
 		if bytes.Contains(first, []byte(forbidden)) {
 			t.Fatalf("generated lint regression: %s", forbidden)
 		}
+	}
+	if !bytes.Contains(first, []byte("let arg0=__arg0;")) || !bytes.Contains(first, []byte("String::from_utf8(__arg0)")) {
+		t.Fatal("owned buffer copied during argument decoding")
 	}
 	if rustfmt, lookErr := exec.LookPath("rustfmt"); lookErr == nil {
 		command := exec.CommandContext(t.Context(), rustfmt, "--edition", "2024", "--emit", "stdout") // #nosec G204 -- The executable is a resolved formatter path.

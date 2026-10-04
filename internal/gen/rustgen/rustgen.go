@@ -169,7 +169,14 @@ func exportMethod(b *strings.Builder, m *manifest.Manifest, function manifest.Fu
 	for index, param := range function.Params {
 		argument := fmt.Sprintf("arg%d", index)
 		if m.Variable(param.Type) {
-			fmt.Fprintf(b, "let __%s=cocoon_guest::input(%s_ptr,%s_len)?; let %s=%s;\n", argument, argument, argument, argument, decode(param.Type, "__"+argument+".as_slice()"))
+			decoded := decode(param.Type, "__"+argument+".as_slice()")
+			switch param.Type {
+			case "bytes":
+				decoded = "__" + argument
+			case "string":
+				decoded = "String::from_utf8(__" + argument + ").map_err(|_| Error::argument(\"invalid UTF-8\"))?"
+			}
+			fmt.Fprintf(b, "let __%s=cocoon_guest::input(%s_ptr,%s_len)?; let %s=%s;\n", argument, argument, argument, argument, decoded)
 		} else if param.Type == "bool" {
 			fmt.Fprintf(b, "let %s=match %s { 0=>false,1=>true,_=>return Err(Error::argument(\"invalid bool\")) };\n", argument, argument)
 		}
