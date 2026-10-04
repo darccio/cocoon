@@ -80,7 +80,7 @@ func (p pipeline) run(ctx context.Context, directory string, m *manifest.Manifes
 		return nil, err
 	}
 	defer func() { err = errors.Join(err, release()) }()
-	identities, err := sourceIdentities(ctx, runner, directory, m)
+	identities, paths, err := sourceIdentities(ctx, runner, directory, m)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,11 @@ func (p pipeline) run(ctx context.Context, directory string, m *manifest.Manifes
 	}()
 	cargo := runner
 	if executable, ok := runner.(ExecRunner); ok {
-		executable.Environment = append(executable.Environment, "RUSTC_BOOTSTRAP=1", "CARGO_TARGET_DIR="+filepath.Join(work, "target"), fmt.Sprintf("CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS=-C link-arg=--max-memory=%d", memory))
+		environment, environmentErr := cargoEnvironment(ctx, runner, directory, moduleRoot, m.Toolchain.Rust, memory, paths)
+		if environmentErr != nil {
+			return nil, environmentErr
+		}
+		executable.Environment = append(slices.Clone(executable.Environment), environment...)
 		cargo = executable
 	}
 	if _, err = cargo.Run(ctx, filepath.Join(directory, "shim"), "rustup", "run", m.Toolchain.Rust, "cargo", "build", "--locked", "--release", "-Zbuild-std=std,panic_abort", "--target", "wasm32-unknown-unknown"); err != nil {

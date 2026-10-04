@@ -178,19 +178,22 @@ func TestSourceIdentityFailures(t *testing.T) {
 	directory, runner := makeProject(t)
 	m := testManifest(t)
 	m.Sources = []manifest.SourcePin{{Name: "upstream", Path: "guest", Revision: "0123456789012345678901234567890123456789"}}
-	identities, err := sourceIdentities(t.Context(), runner, directory, m)
+	identities, paths, err := sourceIdentities(t.Context(), runner, directory, m)
 	if err != nil || len(identities) != 2 {
 		t.Fatal(err)
 	}
+	if len(paths) != 2 {
+		t.Fatal("missing source path remaps")
+	}
 	for _, failure := range []string{"revision", "dirty", "metadata"} {
 		runner.fail = failure
-		if _, identityErr := sourceIdentities(t.Context(), runner, directory, m); identityErr == nil {
+		if _, _, identityErr := sourceIdentities(t.Context(), runner, directory, m); identityErr == nil {
 			t.Fatalf("accepted %s", failure)
 		}
 	}
 	runner.fail = ""
 	runner.guest = ""
-	if _, identityErr := sourceIdentities(t.Context(), runner, directory, m); identityErr == nil {
+	if _, _, identityErr := sourceIdentities(t.Context(), runner, directory, m); identityErr == nil {
 		t.Fatal("accepted missing guest crate")
 	}
 }

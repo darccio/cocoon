@@ -62,6 +62,28 @@ func TestExternalWorkflow(t *testing.T) {
 	if bytes.Contains(firstLock, []byte(work)) || bytes.Contains(firstLock, []byte(root)) {
 		t.Fatal("lock contains machine-specific source paths")
 	}
+	firstWasm := read(t, filepath.Join(outputs, "example", "testdata", "module.wasm"))
+	if bytes.Contains(firstWasm, []byte(work)) || bytes.Contains(firstWasm, []byte(root)) {
+		t.Fatal("Wasm contains machine-specific source paths")
+	}
+
+	// Relocate both the project and guest support crate. This catches path
+	// strings in compiled Rust that same-directory rebuilding cannot detect.
+	relocated := filepath.Join(work, "relocated author with spaces")
+	guest := filepath.Join(work, "relocated guest with spaces")
+	mkdir(t, relocated)
+	for relative, data := range snapshot(t, filepath.Join(root, "rust", "cocoon-guest")) {
+		write(t, filepath.Join(guest, relative), string(data))
+	}
+	for _, metadata := range []string{"go.mod", "go.sum"} {
+		write(t, filepath.Join(relocated, metadata), string(read(t, filepath.Join(author, metadata))))
+	}
+	run(t, relocated, environment, cocoon, "init", "--guest", guest, "project")
+	relocatedManifest := filepath.Join(relocated, "project", "cocoon.toml")
+	run(t, relocated, environment, cocoon, "build", "--manifest", relocatedManifest)
+	if !reflect.DeepEqual(first, snapshot(t, filepath.Join(relocated, "project", "go"))) || !bytes.Equal(firstLock, read(t, filepath.Join(relocated, "project", "cocoon.lock.json"))) {
+		t.Fatal("relocating source directories changed generated artifacts")
+	}
 
 	// The consumer receives only production Go files: no Rust, Wasm fixture,
 	// translator, generated differential tests, or checkout-only dependency.

@@ -18,30 +18,37 @@ type SourceHash struct {
 	SHA256   string `json:"sha256"`
 }
 
-func sourceIdentities(ctx context.Context, runner Runner, directory string, m *manifest.Manifest) ([]SourceHash, error) {
+type sourcePath struct {
+	name string
+	path string
+}
+
+func sourceIdentities(ctx context.Context, runner Runner, directory string, m *manifest.Manifest) ([]SourceHash, []sourcePath, error) {
 	identities := make([]SourceHash, 0, len(m.Sources)+1)
+	var paths []sourcePath
 	for _, source := range m.Sources {
 		path := filepath.Join(directory, filepath.FromSlash(source.Path))
 		arguments := []string{"--git-dir=" + filepath.Join(path, ".git"), "--work-tree=" + path}
 		output, err := runner.Run(ctx, directory, "git", append(slices.Clone(arguments), "rev-parse", "HEAD")...)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if strings.TrimSpace(string(output)) != source.Revision {
-			return nil, fmt.Errorf("source %s must be at revision %s", source.Name, source.Revision)
+			return nil, nil, fmt.Errorf("source %s must be at revision %s", source.Name, source.Revision)
 		}
 		if _, diffErr := runner.Run(ctx, directory, "git", append(arguments, "diff", "--quiet", "HEAD", "--")...); diffErr != nil {
-			return nil, fmt.Errorf("source %s has modified tracked files: %w", source.Name, diffErr)
+			return nil, nil, fmt.Errorf("source %s has modified tracked files: %w", source.Name, diffErr)
 		}
 		hash, err := sourceDigest(path)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		identities = append(identities, SourceHash{Name: source.Name, Revision: source.Revision, SHA256: hash})
+		paths = append(paths, sourcePath{name: "sources/" + source.Name, path: path})
 	}
 	metadata, err := runner.Run(ctx, filepath.Join(directory, "shim"), "rustup", "run", m.Toolchain.Rust, "cargo", "metadata", "--locked", "--offline", "--no-deps", "--format-version=1")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var cargo struct {
 		Packages []struct {
@@ -52,7 +59,7 @@ func sourceIdentities(ctx context.Context, runner Runner, directory string, m *m
 		} `json:"packages"`
 	}
 	if decodeErr := json.Unmarshal(metadata, &cargo); decodeErr != nil {
-		return nil, fmt.Errorf("read Cargo metadata: %w", decodeErr)
+		return nil, nil, fmt.Errorf("read Cargo metadata: %w", decodeErr)
 	}
 	for _, pkg := range cargo.Packages {
 		for _, dependency := range pkg.Dependencies {
@@ -61,14 +68,15 @@ func sourceIdentities(ctx context.Context, runner Runner, directory string, m *m
 			}
 			hash, hashErr := sourceDigest(dependency.Path)
 			if hashErr != nil {
-				return nil, hashErr
+				return nil, nil, hashErr
 			}
 			identities = append(identities, SourceHash{Name: dependency.Name, SHA256: hash})
+			paths = append(paths, sourcePath{name: "crates/" + dependency.Name, path: dependency.Path})
 		}
 	}
 	if !slices.ContainsFunc(identities, func(source SourceHash) bool { return source.Name == "cocoon-guest" }) {
-		return nil, fmt.Errorf("shim must depend on the local cocoon-guest crate")
+		return nil, nil, fmt.Errorf("shim must depend on the local cocoon-guest crate")
 	}
 	slices.SortFunc(identities, func(a, b SourceHash) int { return strings.Compare(a.Name, b.Name) })
-	return identities, nil
+	return identities, paths, nil
 }
