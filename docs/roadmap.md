@@ -2,8 +2,9 @@
 
 This is the resume point for future development conversations. Updated
 2026-10-04. The synchronous M1 framework and Datadog proof are implemented;
-performance acceptance and independent CI execution remain open. Async and
-HTTP are a separate milestone, not partially implemented M1 features.
+performance acceptance is deferred by the user and independent CI execution
+is underway. Async and HTTP are a separate milestone, not partially implemented
+M1 features.
 
 ## Current working state
 
@@ -14,11 +15,25 @@ environment variables are required.
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
 have passed locally. Rebuilding both proof packages reproduces their committed
-artifacts and lock hashes. GitHub CI has not been run from this environment.
+artifacts and lock hashes. The private repository is
+`github.com/darccio/cocoon`, and the tested branch has been pushed. No license
+has been selected. GitHub CI is running for the first release; do not tag
+`v0.1.0` until all three jobs pass on the release commit.
 Native linux/386 tests now pass outside the former sandbox. Current runtime
 coverage is 95.6 percent; the Rust and Go generators are 94.6 and 96.7 percent.
 
-## Performance work in progress
+The installed-CLI smoke test passes with Go 1.26.8 and 1.27.1. It initializes,
+formats, builds, verifies, and deterministically rebuilds a separate author's
+shim, then runs a Go-only consumer against stripped production sources with
+module fetching disabled and Rust/Wasm tools unavailable. The consumer also
+exercises the checked-in Datadog package. Authenticated installation and a
+separate consumer of the published private module at `main` also pass without
+local replacements. Run the checkout smoke test with `make smoke`.
+
+## Deferred performance work
+
+The user chose to defer further optimization until after the first complete
+MVP. Performance acceptance remains unmet; it is not a gate for that release.
 
 The same-machine comparison is complete and recorded in
 [performance notes](performance.md), including all five samples and build
@@ -48,10 +63,15 @@ original acceptance limits remain unmet: 2.2154 microseconds and 55.44 nanosecon
 
 - Run the configured GitHub workflow on a fresh checkout, including native
   arm64 execution, pinned dependency fetching, and reproducible artifact builds.
-  A remote destination/publication decision is still needed; none is configured.
+  CI found an omitted Binaryen submodule checkout and a hardener rewrite that
+  failed to supply an omitted slice upper bound. Both are fixed, with a
+  regression test for the rewrite. CI is rerunning. Native amd64 and arm64
+  test, race, coverage, and cross-compilation jobs have started successfully.
+- Once CI is green, create the private `v0.1.0` release and verify installation
+  and consumption by tag with authenticated Git and `GOPRIVATE` configured.
 - Expand error-path tests where coverage remains lower: generation/publication
-  64.3 percent, CLI 70.1 percent, build orchestration 78.4 percent. Runtime,
-  hardening, and both generators already exceed 94 percent.
+  now reaches 84.8 percent, CLI 72.3 percent, and build orchestration 81.6 percent.
+  Runtime, hardening, and both generators already exceed 94 percent.
 - Consider upstreaming the translator's bulk-memory length-versus-capacity fix.
   Cocoon already applies and tests its own checked AST hardening.
 
@@ -71,8 +91,9 @@ use `darna --committable --dependants` and staged validation, and test the stage
 snapshot before each commit. Reference directories may be inspected for evidence
 but their source must not be transplanted into this implementation.
 
-Use `make check`, `make race`, and `make integration` for correctness gates;
-`make cross`, `make fuzz`, and `make coverage` provide additional qualification.
+Use `make check`, `make race`, `make integration`, and `make smoke` for
+correctness gates; `make cross`, `make fuzz`, and `make coverage` provide
+additional qualification.
 Benchmark in isolation with Go 1.26.8 and CGO disabled for comparison with the
 recorded spike results. Run no compilation, linting, or fuzzing concurrently
 with measurements. Local profiles and build caches live in ignored `.cache`;
