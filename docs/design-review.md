@@ -68,11 +68,11 @@ metadata is stored in `.cocoon-git` for this session. Commands use
 `GIT_DIR=$PWD/.cocoon-git GIT_WORK_TREE=$PWD`. Commit signing is disabled only in
 this repository because the configured 1Password signing agent is unavailable.
 
-Go 1.27.1, golangci-lint 2.11.4, darna, Binaryen 133, Rust 1.94.0 with rust-src,
-and the wasm32 target are installed. Rust 1.97.0 and the libdatadog checkout at
-revision 7f3b16f are absent. Terminal DNS/network access is unavailable. Exact
-toolchain and Datadog proof checks must report those prerequisites as missing;
-passing tests with available tools does not establish the missing proof.
+Go 1.27.1, darna, and Binaryen 133 are installed. The user supplied Rust 1.97.0
+and libdatadog at exact revision 7f3b16fe1b4bfc2a016ef869459e915ee02d6d6a.
+Terminal DNS/network access is unavailable; dependencies must be resolved from
+local caches. The installed golangci-lint 2.11.4 cannot read Go 1.27 export data,
+so quality checks use golangci-lint 2.13.1 built from cached module sources.
 
 The golangci-lint configuration enables 49 independent correctness, security,
 API, documentation, and style checks with all vet analyzers and unchecked-error

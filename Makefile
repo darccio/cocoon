@@ -2,6 +2,7 @@ SHELL := /bin/bash
 export GOCACHE := $(CURDIR)/.cache/go
 export GOLANGCI_LINT_CACHE := $(CURDIR)/.cache/lint
 export GOFLAGS := -buildvcs=false
+GOLANGCI_LINT ?= golangci-lint
 
 .PHONY: check test lint fmt race coverage cross rust
 check: test lint
@@ -9,10 +10,10 @@ test:
 	CGO_ENABLED=0 go test ./...
 	CGO_ENABLED=0 go vet ./...
 lint:
-	golangci-lint fmt --diff
-	golangci-lint run
+	$(GOLANGCI_LINT) fmt --diff
+	$(GOLANGCI_LINT) run
 fmt:
-	golangci-lint fmt
+	$(GOLANGCI_LINT) fmt
 race:
 	CGO_ENABLED=1 go test -race ./...
 coverage:
