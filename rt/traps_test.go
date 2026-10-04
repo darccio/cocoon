@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"cocoon.dev/cocoon/rt"
-	"cocoon.dev/cocoon/rt/internal/trapfix"
+	"github.com/darccio/cocoon/rt"
+	"github.com/darccio/cocoon/rt/internal/trapfix"
 )
 
 type trapModule struct{ *trapfix.Module }

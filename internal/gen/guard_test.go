@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/gen"
+	"github.com/darccio/cocoon/internal/gen"
 )
 
 func TestSharedProjectGuard(t *testing.T) {

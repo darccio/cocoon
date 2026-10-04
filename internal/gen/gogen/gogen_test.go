@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/gen/gogen"
-	"cocoon.dev/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/gen/gogen"
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 func TestFacadeAndAdapter(t *testing.T) {

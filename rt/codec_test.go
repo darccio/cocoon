@@ -7,7 +7,7 @@ import (
 	"math"
 	"testing"
 
-	"cocoon.dev/cocoon/rt"
+	"github.com/darccio/cocoon/rt"
 )
 
 func TestRecordCodec(t *testing.T) {

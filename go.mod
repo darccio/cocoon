@@ -1,4 +1,4 @@
-module cocoon.dev/cocoon
+module github.com/darccio/cocoon
 
 go 1.26.0
 

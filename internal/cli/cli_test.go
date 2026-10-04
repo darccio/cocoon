@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/cli"
+	"github.com/darccio/cocoon/internal/cli"
 )
 
 func TestHelpAndInvalidCommands(t *testing.T) {

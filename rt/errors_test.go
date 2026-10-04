@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"cocoon.dev/cocoon/rt"
+	"github.com/darccio/cocoon/rt"
 )
 
 func TestClassify(t *testing.T) {

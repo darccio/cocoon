@@ -15,7 +15,7 @@ import (
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 
-	"cocoon.dev/cocoon/rt"
+	"github.com/darccio/cocoon/rt"
 )
 
 // Arg carries either scalar Wasm bits or a variable input buffer region.

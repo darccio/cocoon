@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"cocoon.dev/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 // Runner is injectable so toolchain checks can be tested without launching tools.

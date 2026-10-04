@@ -17,7 +17,7 @@ CGO_ENABLED=0 go test ./testdata/compute/go/compute/...
 go build -o bin/cocoon ./cmd/cocoon
 ```
 
-The proof consumer is `cocoon.dev/cocoon/examples/datadog/go/dd`:
+The proof consumer is `github.com/darccio/cocoon/examples/datadog/go/dd`:
 
 ```go
 library, err := dd.Open(dd.Options{Instances: 1})

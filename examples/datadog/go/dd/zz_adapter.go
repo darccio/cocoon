@@ -2,8 +2,8 @@
 package dd
 
 import (
-	wasm "cocoon.dev/cocoon/examples/datadog/go/dd/internal/wasm"
-	"cocoon.dev/cocoon/rt"
+	wasm "github.com/darccio/cocoon/examples/datadog/go/dd/internal/wasm"
+	"github.com/darccio/cocoon/rt"
 )
 
 type module struct{ *wasm.Module }

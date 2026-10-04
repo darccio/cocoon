@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 func testManifest(t *testing.T) *manifest.Manifest {

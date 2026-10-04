@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/wasmbin"
+	"github.com/darccio/cocoon/internal/wasmbin"
 )
 
 func fixture() []byte {

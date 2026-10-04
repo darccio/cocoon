@@ -1,6 +1,6 @@
 [package]
 name = "dd"
-go_import = "cocoon.dev/cocoon/examples/datadog/go/dd"
+go_import = "github.com/darccio/cocoon/examples/datadog/go/dd"
 rust_crate = "cocoon-dd-shim"
 
 [[source]]

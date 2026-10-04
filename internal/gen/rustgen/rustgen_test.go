@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/gen/rustgen"
-	"cocoon.dev/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/gen/rustgen"
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 func TestDatadogGeneration(t *testing.T) {

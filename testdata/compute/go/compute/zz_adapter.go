@@ -2,8 +2,8 @@
 package compute
 
 import (
-	"cocoon.dev/cocoon/rt"
-	wasm "cocoon.dev/cocoon/testdata/compute/go/compute/internal/wasm"
+	"github.com/darccio/cocoon/rt"
+	wasm "github.com/darccio/cocoon/testdata/compute/go/compute/internal/wasm"
 )
 
 type module struct{ *wasm.Module }

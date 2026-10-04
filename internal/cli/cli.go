@@ -13,9 +13,9 @@ import (
 
 	"golang.org/x/mod/modfile"
 
-	"cocoon.dev/cocoon/internal/build"
-	"cocoon.dev/cocoon/internal/gen"
-	"cocoon.dev/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/build"
+	"github.com/darccio/cocoon/internal/gen"
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 // Run executes one Cocoon command and returns errors for the caller to report.

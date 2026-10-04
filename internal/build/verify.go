@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strings"
 
-	"cocoon.dev/cocoon/internal/manifest"
-	"cocoon.dev/cocoon/internal/wasmbin"
+	"github.com/darccio/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/wasmbin"
 )
 
 // ExportSet derives the exact ABI export signatures from a validated manifest.

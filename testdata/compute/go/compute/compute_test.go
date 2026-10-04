@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"cocoon.dev/cocoon/cocoontest"
-	"cocoon.dev/cocoon/rt"
+	"github.com/darccio/cocoon/cocoontest"
+	"github.com/darccio/cocoon/rt"
 )
 
 func TestAllValueTypesAndAggregateLimits(t *testing.T) {

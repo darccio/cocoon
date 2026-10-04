@@ -10,7 +10,7 @@ import (
 	"slices"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 type pipelineRunner struct {

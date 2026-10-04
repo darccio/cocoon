@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/build"
-	"cocoon.dev/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/build"
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 type fakeRunner struct{ fail string }

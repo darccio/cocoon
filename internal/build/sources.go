@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"cocoon.dev/cocoon/internal/manifest"
+	"github.com/darccio/cocoon/internal/manifest"
 )
 
 // SourceHash identifies a local source tree without leaking build-machine paths.

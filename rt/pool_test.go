@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"cocoon.dev/cocoon/rt"
+	"github.com/darccio/cocoon/rt"
 )
 
 func TestPoolPanicDoesNotLoseSlot(t *testing.T) {

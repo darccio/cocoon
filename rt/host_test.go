@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"cocoon.dev/cocoon/rt"
+	"github.com/darccio/cocoon/rt"
 )
 
 func TestHostCapabilities(t *testing.T) {

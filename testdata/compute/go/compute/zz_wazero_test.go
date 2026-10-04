@@ -3,10 +3,10 @@ package compute
 
 import (
 	"bytes"
-	"cocoon.dev/cocoon/cocoontest"
-	"cocoon.dev/cocoon/rt"
 	_ "embed"
 	"errors"
+	"github.com/darccio/cocoon/cocoontest"
+	"github.com/darccio/cocoon/rt"
 	"math"
 	"testing"
 )
