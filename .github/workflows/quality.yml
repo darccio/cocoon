@@ -50,6 +50,8 @@ jobs:
           cargo fetch --locked --manifest-path examples/datadog/shim/Cargo.toml
       - name: Rebuild and exercise both proof packages
         run: make integration
+      - name: Exercise the external author and Go-only consumer workflows
+        run: make smoke
       - name: Verify generated artifacts are reproducible
         run: |
           git diff --exit-code -- testdata/compute examples/datadog

@@ -5,7 +5,7 @@ export GOFLAGS := -buildvcs=false
 GOLANGCI_LINT ?= $(if $(wildcard $(CURDIR)/.cache/bin/golangci-lint),$(CURDIR)/.cache/bin/golangci-lint,golangci-lint)
 PACKAGES := ./... ./testdata/compute/go/compute/...
 
-.PHONY: check test lint fmt race coverage cross rust integration fuzz bench
+.PHONY: check test lint fmt race coverage cross rust integration smoke fuzz bench
 check: test lint
 test:
 	CGO_ENABLED=0 go test $(PACKAGES)
@@ -43,6 +43,8 @@ integration:
 	cargo fmt --manifest-path examples/datadog/shim/Cargo.toml --check
 	cargo clippy --manifest-path examples/datadog/shim/Cargo.toml --all-targets -- -D warnings
 	cargo test --manifest-path examples/datadog/shim/Cargo.toml --locked
+smoke:
+	COCOON_SMOKE=1 CGO_ENABLED=0 go test ./internal/smoke -run '^TestExternalWorkflow$$' -count=1 -timeout=10m -v
 fuzz:
 	go test ./internal/manifest -run '^$$' -fuzz FuzzParse -fuzztime=15s -parallel=2
 	go test ./internal/wasmbin -run '^$$' -fuzz FuzzRead -fuzztime=15s -parallel=2
