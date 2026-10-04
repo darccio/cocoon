@@ -36,6 +36,7 @@ jobs:
           repository: WebAssembly/binaryen
           ref: version_133
           path: .cache/binaryen
+          submodules: recursive
       - name: Build verification tools
         run: |
           cmake -S .cache/binaryen -B .cache/binaryen/build -DCMAKE_BUILD_TYPE=Release
