@@ -142,6 +142,20 @@ name="Empty"
 	}
 }
 
+func TestGeneratedRustPreludeNamesAreReserved(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{"Default", "Ok", "Err"} {
+		source := example + `
+[[record]]
+name="` + name + `"
+fields=[{name="value",type="i32"}]
+`
+		if _, err := manifest.Parse([]byte(source)); err == nil {
+			t.Fatalf("accepted Rust prelude collision %q", name)
+		}
+	}
+}
+
 func TestSourcePinsAndEmptyParameterNormalization(t *testing.T) {
 	t.Parallel()
 	const pins = `

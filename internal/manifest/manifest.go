@@ -223,7 +223,7 @@ func (m *Manifest) Validate() error {
 		sources[source.Name] = true
 	}
 	names := make(map[string]bool)
-	for _, name := range strings.Fields("Library Options Open Close API State Error Result Slab RefCell String Bytes Bool Vec I32 U32 I64 U64 F32 F64 SliceI32 SliceU32 SliceI64 SliceU64 SliceF32 SliceF64") {
+	for _, name := range strings.Fields("Library Options Open Close API State Error Result Default Ok Err Slab RefCell String Bytes Bool Vec I32 U32 I64 U64 F32 F64 SliceI32 SliceU32 SliceI64 SliceU64 SliceF32 SliceF64") {
 		names[name] = true
 	}
 	exports := make(map[string]bool)
