@@ -7,6 +7,7 @@ tool github.com/ncruces/wasm2go
 require (
 	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/tetratelabs/wazero v1.12.0
+	golang.org/x/mod v0.41.0
 	golang.org/x/tools v0.50.0
 )
 
