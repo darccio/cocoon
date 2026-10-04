@@ -55,6 +55,10 @@ length, then copies or decodes before releasing the execution lock. It always
 re-reads current memory after guest allocations; views never expose spare Go
 capacity. No view or `*rt.Call` may escape its call.
 
+`rt.Call.Result` returns an owned byte copy. Generated facades instead decode
+`ResultView` under the execution lock, copying retained string and byte fields
+and allocating owned scalar arrays. Typed results never borrow guest memory.
+
 | Status | Meaning |
 | --- | --- |
 | 0 `OK` | Success; declared result encoding or empty output for unit |

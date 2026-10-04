@@ -271,6 +271,17 @@ func (c *Call) Range(pointer, size uint32) ([]byte, error) {
 
 // Result checks and copies the guest reply before the call releases its lock.
 func (c *Call) Result(op string, status Status) ([]byte, error) {
+	view, err := c.ResultView(op, status)
+	if err != nil {
+		return nil, err
+	}
+	return append([]byte(nil), view...), nil
+}
+
+// ResultView validates a borrowed reply for decoding under the execution lock.
+// The view must not escape the call or survive another guest invocation. Decoders
+// must copy any strings, bytes, or record fields retained in their typed result.
+func (c *Call) ResultView(op string, status Status) ([]byte, error) {
 	memory := c.instance.module.Memory()
 	descriptor, err := Range(memory, c.instance.output, 8)
 	if err != nil {
@@ -288,5 +299,5 @@ func (c *Call) Result(op string, status Status) ([]byte, error) {
 	if err := FromStatus(op, status, view); err != nil {
 		return nil, err
 	}
-	return append([]byte(nil), view...), nil
+	return view, nil
 }

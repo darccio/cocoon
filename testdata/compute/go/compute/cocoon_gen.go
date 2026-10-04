@@ -150,7 +150,7 @@ func decodeBytes(data []byte, limit uint64) ([]byte, error) {
 	if uint64(len(data)) > limit {
 		return nil, rt.ErrTooLarge
 	}
-	return data, nil
+	return append([]byte(nil), data...), nil
 }
 func sizeBool(_ bool, limit uint64) (uint64, error) { return rt.InputSize(limit, 1, 1) }
 func encodeBool(value bool, limit uint64) ([]byte, error) {
@@ -762,7 +762,7 @@ func (l *Library) Echo(_ctx context.Context, _arg0 string) (string, error) {
 				return _putErr
 			}
 			_status := rt.Status(_guest.module.Xcocoon_echo(int32(_pointer0), int32(len(_arg0))))
-			_reply, _resultErr := _call.Result("echo", _status)
+			_reply, _resultErr := _call.ResultView("echo", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -820,7 +820,7 @@ func (l *Library) Join(_ctx context.Context, _arg0 string, _arg1 string) (string
 				return _putErr
 			}
 			_status := rt.Status(_guest.module.Xcocoon_join(int32(_pointer0), int32(len(_arg0)), int32(_pointer1), int32(len(_arg1))))
-			_reply, _resultErr := _call.Result("join", _status)
+			_reply, _resultErr := _call.ResultView("join", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -864,7 +864,7 @@ func (l *Library) Bounce(_ctx context.Context, _arg0 Payload) (Payload, error) {
 				return _putErr
 			}
 			_status := rt.Status(_guest.module.Xcocoon_bounce(int32(_pointer0), int32(len(_data0))))
-			_reply, _resultErr := _call.Result("bounce", _status)
+			_reply, _resultErr := _call.ResultView("bounce", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -888,7 +888,7 @@ func (l *Library) ScalarValues(_ctx context.Context, _arg0 int32, _arg1 uint32, 
 	_err = l.pool.Do(_ctx, func(_guest *guest) error {
 		return _guest.instance.Call("scalar_values", func(_call *rt.Call) error {
 			_status := rt.Status(_guest.module.Xcocoon_scalar_values(_arg0, int32(_arg1), _arg2, int64(_arg3), _arg4, _arg5, boolParam(_arg6)))
-			_reply, _resultErr := _call.Result("scalar_values", _status)
+			_reply, _resultErr := _call.ResultView("scalar_values", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -911,7 +911,7 @@ func (l *Library) TestTrap(_ctx context.Context, _arg0 uint32) error {
 	_err = l.pool.Do(_ctx, func(_guest *guest) error {
 		return _guest.instance.Call("test_trap", func(_call *rt.Call) error {
 			_status := rt.Status(_guest.module.Xcocoon_test_trap(int32(_arg0)))
-			_reply, _resultErr := _call.Result("test_trap", _status)
+			_reply, _resultErr := _call.ResultView("test_trap", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -945,7 +945,7 @@ func (l *Library) NewCounter(_arg0 uint64) (*Counter, error) {
 	}
 	_err = _guest.instance.Call("new", func(_call *rt.Call) error {
 		_status := rt.Status(_guest.module.Xcocoon_counter_new(int64(_arg0)))
-		_reply, _resultErr := _call.Result("new", _status)
+		_reply, _resultErr := _call.ResultView("new", _status)
 		if _resultErr != nil {
 			return _resultErr
 		}
@@ -987,7 +987,7 @@ func (r *Counter) Add(_arg0 uint64) (uint64, error) {
 		_guest := r.guest
 		return _instance.Call("add", func(_call *rt.Call) error {
 			_status := rt.Status(_guest.module.Xcocoon_counter_add(int64(_handle), int64(_arg0)))
-			_reply, _resultErr := _call.Result("add", _status)
+			_reply, _resultErr := _call.ResultView("add", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -1017,7 +1017,7 @@ func (r *Counter) Count() (uint64, error) {
 		_guest := r.guest
 		return _instance.Call("count", func(_call *rt.Call) error {
 			_status := rt.Status(_guest.module.Xcocoon_counter_count(int64(_handle)))
-			_reply, _resultErr := _call.Result("count", _status)
+			_reply, _resultErr := _call.ResultView("count", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}

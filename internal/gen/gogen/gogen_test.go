@@ -22,7 +22,7 @@ func TestFacadeAndAdapter(t *testing.T) {
 	if err != nil || !bytes.Equal(first, second) {
 		t.Fatal("nondeterministic facade")
 	}
-	for _, expected := range []string{"ObfuscateSQL", "NewSketch", "AddMany", "rt.NewResource", "l.life.Close", "rt.InputSize", "PutString(_arg0)", "utf8.ValidString(_arg0)"} {
+	for _, expected := range []string{"ObfuscateSQL", "NewSketch", "AddMany", "rt.NewResource", "l.life.Close", "rt.InputSize", "PutString(_arg0)", "utf8.ValidString(_arg0)", "_call.ResultView(", "append([]byte(nil), data...)"} {
 		if !bytes.Contains(first, []byte(expected)) {
 			t.Fatalf("missing %s", expected)
 		}

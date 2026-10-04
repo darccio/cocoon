@@ -27,6 +27,47 @@ func openTest(tb testing.TB, options Options) *Library {
 	return library
 }
 
+func TestDecodedBytesOwnTheirStorage(t *testing.T) {
+	t.Parallel()
+	data := []byte{1, 2, 3}
+	decoded, err := decodeBytes(data, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	clear(data)
+	if !bytes.Equal(decoded, []byte{1, 2, 3}) {
+		t.Fatal("byte decoder retained borrowed memory", decoded)
+	}
+	if _, err := decodeBytes(data, 2); !errors.Is(err, rt.ErrTooLarge) {
+		t.Fatal("byte decoder skipped its output limit", err)
+	}
+}
+
+func TestScalarReplyDecodeDoesNotAllocate(t *testing.T) {
+	library := openTest(t, Options{Instances: 1})
+	sketch, sketchErr := library.NewSketch()
+	if sketchErr != nil {
+		t.Fatal(sketchErr)
+	}
+	t.Cleanup(func() {
+		if closeErr := sketch.Close(); closeErr != nil {
+			t.Error(closeErr)
+		}
+	})
+	if addErr := sketch.Add(1); addErr != nil {
+		t.Fatal(addErr)
+	}
+	allocations := testing.AllocsPerRun(100, func() {
+		count, countErr := sketch.Count()
+		if countErr != nil || count != 1 {
+			t.Fatal("incorrect scalar result", count, countErr)
+		}
+	})
+	if allocations != 0 {
+		t.Fatalf("scalar reply allocated %g times", allocations)
+	}
+}
+
 func TestSQLTracesAndSketch(t *testing.T) {
 	t.Parallel()
 	library := openTest(t, Options{Instances: 1})

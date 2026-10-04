@@ -255,7 +255,7 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 	if resource != "" {
 		export = strings.ToLower(resource) + "_" + export
 	}
-	fmt.Fprintf(b, "_status:=rt.Status(_guest.module.Xcocoon_%s(%s)); _reply,_resultErr:=_call.Result(%q,_status); if _resultErr!=nil { return _resultErr };\n", export, strings.Join(args, ","), function.Name)
+	fmt.Fprintf(b, "_status:=rt.Status(_guest.module.Xcocoon_%s(%s)); _reply,_resultErr:=_call.ResultView(%q,_status); if _resultErr!=nil { return _resultErr };\n", export, strings.Join(args, ","), function.Name)
 	if result == "" {
 		b.WriteString("if len(_reply)!=0 { return rt.ErrProtocol }; return nil\n")
 	} else {
@@ -285,7 +285,7 @@ func codec(b *strings.Builder) {
 	b.WriteString("func boolParam(value bool) int32 { if value { return 1 }; return 0 }\n")
 	b.WriteString("func sizeString(value string,limit uint64)(uint64,error){ return rt.InputSize(limit,uint64(len(value)),1) }\nfunc sizeBytes(value []byte,limit uint64)(uint64,error){ return rt.InputSize(limit,uint64(len(value)),1) }\n")
 	b.WriteString("func encodeString(value string,limit uint64)([]byte,error){ if _,err:=sizeString(value,limit);err!=nil{return nil,err};if !utf8.ValidString(value){return nil,&rt.AppError{Status:rt.ErrArg,Op:\"encode\",Message:\"invalid UTF-8\"}};return []byte(value),nil }\nfunc encodeBytes(value []byte,limit uint64)([]byte,error){if _,err:=sizeBytes(value,limit);err!=nil{return nil,err};return value,nil}\n")
-	b.WriteString("func decodeString(data []byte,limit uint64)(string,error){if uint64(len(data))>limit{return \"\",rt.ErrTooLarge};if !utf8.Valid(data){return \"\",rt.ErrProtocol};return string(data),nil}\nfunc decodeBytes(data []byte,limit uint64)([]byte,error){if uint64(len(data))>limit{return nil,rt.ErrTooLarge};return data,nil}\n")
+	b.WriteString("func decodeString(data []byte,limit uint64)(string,error){if uint64(len(data))>limit{return \"\",rt.ErrTooLarge};if !utf8.Valid(data){return \"\",rt.ErrProtocol};return string(data),nil}\nfunc decodeBytes(data []byte,limit uint64)([]byte,error){if uint64(len(data))>limit{return nil,rt.ErrTooLarge};return append([]byte(nil),data...),nil}\n")
 	b.WriteString("func sizeBool(_ bool,limit uint64)(uint64,error){return rt.InputSize(limit,1,1)}\nfunc encodeBool(value bool,limit uint64)([]byte,error){if limit<1{return nil,rt.ErrTooLarge};return []byte{byte(boolParam(value))},nil}\nfunc decodeBool(data []byte,_ uint64)(bool,error){if len(data)!=1 || data[0]>1{return false,rt.ErrProtocol};return data[0]==1,nil}\n")
 	for _, typ := range []string{"i32", "u32", "i64", "u64", "f32", "f64"} {
 		goTyp := goType(typ)

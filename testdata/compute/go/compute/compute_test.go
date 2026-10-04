@@ -60,6 +60,47 @@ func TestAllValueTypesAndAggregateLimits(t *testing.T) {
 	}
 }
 
+func TestTypedRepliesOwnTheirRetainedStorage(t *testing.T) {
+	t.Parallel()
+	l, err := Open(Options{Instances: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if closeErr := l.Close(); closeErr != nil {
+			t.Error(closeErr)
+		}
+	})
+	payload := Payload{Label: "retained text", Data: []byte{1, 2, 3}, Signed32: []int32{4, 5}, Unsigned32: []uint32{8}, Signed64: []int64{-9}, Unsigned64: []uint64{6, 7}, Float32: []float32{1.5}, Float64: []float64{2.5}}
+	result, err := l.Bounce(t.Context(), payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text, err := l.Echo(t.Context(), payload.Label)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Reuse the pooled instance's output buffer with a differently shaped reply.
+	if _, overwriteErr := l.Echo(t.Context(), strings.Repeat("z", 2048)); overwriteErr != nil {
+		t.Fatal(overwriteErr)
+	}
+	if !reflect.DeepEqual(result, payload) || text != payload.Label {
+		t.Fatal("typed output aliases guest memory", result, text)
+	}
+	encoded, err := encodePayload(payload, generatedOutputLimit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoded, err := decodePayload(encoded, generatedOutputLimit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	clear(encoded)
+	if !reflect.DeepEqual(decoded, payload) {
+		t.Fatal("record decoder retained borrowed fields", decoded)
+	}
+}
+
 func TestRealRustPanicPoisonsHomeAndReplacesPool(t *testing.T) {
 	t.Parallel()
 	var logs bytes.Buffer

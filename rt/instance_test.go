@@ -269,6 +269,62 @@ func TestCachedOutputDescriptorReadsCurrentMemory(t *testing.T) {
 	}
 }
 
+func TestResultViewValidationAndLifetime(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		want          error
+		name          string
+		size, pointer uint32
+		status        rt.Status
+	}{
+		{nil, "success", 3, 16, rt.OK},
+		{rt.ErrTooLarge, "output limit", 33, 16, rt.OK},
+		{rt.ErrProtocol, "logical length", 3, 63, rt.OK},
+		{rt.ErrProtocol, "reserved status", 0, 16, rt.Pending},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			m := newModule()
+			i := newInstance(t, m)
+			binary.LittleEndian.PutUint32(m.memory, test.pointer)
+			binary.LittleEndian.PutUint32(m.memory[4:], test.size)
+			copy(m.memory[16:], "abc")
+			err := i.Call("view", func(call *rt.Call) error {
+				view, resultErr := call.ResultView("view", test.status)
+				if resultErr == nil {
+					if string(view) != "abc" || cap(view) != len(view) {
+						t.Fatal("unbounded or incorrect reply", view)
+					}
+					m.memory[16] = 'x'
+					if view[0] != 'x' {
+						t.Fatal("view copied instead of borrowing")
+					}
+				}
+				return resultErr
+			})
+			if !errors.Is(err, test.want) || errors.Is(err, rt.ErrProtocol) && i.Healthy() {
+				t.Fatal("view changed reply validation or poisoning", err)
+			}
+		})
+	}
+	m := newModule()
+	i := newInstance(t, m)
+	binary.LittleEndian.PutUint32(m.memory, 16)
+	binary.LittleEndian.PutUint32(m.memory[4:], 3)
+	copy(m.memory[16:], "bad")
+	var application *rt.AppError
+	if err := i.Call("error", func(call *rt.Call) error {
+		_, resultErr := call.ResultView("error", rt.ErrArg)
+		return resultErr
+	}); !errors.As(err, &application) || !i.Healthy() {
+		t.Fatal("expected error poisoned instance", err)
+	}
+	m.memory[16] = 'x'
+	if application.Message != "bad" {
+		t.Fatal("error message retained borrowed memory")
+	}
+}
+
 func TestInstanceFaultAndClose(t *testing.T) {
 	t.Parallel()
 	i := newInstance(t, newModule())

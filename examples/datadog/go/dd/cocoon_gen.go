@@ -149,7 +149,7 @@ func decodeBytes(data []byte, limit uint64) ([]byte, error) {
 	if uint64(len(data)) > limit {
 		return nil, rt.ErrTooLarge
 	}
-	return data, nil
+	return append([]byte(nil), data...), nil
 }
 func sizeBool(_ bool, limit uint64) (uint64, error) { return rt.InputSize(limit, 1, 1) }
 func encodeBool(value bool, limit uint64) ([]byte, error) {
@@ -439,7 +439,7 @@ func (l *Library) ObfuscateSQL(_ctx context.Context, _arg0 string) (string, erro
 				return _putErr
 			}
 			_status := rt.Status(_guest.module.Xcocoon_obfuscate_sql(int32(_pointer0), int32(len(_arg0))))
-			_reply, _resultErr := _call.Result("obfuscate_sql", _status)
+			_reply, _resultErr := _call.ResultView("obfuscate_sql", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -483,7 +483,7 @@ func (l *Library) ObfuscateTraces(_ctx context.Context, _arg0 []byte) ([]byte, e
 				return _putErr
 			}
 			_status := rt.Status(_guest.module.Xcocoon_obfuscate_traces(int32(_pointer0), int32(len(_data0))))
-			_reply, _resultErr := _call.Result("obfuscate_traces", _status)
+			_reply, _resultErr := _call.ResultView("obfuscate_traces", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -519,7 +519,7 @@ func (l *Library) NewSketch() (*Sketch, error) {
 	}
 	_err = _guest.instance.Call("new", func(_call *rt.Call) error {
 		_status := rt.Status(_guest.module.Xcocoon_sketch_new())
-		_reply, _resultErr := _call.Result("new", _status)
+		_reply, _resultErr := _call.ResultView("new", _status)
 		if _resultErr != nil {
 			return _resultErr
 		}
@@ -560,7 +560,7 @@ func (r *Sketch) Add(_arg0 float64) error {
 		_guest := r.guest
 		return _instance.Call("add", func(_call *rt.Call) error {
 			_status := rt.Status(_guest.module.Xcocoon_sketch_add(int64(_handle), _arg0))
-			_reply, _resultErr := _call.Result("add", _status)
+			_reply, _resultErr := _call.ResultView("add", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -607,7 +607,7 @@ func (r *Sketch) AddMany(_arg0 []float64) error {
 				return _putErr
 			}
 			_status := rt.Status(_guest.module.Xcocoon_sketch_add_many(int64(_handle), int32(_pointer0), int32(len(_data0))))
-			_reply, _resultErr := _call.Result("add_many", _status)
+			_reply, _resultErr := _call.ResultView("add_many", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -635,7 +635,7 @@ func (r *Sketch) Count() (float64, error) {
 		_guest := r.guest
 		return _instance.Call("count", func(_call *rt.Call) error {
 			_status := rt.Status(_guest.module.Xcocoon_sketch_count(int64(_handle)))
-			_reply, _resultErr := _call.Result("count", _status)
+			_reply, _resultErr := _call.ResultView("count", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
@@ -665,7 +665,7 @@ func (r *Sketch) Encode() ([]byte, error) {
 		_guest := r.guest
 		return _instance.Call("encode", func(_call *rt.Call) error {
 			_status := rt.Status(_guest.module.Xcocoon_sketch_encode(int64(_handle)))
-			_reply, _resultErr := _call.Result("encode", _status)
+			_reply, _resultErr := _call.ResultView("encode", _status)
 			if _resultErr != nil {
 				return _resultErr
 			}
