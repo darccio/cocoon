@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"os"
+	"sync"
 	"testing"
 
 	"cocoon.dev/cocoon/cocoontest"
@@ -58,4 +59,22 @@ func TestI32ResultsAfterWideScalar(t *testing.T) {
 	if _, _, err := guest.Operation(t.Context(), "store", []cocoontest.Arg{{Value: 1}}, 64, 7); !errors.Is(err, rt.ErrTooLarge) {
 		t.Fatal(err)
 	}
+}
+
+func TestConcurrentReferenceConstruction(t *testing.T) {
+	t.Parallel()
+	var workers sync.WaitGroup
+	for range 16 {
+		workers.Go(func() {
+			guest, err := cocoontest.Instantiate(t.Context(), []byte{0, 97, 115, 109, 1, 0, 0, 0})
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			if err := guest.Close(t.Context()); err != nil {
+				t.Error(err)
+			}
+		})
+	}
+	workers.Wait()
 }

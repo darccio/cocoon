@@ -33,6 +33,20 @@ type Guest struct {
 	mu      sync.Mutex
 }
 
+var runtimeConstruction sync.Mutex
+
+// Compiled instructions are immutable; memory and globals remain per guest.
+// The reference cache lives for the test process, never in production libraries.
+var referenceCompilation = sync.OnceValue(wazero.NewCompilationCache)
+
+func newRuntime(ctx context.Context) wazero.Runtime {
+	// The pinned compiler engine lazily initializes a process-wide version
+	// string without synchronization. Serialize construction, not execution.
+	runtimeConstruction.Lock()
+	defer runtimeConstruction.Unlock()
+	return wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithCloseOnContextDone(true).WithCompilationCache(referenceCompilation()))
+}
+
 // New instantiates the exact bytes translated into Go and registers cleanup.
 func New(tb testing.TB, wasm []byte) *Guest {
 	tb.Helper()
@@ -50,7 +64,7 @@ func New(tb testing.TB, wasm []byte) *Guest {
 
 // Instantiate creates a reference guest with shielded log, random, and clock imports.
 func Instantiate(ctx context.Context, wasm []byte) (*Guest, error) {
-	runtime := wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithCloseOnContextDone(true))
+	runtime := newRuntime(ctx)
 	host := rt.NewHost(slog.New(slog.NewTextHandler(io.Discard, nil)))
 	guest := &Guest{runtime: runtime, host: host}
 	builder := runtime.NewHostModuleBuilder("cocoon")
