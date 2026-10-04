@@ -156,6 +156,26 @@ fields=[{name="value",type="i32"}]
 	}
 }
 
+func TestSourcePinPathsMustBeRelativeAndPortable(t *testing.T) {
+	t.Parallel()
+	m, err := manifest.Parse([]byte(example))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"", "/upstream", `C:/upstream`, `..\upstream`, "upstream\x00"} {
+		m.Sources = []manifest.SourcePin{{Name: "upstream", Path: name, Revision: "0123456789012345678901234567890123456789"}}
+		if err := m.Validate(); err == nil {
+			t.Fatalf("accepted nonportable source path %q", name)
+		}
+	}
+	for _, name := range []string{"upstream", "../upstream", "./upstream"} {
+		m.Sources[0].Path = name
+		if err := m.Validate(); err != nil {
+			t.Fatalf("rejected relative source path %q: %v", name, err)
+		}
+	}
+}
+
 func TestSourcePinsAndEmptyParameterNormalization(t *testing.T) {
 	t.Parallel()
 	const pins = `

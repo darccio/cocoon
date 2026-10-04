@@ -217,7 +217,7 @@ func (m *Manifest) Validate() error {
 	}
 	sources := make(map[string]bool)
 	for _, source := range m.Sources {
-		if !identifier.MatchString(source.Name) || sources[source.Name] || source.Path == "" || strings.ContainsRune(source.Path, 0) || !revision.MatchString(source.Revision) {
+		if !identifier.MatchString(source.Name) || sources[source.Name] || source.Path == "" || path.IsAbs(source.Path) || strings.ContainsAny(source.Path, "\x00\\:") || !revision.MatchString(source.Revision) {
 			return fmt.Errorf("invalid or duplicate source pin %q", source.Name)
 		}
 		sources[source.Name] = true
