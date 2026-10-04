@@ -188,6 +188,87 @@ func TestInputGrowthAndReply(t *testing.T) {
 	}
 }
 
+type descriptorModule struct {
+	*module
+	calls   int
+	pointer uint32
+	trap    bool
+}
+
+func (m *descriptorModule) Output() uint32 {
+	m.calls++
+	if m.trap {
+		panic("unreachable")
+	}
+	return m.pointer
+}
+
+func TestOutputDescriptorInitialization(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		name    string
+		pointer uint32
+		trap    bool
+	}{
+		{"past logical length", 60, false},
+		{"overflow", math.MaxUint32, false},
+		{"trap", 0, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			m := &descriptorModule{module: newModule(), pointer: test.pointer, trap: test.trap}
+			i, err := rt.NewInstance(m, 7, rt.Limits{MaxInput: 64, MaxOutput: 32, MaxMemory: 128})
+			if i != nil {
+				i.Close()
+				t.Fatal("accepted invalid output descriptor")
+			}
+			var fault *rt.FaultError
+			if test.trap && !errors.As(err, &fault) || !test.trap && !errors.Is(err, rt.ErrProtocol) {
+				t.Fatalf("descriptor initialization: %v", err)
+			}
+		})
+	}
+}
+
+func TestCachedOutputDescriptorReadsCurrentMemory(t *testing.T) {
+	t.Parallel()
+	m := &descriptorModule{module: newModule(), pointer: 48}
+	i, err := rt.NewInstance(m, 7, rt.Limits{MaxInput: 64, MaxOutput: 32, MaxMemory: 128})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(i.Close)
+	// Replace the backing store, as guest memory growth can do. Only the address,
+	// not a slice into the old store, may be cached between calls.
+	m.memory = make([]byte, 128)
+	binary.LittleEndian.PutUint32(m.memory[48:], 80)
+	binary.LittleEndian.PutUint32(m.memory[52:], 5)
+	copy(m.memory[80:], "grown")
+	for range 2 {
+		if err := i.Call("grown", func(call *rt.Call) error {
+			data, resultErr := call.Result("grown", rt.OK)
+			if resultErr == nil && string(data) != "grown" {
+				t.Fatal("read stale output storage", string(data))
+			}
+			return resultErr
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if m.calls != 1 {
+		t.Fatalf("output export called %d times, want once", m.calls)
+	}
+	// An adversarial module can shrink its logical memory while retaining spare
+	// capacity. The cached descriptor still requires bounds checking each time.
+	m.memory = m.memory[:52]
+	if err := i.Call("shrunk", func(call *rt.Call) error {
+		_, resultErr := call.Result("shrunk", rt.OK)
+		return resultErr
+	}); !errors.Is(err, rt.ErrProtocol) || i.Healthy() {
+		t.Fatal("descriptor crossed logical memory without poisoning", err)
+	}
+}
+
 func TestInstanceFaultAndClose(t *testing.T) {
 	t.Parallel()
 	i := newInstance(t, newModule())

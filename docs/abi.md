@@ -48,7 +48,9 @@ Nested records use the same format; scalar fields use little-endian bytes and
 bool uses one byte, 0 or 1. Multiple logical results must be a named record.
 
 `cocoon_out` points at two little-endian u32 values: output pointer and byte
-length. The host checks descriptor bounds, `max_output`, and logical memory
+length. Its address is fixed after initialization, including across trim and
+memory growth; the host resolves it once per instance, without retaining a
+memory view. The host checks descriptor bounds, `max_output`, and logical memory
 length, then copies or decodes before releasing the execution lock. It always
 re-reads current memory after guest allocations; views never expose spare Go
 capacity. No view or `*rt.Call` may escape its call.

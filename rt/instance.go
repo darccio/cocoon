@@ -24,6 +24,7 @@ type ABI interface {
 	Schema() uint64
 	Init()
 	Reserve(size uint32) uint32
+	// Output returns a descriptor address fixed for the initialized lifetime.
 	Output() uint32
 	Trim(keep uint32)
 }
@@ -91,6 +92,7 @@ type Instance struct {
 	mu     sync.Mutex
 	alive  atomic.Bool
 	state  instanceState
+	output uint32
 }
 
 // NewInstance validates identity and contains traps during initialization.
@@ -118,7 +120,9 @@ func NewInstance(module ABI, schema uint64, limits Limits, hosts ...*Host) (*Ins
 		if uint64(len(module.Memory())) > limits.MaxMemory {
 			return fmt.Errorf("%w: initial memory", ErrTooLarge)
 		}
-		return nil
+		i.output = module.Output()
+		_, outputErr := Range(module.Memory(), i.output, 8)
+		return outputErr
 	})
 	if err != nil {
 		i.Close()
@@ -267,7 +271,8 @@ func (c *Call) Range(pointer, size uint32) ([]byte, error) {
 
 // Result checks and copies the guest reply before the call releases its lock.
 func (c *Call) Result(op string, status Status) ([]byte, error) {
-	descriptor, err := c.Range(c.instance.module.Output(), 8)
+	memory := c.instance.module.Memory()
+	descriptor, err := Range(memory, c.instance.output, 8)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +281,7 @@ func (c *Call) Result(op string, status Status) ([]byte, error) {
 	if uint64(size) > c.instance.limits.MaxOutput {
 		return nil, ErrTooLarge
 	}
-	view, err := c.Range(pointer, size)
+	view, err := Range(memory, pointer, size)
 	if err != nil {
 		return nil, err
 	}
