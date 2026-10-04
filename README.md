@@ -4,7 +4,8 @@ Cocoon turns a safe Rust shim into an ordinary Go package. Its checked-in output
 needs no Rust compiler, Wasm engine, cgo, or native shared library at runtime.
 The synchronous M1 framework supports typed values, records, shared resources,
 bounded calls, terminal shutdown, and declared host capabilities. Async and HTTP
-are deliberately not implemented yet.
+are deliberately not implemented yet. The [roadmap](docs/roadmap.md) records
+remaining work and how to resume development in a later conversation.
 
 ## Try the checked-in packages
 
