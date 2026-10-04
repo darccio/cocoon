@@ -68,6 +68,7 @@ func TestManifestAndArgumentErrors(t *testing.T) {
 	directory := t.TempDir()
 	path := filepath.Join(directory, "cocoon.toml")
 	data := []byte("[package]\nname=\"test\"\ngo_import=\"example.com/test\"\nrust_crate=\"test-shim\"\n[limits]\nmax_input=\"64KiB\"\nmax_output=\"64KiB\"\nmax_memory=\"16MiB\"\ninstances=\"1\"\n")
+	data = append(data, []byte("[[func]]\nname=\"echo\"\nparams=[{name=\"input\",type=\"string\"}]\nreturns=\"string\"\n")...)
 	if err := os.WriteFile(path, data, 0o600); err != nil {
 		t.Fatal(err)
 	}
