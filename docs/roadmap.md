@@ -1,10 +1,9 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-04. The synchronous M1 framework and Datadog proof are implemented;
-performance acceptance is deferred by the user and independent CI execution
-is underway. Async and HTTP are a separate milestone, not partially implemented
-M1 features.
+2026-10-04. The synchronous M1 framework and Datadog proof are released privately
+as v0.1.0. Performance acceptance is deferred by the user and remains unmet.
+Async and HTTP are a separate milestone, not partially implemented M1 features.
 
 ## Current working state
 
@@ -15,10 +14,13 @@ environment variables are required.
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
 have passed locally. Rebuilding both proof packages reproduces their committed
-artifacts and lock hashes. The private repository is
-`github.com/darccio/cocoon`, and the tested branch has been pushed. No license
-has been selected. GitHub CI is running for the first release; do not tag
-`v0.1.0` until all three jobs pass on the release commit.
+artifacts and lock hashes. The private repository and first release are
+[github.com/darccio/cocoon v0.1.0](https://github.com/darccio/cocoon/releases/tag/v0.1.0).
+All three [release qualification CI jobs](https://github.com/darccio/cocoon/actions/runs/37235658925)
+passed: native amd64 and arm64 Go quality gates and the fresh pinned end-to-end
+build. The release tag points to that qualified code commit. No license has
+been selected.
+
 Native linux/386 tests now pass outside the former sandbox. Current runtime
 coverage is 95.6 percent; the Rust and Go generators are 94.6 and 96.7 percent.
 
@@ -27,10 +29,21 @@ formats, builds, verifies, and deterministically rebuilds a separate author's
 shim, then runs a Go-only consumer against stripped production sources with
 module fetching disabled and Rust/Wasm tools unavailable. The consumer also
 exercises the checked-in Datadog package. Authenticated installation and a
-separate consumer of the published private module at `main` also pass without
-local replacements. Run the checkout smoke test with `make smoke`.
+separate consumer of the published private module at `v0.1.0` also pass without
+local replacements on both Go versions. The tagged Go-only consumer passes with
+fetching disabled and Rust/Wasm tools unavailable. Run the checkout smoke test
+with `make smoke`.
 The smoke test now also relocates both the author module and guest support
 crate into paths containing spaces and checks identical artifacts and locks.
+
+CI exposed an omitted slice upper bound in hardening, embedded absolute Rust
+source paths, and path-dependent Cargo crate metadata for dependencies outside
+the shim workspace. All are fixed and regression-tested. CI uses the
+SHA-verified official Binaryen bundle; locks fingerprint its executables and
+the compiler metadata normalizer. The normalizer's source hash invalidates
+Cargo's cache when its implementation changes. Both proof artifacts and locks
+match across relocated checkouts and the clean CI checkout, including repeated
+rebuilds.
 
 ## Deferred performance work
 
@@ -44,8 +57,9 @@ cache the fixed output descriptor address, and decode typed replies without an
 intermediate copy. SketchAdd improved from 114.4 to 103.2 nanoseconds; SQL remains
 about 2.30 microseconds while reducing Go allocations from two to one. Both
 original acceptance limits remain unmet: 2.2154 microseconds and 55.44 nanoseconds.
-Those measurements precede the source-path remapping fix; remeasure the release
-artifacts when performance work resumes.
+Those measurements precede the final source-path and compiler-metadata
+reproducibility fixes; remeasure the release artifacts when performance work
+resumes.
 
 1. Add isolated measurements of direct guest execution, empty instance calls,
    and resource calls using identical workloads. The post-change SketchAdd
@@ -63,21 +77,13 @@ artifacts when performance work resumes.
    benchmark currently meets either interpretation of the 10-percent target;
    do not mark M1 performance accepted.
 
-## Remaining M1 qualification and quality work
+## Follow up quality work
 
-- Run the configured GitHub workflow on a fresh checkout, including native
-  arm64 execution, pinned dependency fetching, and reproducible artifact builds.
-  CI found an omitted Binaryen submodule checkout and a hardener rewrite that
-  failed to supply an omitted slice upper bound. Both are fixed, with a
-  regression test for the rewrite. CI is rerunning. Native amd64 and arm64
-  test, race, coverage, cross-compilation, and fuzz jobs passed. The fresh build
-  then found absolute Rust source paths embedded in Wasm. Stable remapping is
-  implemented and both proof artifacts are regenerated; the new candidate is
-  awaiting its clean-checkout CI results.
-- Once CI is green, create the private `v0.1.0` release and verify installation
-  and consumption by tag with authenticated Git and `GOPRIVATE` configured.
+The first MVP's qualification and private publication are complete. The
+following improvements are not release blockers.
+
 - Expand error-path tests where coverage remains lower: generation/publication
-  now reaches 84.8 percent, CLI 72.3 percent, and build orchestration 81.9 percent.
+  now reaches 84.8 percent, CLI 72.7 percent, and build orchestration 85.7 percent.
   Runtime, hardening, and both generators already exceed 94 percent.
 - Consider upstreaming the translator's bulk-memory length-versus-capacity fix.
   Cocoon already applies and tests its own checked AST hardening.

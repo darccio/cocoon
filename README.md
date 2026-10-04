@@ -15,14 +15,14 @@ requires authorized GitHub access. Authenticate Git first, for example with
 the public Go proxy and checksum service:
 
 ```sh
-GOPRIVATE=github.com/darccio/cocoon go install github.com/darccio/cocoon/cmd/cocoon@main
-GOPRIVATE=github.com/darccio/cocoon go get github.com/darccio/cocoon@main
+GOPRIVATE=github.com/darccio/cocoon go install github.com/darccio/cocoon/cmd/cocoon@v0.1.0
+GOPRIVATE=github.com/darccio/cocoon go get github.com/darccio/cocoon@v0.1.0
 ```
 
-Use a release tag instead of `main` when one is available. Keep any other
-existing `GOPRIVATE` entries when configuring your environment. Consumers of
-checked-in Go packages need only Go; authoring a new Rust shim also requires
-a matching source checkout for `rust/cocoon-guest` and the tools below.
+The first release is [v0.1.0](https://github.com/darccio/cocoon/releases/tag/v0.1.0).
+Keep any other existing `GOPRIVATE` entries when configuring your environment.
+Consumers of checked-in Go packages need only Go; authoring a new Rust shim also requires
+a matching v0.1.0 source checkout for `rust/cocoon-guest` and the tools below.
 
 ## Try the checked-in packages
 
@@ -93,7 +93,7 @@ For a separate author module, after installing the CLI and the pinned tools:
 
 ```sh
 go mod init example.com/my-library
-GOPRIVATE=github.com/darccio/cocoon go get github.com/darccio/cocoon@main
+GOPRIVATE=github.com/darccio/cocoon go get github.com/darccio/cocoon@v0.1.0
 go get -tool github.com/ncruces/wasm2go@v0.4.16
 cocoon init --guest /absolute/path/to/cocoon/rust/cocoon-guest project
 cocoon doctor --manifest project/cocoon.toml
