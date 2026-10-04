@@ -61,6 +61,28 @@ func TestInvalidSource(t *testing.T) {
 	}
 }
 
+func TestTableHardening(t *testing.T) {
+	t.Parallel()
+	source := `package wasm
+type Module struct { t0 []any; memory []byte }
+func(m *Module) call(index uint32) { m.t0[index].(func())() }
+func(m *Module) set(index uint32,value any) { m.t0[index]=value }
+func table_copy(tab,elems []any,low,high uint64) { copy(tab[low:high],elems[:high]) }
+`
+	output, err := harden.Rewrite([]byte(source), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, expected := range []string{"cocoon_table_index(uint64(index), len(m.t0))", "cocoon_table_slice(tab", "cocoon_table_slice(elems", "out of bounds table access", "table[low:high:len(table)]"} {
+		if !bytes.Contains(output, []byte(expected)) {
+			t.Fatalf("missing %s: %s", expected, output)
+		}
+	}
+	if _, err := harden.Rewrite(output, nil); err == nil {
+		t.Fatal("preexisting table hardening accepted")
+	}
+}
+
 func FuzzRewrite(f *testing.F) {
 	f.Add([]byte(bulk))
 	f.Fuzz(func(t *testing.T, source []byte) {

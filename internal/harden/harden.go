@@ -123,6 +123,9 @@ func Rewrite(source []byte, expected []string) ([]byte, error) {
 			return nil, fmt.Errorf("missing helper %q", name)
 		}
 	}
+	if tableErr := hardenTables(file); tableErr != nil {
+		return nil, tableErr
+	}
 	var output bytes.Buffer
 	if err := format.Node(&output, fset, file); err != nil {
 		return nil, fmt.Errorf("format hardened Go: %w", err)
