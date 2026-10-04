@@ -1,0 +1,10 @@
+[workspace]
+resolver = "3"
+members = ["rust/cocoon-guest"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
