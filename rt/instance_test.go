@@ -64,6 +64,24 @@ func TestRange(t *testing.T) {
 	}
 }
 
+func TestCallResetsReservationWithoutAllocating(t *testing.T) {
+	i := newInstance(t, newModule())
+	if err := i.Call("reserve", func(call *rt.Call) error { return call.PrepareInput(4) }); err != nil {
+		t.Fatal(err)
+	}
+	if err := i.Call("fresh", func(call *rt.Call) error { _, putErr := call.PutBytes([]byte{1}); return putErr }); !errors.Is(err, rt.ErrTooLarge) {
+		t.Fatal("reservation leaked between calls", err)
+	}
+	allocations := testing.AllocsPerRun(100, func() {
+		if err := i.Call("empty", func(*rt.Call) error { return nil }); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if allocations != 0 {
+		t.Fatalf("empty call allocated %g times", allocations)
+	}
+}
+
 func TestInputSize(t *testing.T) {
 	t.Parallel()
 	for _, test := range []struct {

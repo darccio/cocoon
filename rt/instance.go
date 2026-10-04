@@ -85,6 +85,7 @@ const (
 type Instance struct {
 	module ABI
 	host   *Host
+	call   Call
 	limits Limits
 	epoch  atomic.Uint64
 	mu     sync.Mutex
@@ -156,7 +157,8 @@ func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
 	if i.host != nil {
 		i.host.takePanic()
 	}
-	err = invoke(&Call{instance: i})
+	i.call = Call{instance: i}
+	err = invoke(&i.call)
 	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
 		i.poison()
 		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
