@@ -14,6 +14,13 @@ import (
 
 var bulkHelpers = []string{"memory_init", "memory_copy", "memory_fill", "memory_zero"}
 
+var helperSignatures = map[string]string{
+	"memory_init": "func[T1, T2 int | uint32 | uint64](mem []byte, data string, dest T1, src, n T2)",
+	"memory_copy": "func[T uint32 | uint64](mem []byte, dest, src, n T)",
+	"memory_fill": "func[T uint32 | uint64](mem []byte, dest T, val int32, n T)",
+	"memory_zero": "func[T uint32 | uint64](mem []byte, dest, n T)",
+}
+
 // Required derives the precise bulk-memory helper set from generated calls.
 func Required(source []byte) ([]string, error) {
 	file, err := parser.ParseFile(token.NewFileSet(), "translated.go", source, 0)
@@ -91,6 +98,13 @@ func Rewrite(source []byte, expected []string) ([]byte, error) {
 		}
 		if shape.String() != "[]byte" {
 			return nil, fmt.Errorf("helper memory type drift: %s", name)
+		}
+		shape.Reset()
+		if signatureErr := format.Node(&shape, fset, function.Type); signatureErr != nil {
+			return nil, signatureErr
+		}
+		if shape.String() != helperSignatures[name] {
+			return nil, fmt.Errorf("helper full signature drift: %s", name)
 		}
 		views := 0
 		ast.Inspect(function.Body, func(node ast.Node) bool {

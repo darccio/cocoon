@@ -2,6 +2,7 @@ package harden_test
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 
@@ -15,6 +16,32 @@ func memory_copy[T uint32 | uint64](mem []byte, dest, src, n T) {
 }
 func call(mem []byte) { memory_copy(mem,uint32(0),uint32(0),uint32(1)) }
 `
+
+func TestPinnedFixtureSignaturesAndDrift(t *testing.T) {
+	t.Parallel()
+	source, err := os.ReadFile("../../rt/internal/trapfix/testdata/raw.go.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	names, err := harden.Required(source)
+	if err != nil || len(names) != 4 {
+		t.Fatal(names, err)
+	}
+	if _, err := harden.Rewrite(source, names); err != nil {
+		t.Fatal(err)
+	}
+	for _, change := range [][2]string{
+		{"data string", "data []byte"},
+		{"dest T, val int32", "dest T, val uint32"},
+		{"dest, src, n T", "dest, src, n int32"},
+		{"T uint32 | uint64", "T int32 | uint64"},
+	} {
+		mutated := bytes.ReplaceAll(source, []byte(change[0]), []byte(change[1]))
+		if _, err := harden.Rewrite(mutated, names); err == nil {
+			t.Fatalf("signature drift accepted: %s", change[1])
+		}
+	}
+}
 
 func TestRewrite(t *testing.T) {
 	t.Parallel()
