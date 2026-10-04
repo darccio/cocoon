@@ -88,6 +88,29 @@ func TestRejectInvalidManifests(t *testing.T) {
 	}
 }
 
+func TestInstanceCountsAreCanonicalDecimal(t *testing.T) {
+	t.Parallel()
+	var expected string
+	for _, count := range []string{"10", "010", "00010"} {
+		m, err := manifest.Parse([]byte(strings.ReplaceAll(example, `instances="1"`, `instances="`+count+`"`)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m.Limits.Instances != "10" {
+			t.Fatalf("instance count %q normalized to %q", count, m.Limits.Instances)
+		}
+		_, full, err := m.SchemaHash()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if expected == "" {
+			expected = full
+		} else if full != expected {
+			t.Fatal("equivalent instance counts changed schema")
+		}
+	}
+}
+
 func TestGeneratedNamesCannotCollide(t *testing.T) {
 	t.Parallel()
 	resource := `

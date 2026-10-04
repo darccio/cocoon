@@ -210,6 +210,7 @@ func (m *Manifest) Validate() error {
 		if err != nil || instances == 0 {
 			return fmt.Errorf("invalid instance count")
 		}
+		m.Limits.Instances = strconv.FormatUint(instances, 10)
 	}
 	if len(m.Functions)+len(m.Resources) == 0 {
 		return fmt.Errorf("manifest has no operations")
