@@ -197,6 +197,10 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 	}
 	for index, param := range function.Params {
 		if m.Variable(param.Type) {
+			if param.Type == "string" {
+				fmt.Fprintf(b, "if !utf8.ValidString(_arg%d) { %s };\n", index, failure("&rt.AppError{Op:\"encode\",Status:rt.ErrArg,Message:\"invalid UTF-8\"}"))
+				continue
+			}
 			fmt.Fprintf(b, "_data%d,_err:=encode%s(_arg%d,l.options.MaxInput); if _err!=nil { %s };\n", index, helperName(param.Type), index, failure("_err"))
 		}
 	}
@@ -229,8 +233,12 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 	for index, param := range function.Params {
 		arg := "_arg" + strconv.Itoa(index)
 		if m.Variable(param.Type) {
-			fmt.Fprintf(b, "_pointer%d,_putErr:=_call.PutBytes(_data%d); if _putErr!=nil { return _putErr };\n", index, index)
-			args = append(args, fmt.Sprintf("int32(_pointer%d)", index), fmt.Sprintf("int32(len(_data%d))", index))
+			data, put := fmt.Sprintf("_data%d", index), "PutBytes"
+			if param.Type == "string" {
+				data, put = arg, "PutString"
+			}
+			fmt.Fprintf(b, "_pointer%d,_putErr:=_call.%s(%s); if _putErr!=nil { return _putErr };\n", index, put, data)
+			args = append(args, fmt.Sprintf("int32(_pointer%d)", index), "int32(len("+data+"))")
 		} else {
 			switch param.Type {
 			case "bool":
