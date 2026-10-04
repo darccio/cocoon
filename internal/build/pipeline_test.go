@@ -219,3 +219,46 @@ func TestPipelinePreservesAuthoredOutputs(t *testing.T) {
 		t.Fatal("concurrent or stale build lock ignored")
 	}
 }
+
+func TestPipelinePreflightAndLateFailuresReleaseGuard(t *testing.T) {
+	t.Parallel()
+	for _, failure := range []string{"manifest", "source-identity", "source-generation", "cargo-lock"} {
+		t.Run(failure, func(t *testing.T) {
+			t.Parallel()
+			directory, runner := makeProject(t)
+			m := testManifest(t)
+			p := pipeline{runner: runner, sources: fakeSources}
+			switch failure {
+			case "manifest":
+				m.Package.Name = "../invalid"
+			case "source-identity":
+				runner.fail = "metadata"
+				p.runner = runner
+			case "source-generation":
+				p.sources = func(context.Context, *manifest.Manifest) ([]byte, []byte, error) {
+					return nil, nil, fmt.Errorf("source formatting failed")
+				}
+			case "cargo-lock":
+				if err := os.Remove(filepath.Join(directory, "shim", "Cargo.lock")); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if _, err := p.run(t.Context(), directory, m); err == nil {
+				t.Fatalf("accepted %s failure", failure)
+			}
+			for _, path := range []string{".cocoon-build/lock", "shim/src/cocoon_gen.rs", "go/test/cocoon_gen.go", "cocoon.lock.json"} {
+				if _, err := os.Stat(filepath.Join(directory, path)); !os.IsNotExist(err) {
+					t.Fatalf("failed build left %s: %v", path, err)
+				}
+			}
+			// A repaired build must work without manually removing a stale guard.
+			if err := os.WriteFile(filepath.Join(directory, "shim", "Cargo.lock"), []byte("locked"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			p = pipeline{runner: pipelineRunner{guest: runner.guest, wasm: runner.wasm}, sources: fakeSources}
+			if _, err := p.run(t.Context(), directory, testManifest(t)); err != nil {
+				t.Fatal("failed build prevented retry", err)
+			}
+		})
+	}
+}
