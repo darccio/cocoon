@@ -58,6 +58,10 @@ func TestInitAndGenWithPinnedFormatter(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(project, "shim", "Cargo.lock")); err != nil {
 		t.Fatal(err)
 	}
+	formatter := exec.CommandContext(t.Context(), rustup, "run", "1.97.0", "cargo", "fmt", "--manifest-path", filepath.Join(project, "shim", "Cargo.toml"), "--check") // #nosec G204 -- Invoke the resolved tool on this test's temporary scaffold.
+	if diagnostics, formatErr := formatter.CombinedOutput(); formatErr != nil {
+		t.Fatalf("initial scaffold is not rustfmt-clean: %v: %s", formatErr, diagnostics)
+	}
 	if err := cli.Run(t.Context(), []string{"init", "--guest", guest, project}, &output); err == nil {
 		t.Fatal("existing initialized files overwritten")
 	}

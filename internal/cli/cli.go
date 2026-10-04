@@ -188,7 +188,7 @@ func initialize(ctx context.Context, args []string, output io.Writer) error {
 	files := map[string][]byte{
 		"cocoon.toml": []byte(manifestData), "shim/Cargo.toml": []byte(cargo),
 		"shim/src/lib.rs":            []byte("mod cocoon_gen;\n#[forbid(unsafe_code)]\nmod implementation;\npub use implementation::Shim;\n"),
-		"shim/src/implementation.rs": []byte("#[derive(Default)]\npub struct Shim;\nimpl crate::cocoon_gen::API for Shim {\nfn echo(&mut self,input:String)->cocoon_guest::Result<String>{Ok(input)}\n}\n"),
+		"shim/src/implementation.rs": []byte("#[derive(Default)]\npub struct Shim;\nimpl crate::cocoon_gen::API for Shim {\n    fn echo(&mut self, input: String) -> cocoon_guest::Result<String> {\n        Ok(input)\n    }\n}\n"),
 	}
 	for path := range files {
 		if _, err = os.Lstat(filepath.Join(directory, filepath.FromSlash(path))); err == nil {
