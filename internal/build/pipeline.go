@@ -27,16 +27,19 @@ func Features() []string {
 
 // Lock records deterministic tool, source, and artifact identities.
 type Lock struct {
-	Tools    ToolVersions `json:"tools"`
-	Schema   string       `json:"schema_sha256"`
-	Manifest string       `json:"manifest_sha256"`
-	Cargo    string       `json:"cargo_lock_sha256"`
-	Rust     string       `json:"shim_sha256"`
-	Wasm     string       `json:"wasm_sha256"`
-	Go       string       `json:"go_sha256"`
-	Facade   string       `json:"facade_sha256"`
-	Adapter  string       `json:"adapter_sha256"`
-	Sources  []SourceHash `json:"sources"`
+	Tools        ToolVersions `json:"tools"`
+	Schema       string       `json:"schema_sha256"`
+	Manifest     string       `json:"manifest_sha256"`
+	Cargo        string       `json:"cargo_lock_sha256"`
+	Rust         string       `json:"shim_sha256"`
+	Wasm         string       `json:"wasm_sha256"`
+	Go           string       `json:"go_sha256"`
+	Facade       string       `json:"facade_sha256"`
+	Adapter      string       `json:"adapter_sha256"`
+	Contracts    string       `json:"contract_tests_sha256"`
+	Differential string       `json:"differential_tests_sha256"`
+	Bulk         string       `json:"bulk_tests_sha256"`
+	Sources      []SourceHash `json:"sources"`
 }
 
 type pipeline struct {
@@ -171,6 +174,18 @@ func (p pipeline) run(ctx context.Context, directory string, m *manifest.Manifes
 	if err != nil {
 		return nil, err
 	}
+	contracts, err := gogen.Contracts(m)
+	if err != nil {
+		return nil, err
+	}
+	differential, err := gogen.WazeroTests(m)
+	if err != nil {
+		return nil, err
+	}
+	bulk, err := gogen.BulkTests(required)
+	if err != nil {
+		return nil, err
+	}
 	output := filepath.Join(directory, "go", m.Package.Name)
 	_, schema, err := m.SchemaHash()
 	if err != nil {
@@ -184,7 +199,7 @@ func (p pipeline) run(ctx context.Context, directory string, m *manifest.Manifes
 	if err != nil {
 		return nil, err
 	}
-	lock := &Lock{Tools: versions, Schema: schema, Manifest: digest(m.Content), Cargo: digest(cargoLock), Rust: source, Wasm: digest(wasm), Go: digest(translated), Facade: digest(facade), Adapter: digest(adapter), Sources: identities}
+	lock := &Lock{Tools: versions, Schema: schema, Manifest: digest(m.Content), Cargo: digest(cargoLock), Rust: source, Wasm: digest(wasm), Go: digest(translated), Facade: digest(facade), Adapter: digest(adapter), Contracts: digest(contracts), Differential: digest(differential), Bulk: digest(bulk), Sources: identities}
 	lockData, err := json.MarshalIndent(lock, "", "  ")
 	if err != nil {
 		return nil, err
@@ -193,6 +208,9 @@ func (p pipeline) run(ctx context.Context, directory string, m *manifest.Manifes
 		{Path: filepath.Join(output, "cocoon_gen.go"), Data: facade, Generated: true},
 		{Path: filepath.Join(output, "internal", "wasm", "module.go"), Data: translated, Generated: true},
 		{Path: filepath.Join(output, "zz_adapter.go"), Data: adapter, Generated: true},
+		{Path: filepath.Join(output, "zz_contract_test.go"), Data: contracts, Generated: true},
+		{Path: filepath.Join(output, "zz_wazero_test.go"), Data: differential, Generated: true},
+		{Path: filepath.Join(output, "internal", "wasm", "zz_bulk_test.go"), Data: bulk, Generated: true},
 		{Path: filepath.Join(output, "testdata", "module.wasm"), Data: wasm},
 		{Path: filepath.Join(directory, "cocoon.lock.json"), Data: append(lockData, '\n')},
 	}); publicationErr != nil {

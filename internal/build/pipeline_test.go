@@ -134,6 +134,16 @@ func TestPipelineDeterminismAndFailureRollback(t *testing.T) {
 	if len(first.Sources) != 1 || first.Sources[0].Name != "cocoon-guest" || len(first.Go) != 64 {
 		t.Fatal("missing source or artifact provenance")
 	}
+	for path, expected := range map[string]string{
+		"go/test/zz_contract_test.go":           first.Contracts,
+		"go/test/zz_wazero_test.go":             first.Differential,
+		"go/test/internal/wasm/zz_bulk_test.go": first.Bulk,
+	} {
+		data, readErr := os.ReadFile(filepath.Join(directory, path)) // #nosec G304 -- Read only generated fixtures below t.TempDir.
+		if readErr != nil || expected != digest(data) {
+			t.Fatalf("missing or untracked generated test %s: %v", path, readErr)
+		}
+	}
 }
 
 func TestSourceDigestAndMissingModule(t *testing.T) {
