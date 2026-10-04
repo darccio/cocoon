@@ -1,11 +1,11 @@
-package build_test
+package build
 
 import (
 	"encoding/binary"
 	"slices"
+	"strings"
 	"testing"
 
-	"cocoon.dev/cocoon/internal/build"
 	"cocoon.dev/cocoon/internal/manifest"
 )
 
@@ -44,7 +44,7 @@ func name(data []byte, value string) []byte {
 
 func abiModule(t *testing.T, omit string, maximum byte) []byte {
 	t.Helper()
-	exports := build.ExportSet(testManifest(t))
+	exports := ExportSet(testManifest(t))
 	names := make([]string, 0, len(exports))
 	for key := range exports {
 		names = append(names, key)
@@ -52,6 +52,9 @@ func abiModule(t *testing.T, omit string, maximum byte) []byte {
 	slices.Sort(names)
 	count := byte(len(names)) // #nosec G115 -- The fixture has eight fixed ABI exports.
 	types, functions, exported, code := []byte{count}, []byte{count}, []byte{count + 1}, []byte{count}
+	if omit != "" {
+		exported[0]--
+	}
 	for index, key := range names {
 		signature := exports[key]
 		types = append(types, 0x60, byte(len(signature.Params))) // #nosec G115 -- Fixed fixture signatures have at most two parameters.
@@ -63,12 +66,10 @@ func abiModule(t *testing.T, omit string, maximum byte) []byte {
 			types = append(types, byte(result))
 		}
 		functions = append(functions, byte(index)) // #nosec G115 -- Fixed ABI export indexes fit in one byte.
-		exportName := key
-		if key == omit {
-			exportName = "unexpected"
+		if key != omit {
+			exported = name(exported, key)
+			exported = append(exported, 0, byte(index)) // #nosec G115 -- Fixed indexes fit in one byte.
 		}
-		exported = name(exported, exportName)
-		exported = append(exported, 0, byte(index)) // #nosec G115 -- Fixed indexes fit in one byte.
 		body := []byte{0}
 		for _, result := range signature.Results {
 			if result == 0x7e {
@@ -81,8 +82,10 @@ func abiModule(t *testing.T, omit string, maximum byte) []byte {
 		code = append(code, byte(len(body))) // #nosec G115 -- Bodies have at most four bytes.
 		code = append(code, body...)         // #nosec G115 -- Bodies have at most four bytes.
 	}
-	exported = name(exported, "memory")
-	exported = append(exported, 2, 0)
+	if omit != "memory" {
+		exported = name(exported, "memory")
+		exported = append(exported, 2, 0)
+	}
 	data := []byte{0, 97, 115, 109, 1, 0, 0, 0}
 	data = section(data, 1, types)
 	data = section(data, 3, functions)
@@ -93,12 +96,37 @@ func abiModule(t *testing.T, omit string, maximum byte) []byte {
 
 func TestVerifyABI(t *testing.T) {
 	t.Parallel()
-	if _, err := build.Verify(testManifest(t), abiModule(t, "", 2)); err != nil {
+	if _, err := Verify(testManifest(t), abiModule(t, "", 2)); err != nil {
 		t.Fatal(err)
 	}
-	for _, bad := range [][]byte{abiModule(t, "cocoon_out", 2), abiModule(t, "", 3), {0}} {
-		if _, err := build.Verify(testManifest(t), bad); err == nil {
+	for _, bad := range [][]byte{abiModule(t, "cocoon_out", 2), abiModule(t, "memory", 2), abiModule(t, "", 3), {0}} {
+		if _, err := Verify(testManifest(t), bad); err == nil {
 			t.Fatal("invalid ABI accepted")
 		}
+	}
+}
+
+func TestVerifyNegativePolicy(t *testing.T) {
+	t.Parallel()
+	valid := abiModule(t, "", 2)
+	// Insert a structurally valid function import after the types section.
+	end := 10 + int(valid[9])
+	imported := name(name([]byte{1}, "evil"), "call")
+	imported = append(imported, 0, 0)
+	withImport := section(slices.Clone(valid[:end]), 2, imported)
+	withImport = append(withImport, valid[end:]...)
+	if _, err := Verify(testManifest(t), withImport); err == nil || !strings.Contains(err.Error(), "undeclared") {
+		t.Fatalf("undeclared import: %v", err)
+	}
+	feature := name(nil, "target_features")
+	feature = append(feature, 1, '+')
+	feature = name(feature, "simd128")
+	if _, err := Verify(testManifest(t), section(slices.Clone(valid), 0, feature)); err == nil || !strings.Contains(err.Error(), "unsupported") {
+		t.Fatalf("unsupported feature: %v", err)
+	}
+	m := testManifest(t)
+	m.Functions[0].Params[0].Type = "u64"
+	if _, err := Verify(m, valid); err == nil || !strings.Contains(err.Error(), "signature") {
+		t.Fatalf("wrong signature: %v", err)
 	}
 }

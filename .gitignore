@@ -4,3 +4,4 @@
 /target/
 coverage.out
 *.prof
+.cocoon-build/
