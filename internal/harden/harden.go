@@ -126,6 +126,7 @@ func Rewrite(source []byte, expected []string) ([]byte, error) {
 	if tableErr := hardenTables(file); tableErr != nil {
 		return nil, tableErr
 	}
+	removeDeadReturns(file)
 	var output bytes.Buffer
 	if err := format.Node(&output, fset, file); err != nil {
 		return nil, fmt.Errorf("format hardened Go: %w", err)

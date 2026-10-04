@@ -83,6 +83,26 @@ func table_copy(tab,elems []any,low,high uint64) { copy(tab[low:high],elems[:hig
 	}
 }
 
+func TestOnlyUnreachableReturnsAreRemoved(t *testing.T) {
+	t.Parallel()
+	source := `package wasm
+func call(flag bool) int {
+if flag { goto live }
+{ return 1 }
+return 99
+live:
+return 2
+}
+`
+	output, err := harden.Rewrite([]byte(source), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(output, []byte("return 99")) || !bytes.Contains(output, []byte("live:")) || bytes.Count(output, []byte("return")) != 2 {
+		t.Fatalf("changed reachable control flow: %s", output)
+	}
+}
+
 func FuzzRewrite(f *testing.F) {
 	f.Add([]byte(bulk))
 	f.Fuzz(func(t *testing.T, source []byte) {
