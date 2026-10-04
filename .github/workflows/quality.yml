@@ -56,3 +56,19 @@ jobs:
           git diff --exit-code -- testdata/compute examples/datadog
           go generate ./rt/internal/trapfix ./cocoontest
           git diff --exit-code -- rt/internal/trapfix cocoontest/testdata
+      - name: Preserve failed rebuild diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rebuild-diagnostics
+          include-hidden-files: true
+          retention-days: 7
+          path: |
+            testdata/compute/.cocoon-build/*.wasm
+            testdata/compute/.cocoon-build/target/wasm32-unknown-unknown/release/*.wasm
+            testdata/compute/.cocoon-build/target/wasm32-unknown-unknown/release/.fingerprint/**/*.json
+            testdata/compute/cocoon.lock.json
+            examples/datadog/.cocoon-build/*.wasm
+            examples/datadog/.cocoon-build/target/wasm32-unknown-unknown/release/*.wasm
+            examples/datadog/.cocoon-build/target/wasm32-unknown-unknown/release/.fingerprint/**/*.json
+            examples/datadog/cocoon.lock.json
