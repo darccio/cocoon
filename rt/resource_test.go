@@ -2,6 +2,7 @@ package rt_test
 
 import (
 	"errors"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -77,5 +78,54 @@ func TestResourceFaultInvalidation(t *testing.T) {
 	}
 	if _, err := rt.NewResource[int](nil, 0, nil); !errors.As(err, &handleErr) {
 		t.Fatal("invalid ownership accepted")
+	}
+}
+
+func TestResourceUsePanicReleasesOwnershipLock(t *testing.T) {
+	t.Parallel()
+	i := newInstance(t, newModule())
+	r, err := rt.NewResource[int](i, 1, func(_ uint64) error { return nil })
+	if err != nil {
+		t.Fatal(err)
+	}
+	func() {
+		defer func() {
+			if recover() != "callback" {
+				t.Error("resource callback panic changed")
+			}
+		}()
+		if err := r.Use("panic", func(_ *rt.Instance, _ uint64) error { panic("callback") }); err != nil {
+			t.Error(err)
+		}
+	}()
+	if err := r.Use("after panic", func(_ *rt.Instance, _ uint64) error { return nil }); err != nil {
+		t.Fatal("ownership lock held after panic", err)
+	}
+	if err := r.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestResourceUseKeepsOwnershipAlive(t *testing.T) {
+	t.Parallel()
+	i := newInstance(t, newModule())
+	var destroyed atomic.Int32
+	r, err := rt.NewResource[int](i, 1, func(_ uint64) error { destroyed.Add(1); return nil })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.Use("gc", func(_ *rt.Instance, _ uint64) error {
+		// Remove the caller's only wrapper reference during the callback.
+		r = nil
+		for range 3 {
+			runtime.GC()
+			runtime.Gosched()
+			if destroyed.Load() != 0 {
+				t.Error("cleanup destroyed an active resource")
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
 	}
 }
