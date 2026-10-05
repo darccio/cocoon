@@ -65,6 +65,27 @@ func TestRange(t *testing.T) {
 	}
 }
 
+func TestRangeErrorDiagnostics(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		want          string
+		pointer, size uint32
+	}{
+		{"cocoon: invalid guest reply: memory range [11,11) exceeds 10", 11, 0},
+		{"cocoon: invalid guest reply: memory range [9,11) exceeds 10", 9, 2},
+		{"cocoon: invalid guest reply: memory range [4294967295,4294967297) exceeds 10", math.MaxUint32, 2},
+	} {
+		view, err := rt.Range(make([]byte, 10, 100), test.pointer, test.size)
+		if !errors.Is(err, rt.ErrProtocol) || view != nil || err.Error() != test.want {
+			t.Fatalf("range error = %v, view = %v", err, view)
+		}
+	}
+	view, err := rt.Range(nil, 0, 0)
+	if err != nil || len(view) != 0 || cap(view) != 0 {
+		t.Fatalf("empty memory range = %v: %v", view, err)
+	}
+}
+
 func TestCallResetsReservationWithoutAllocating(t *testing.T) {
 	i := newInstance(t, newModule())
 	if err := i.Call("reserve", func(call *rt.Call) error { return call.PrepareInput(4) }); err != nil {

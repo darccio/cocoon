@@ -68,10 +68,23 @@ func InputSize(limit, count, width uint64, other ...uint64) (uint64, error) {
 func Range(memory []byte, pointer, size uint32) ([]byte, error) {
 	end := uint64(pointer) + uint64(size)
 	if end > uint64(len(memory)) {
-		return nil, fmt.Errorf("%w: memory range [%d,%d) exceeds %d", ErrProtocol, pointer, end, len(memory))
+		return nil, &memoryRangeError{pointer: pointer, end: end, length: len(memory)}
 	}
 	return memory[pointer:end:end], nil
 }
+
+// Small error construction lets Range inline its checked success path.
+type memoryRangeError struct {
+	end     uint64
+	length  int
+	pointer uint32
+}
+
+func (e *memoryRangeError) Error() string {
+	return fmt.Sprintf("%s: memory range [%d,%d) exceeds %d", ErrProtocol, e.pointer, e.end, e.length)
+}
+
+func (*memoryRangeError) Unwrap() error { return ErrProtocol }
 
 type instanceState uint8
 
