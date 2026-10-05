@@ -1,7 +1,7 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-04. The synchronous M1 framework and Datadog proof are released privately
+2026-10-05. The synchronous M1 framework and Datadog proof are released privately
 as v0.1.0. Performance acceptance is deferred by the user and remains unmet.
 Async and HTTP are a separate milestone, not partially implemented M1 features.
 
@@ -79,14 +79,37 @@ resumes.
 
 ## Follow up quality work
 
-The first MVP's qualification and private publication are complete. The
-following improvements are not release blockers.
+The follow-up quality pass is complete as of 2026-10-05. Performance remains
+deferred; no async implementation was added in this pass.
 
-- Expand error-path tests where coverage remains lower: generation/publication
-  now reaches 84.8 percent, CLI 72.7 percent, and build orchestration 85.7 percent.
-  Runtime, hardening, and both generators already exceed 94 percent.
-- Consider upstreaming the translator's bulk-memory length-versus-capacity fix.
-  Cocoon already applies and tests its own checked AST hardening.
+`make check`, `make race`, `make cross`, `make integration`, and `make smoke`
+passed for this pass. Both real proof builds reproduce the release artifacts
+and locks without generated-source changes. The expanded CLI, publication, and
+build tests also pass with Go 1.26.8 and native linux/386; the latter requires
+execution outside the sandbox because its syscall filter rejects 32-bit tests.
+
+- CLI coverage increased from 72.7 to 92.8 percent. Hermetic fixture tools cover
+  build, doctor, and verification workflows, tool failures, canceled builds,
+  output errors, temporary-file cleanup, initialization failures, and retries.
+  They supplement rather than replace the real-tool smoke test.
+- Generation/publication coverage increased from 84.8 to 92.9 percent. New tests
+  exercise a real publication rename failure, restore replaced files and their
+  permissions, remove newly published files, check staging cleanup, preserve
+  authored files, and verify guard failure and retry behavior.
+- Build orchestration coverage increased from 85.7 to 92.2 percent. New tests
+  compare the entire published artifact set after tool-stage failures, reject
+  missing or malformed output and helper drift, check capability and ABI policy,
+  and exercise source and executable digest failures. ABI verification itself
+  reaches 96.1 percent. Runtime, hardening, and both generators remain above
+  94 percent.
+- A regression test exposed a `doctor` component-check bug. It now checks exact
+  Rust component names and accepts CRLF output and a missing final newline.
+- Upstreaming the bulk-memory fix is no longer needed: wasm2go
+  [PR 62](https://github.com/ncruces/wasm2go/pull/62) was merged on 2026-10-04.
+  The latest tagged release checked on 2026-10-05 is still v0.4.16, predating
+  that fix. Keep Cocoon's pin and checked AST hardening until a separately
+  qualified upgrade; already-bounded helpers require corresponding drift-check
+  updates and regenerated proof artifacts, not removal of the safety checks.
 
 ## Next milestone
 
