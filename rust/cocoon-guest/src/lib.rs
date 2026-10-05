@@ -355,6 +355,39 @@ mod tests {
         assert_eq!(slab.insert(44).unwrap() as u32, 2);
     }
     #[test]
+    fn slab_mutable_lookup_preserves_handle_checks_and_reuse() {
+        let mut slab = Slab::default();
+        let first = (1_u64 << 32) | 1;
+        assert_eq!(slab.get_mut(first).unwrap_err(), Error::handle());
+        assert_eq!(slab.insert(42).unwrap(), first);
+        for invalid in [0, 1_u64 << 32, 1, (2_u64 << 32) | 1, first + 1, u64::MAX] {
+            assert_eq!(
+                slab.get_mut(invalid).unwrap_err(),
+                Error::handle(),
+                "handle={invalid:016x}"
+            );
+        }
+        *slab.get_mut(first).unwrap() = 43;
+        assert_eq!(slab.remove(first).unwrap(), 43);
+        let second = (2_u64 << 32) | 1;
+        // The generation matches, but the removed slot is empty.
+        assert_eq!(slab.get_mut(second).unwrap_err(), Error::handle());
+        assert_eq!(slab.get_mut(first).unwrap_err(), Error::handle());
+        assert_eq!(slab.insert(44).unwrap(), second);
+        assert_eq!(*slab.get_mut(second).unwrap(), 44);
+
+        slab.slots[0].generation = u32::MAX;
+        let last = (u64::from(u32::MAX) << 32) | 1;
+        *slab.get_mut(last).unwrap() = 45;
+        assert_eq!(slab.remove(last).unwrap(), 45);
+        // A retired slot stays empty even when the handle generation matches.
+        assert_eq!(slab.get_mut(last).unwrap_err(), Error::handle());
+        let next = slab.insert(46).unwrap();
+        assert_eq!(next, (1_u64 << 32) | 2);
+        assert_eq!(*slab.get_mut(next).unwrap(), 46);
+        assert_eq!(slab.get_mut(last).unwrap_err(), Error::handle());
+    }
+    #[test]
     fn canonical_record() {
         let fields = vec![b"a=b\nvalue".to_vec(), vec![0, 255]];
         let data = encode_record(&fields, 128).unwrap();

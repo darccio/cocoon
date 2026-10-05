@@ -24,7 +24,7 @@
   "sources": [
     {
       "name": "cocoon-guest",
-      "sha256": "eac64de834f6f898346414d2f1c00e3b4ff80f8e74a7ba1278bba9eb8558de20"
+      "sha256": "3d303c5c27dcba8f83786f1d0886cbe6b858493434a2df8b710d7dfadabd9ee6"
     },
     {
       "name": "libdatadog",
