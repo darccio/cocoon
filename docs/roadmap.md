@@ -1,9 +1,9 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-05. The synchronous M1 framework and Datadog proof are released privately
-as v0.1.0. Two performance passes are complete after the quality pass;
-performance acceptance remains unmet.
+2026-10-06. The synchronous M1 framework and Datadog proof are released privately
+as v0.1.0. Two performance passes and a third multi-agent performance loop are
+complete after the quality pass. Performance acceptance remains unmet.
 Async and HTTP are a separate milestone, not partially implemented M1 features.
 
 ## Current working state
@@ -118,22 +118,69 @@ Go 1.26.8 tests, and native linux/386 tests pass. Runtime coverage is 97.0 perce
 Raw samples, screening conditions, profiles, and rejected experiments are
 recorded in the performance notes.
 
-1. Use the second-pass scalar profile to choose the next experiment. It attributes
+### Third performance loop
+
+The 2026-10-05 and 2026-10-06 loop used separate guest, host, and adversarial
+review agents for each round. Every retained commit passes strict lint, darna,
+and exact staged-snapshot Go tests. The retained code and tests also pass full
+integration, race, cross-platform compilation, external CLI and Go-only smoke,
+differential fuzzing, Go 1.26.8, native linux/386, and repeat proof builds.
+Runtime coverage remains 97.0 percent.
+
+Callback-state reset did not establish a gain. Specialized successful unit
+replies and single-slot guest lookup improved scalar calls but regressed other
+workloads and were removed. Binaryen `-O4`, `-O3 --no-stack-ir`, and
+`-O3 --converge` did not justify changing the original optimization policy.
+The new callback, handle-retirement, and explicit optimizer numeric/trap/evaluation
+contracts were retained independently. `make smoke` now exercises the optimizer
+contracts in CI, independently of comparing Go with the same optimized Wasm.
+
+The ordered point predicate (`0dd1701`) was withdrawn in `db580ca` after the
+full screen and longer three-way comparison found a SQL slowdown without an
+established scalar gain. Its native/public numeric-boundary and atomic-error-state
+regressions remain. A subsequent exact unsigned-bit classifier improved batches
+2.85 percent but slowed SQL 2.55 percent versus fix-only and was removed too.
+No performance optimization survived the nine rounds. The destructor correctness
+fix remains, with no detected timing change relative to the matched loop-start
+binary. Both builds contain identical Datadog Go tests.
+
+The longer final comparison puts retained SQL at 1.767 microseconds and
+SketchAdd at 74.33 nanoseconds, versus a fresh reference at 1.617 microseconds
+and 46.65 nanoseconds. Overhead is 9.3 and 59.3 percent respectively. SQL's
+median falls below this run's 10-percent limit with a narrow margin; scalar
+exceeds both original and fresh limits. Overall acceptance is still open.
+Do not attribute differences from older sessions to code changes. Raw samples,
+candidate hashes, rejection evidence, and final provenance are in
+[performance notes](performance.md). This loop's commits have not been pushed.
+
+1. Analyze the fresh isolated `.cache/loop-retained-{sketch,sql}.prof` files.
+   The installed toolchains lack the `pprof` frontend, so their new attribution
+   is still pending. Existing second-pass attribution is a useful starting
+   point, not a substitute for inspecting the retained binary.
+2. Consider a batch-only bit-classification experiment, leaving scalar validation
+   unchanged. The full predicate experiment improved batches but regressed SQL;
+   partial targeting is a hypothesis, not a promised improvement. Retain the
+   exhaustive domain and whole-batch atomicity tests and qualify all workloads.
+3. Inspect checked common-case saturated float conversion in the measured sketch
+   algorithm. Preserve NaN and overflow clamps. Any translator-helper change
+   needs fail-closed AST shape checks, explicit numeric/trap contracts, both
+   proof rebuilds, and differential qualification; never edit generated Go alone.
+4. Use the second-pass scalar profile to choose the next experiment. It attributes
    55.6 percent cumulatively to translated guest execution, 39.2 percent to the
    sketch algorithm, and 11.8 percent to reply validation. The isolated
    call-layer benchmarks (`8d3b074`) are available; keep measuring guest and
    host costs separately, including callback layout and checked reply decoding.
-2. Use the second-pass SQL profile to choose guest-side experiments; 85.9 percent
+5. Use the second-pass SQL profile to choose guest-side experiments; 85.9 percent
    of samples are cumulatively in the translated export. Its reduced
    allocation count did not close the timing gap. Measure full facade calls as
    well as isolated layers before considering synchronization changes.
-3. Optimize measured hot paths without removing bounds checks, canonical reply
+6. Optimize measured hot paths without removing bounds checks, canonical reply
    validation, fault containment, shared ownership, or terminal draining Close.
    Add regression tests and regenerate affected proof artifacts with each change.
-4. Repeat isolated before/after and independent spike samples. Retain the
-   original absolute limits as well as the same-machine comparison. Both
-   benchmarks still exceed the fresh same-machine limits, and SketchAdd also
-   exceeds its original limit. Do not mark M1 performance accepted.
+7. Repeat isolated before/after and independent spike samples. Retain the
+   original absolute limits as well as the same-machine comparison. SketchAdd
+   still exceeds both limits; SQL's narrow current margin requires continued
+   checking. Do not mark M1 performance accepted or add screening gains together.
 
 ## Follow up quality work
 
@@ -172,18 +219,19 @@ execution outside the sandbox because its syscall filter rejects 32-bit tests.
 
 ### Additional ABI follow up
 
-The second-pass review identified a pre-existing strictness gap in generated
-resource destructors. Their callbacks use `Call.Result`, which validates status,
-output limits, and memory bounds but does not require an empty successful
-unit reply. Ordinary unit methods additionally reject a nonempty reply. The
-authored Rust destructors currently publish canonical empty successes; no
-production failure was observed in this pass.
+The pre-existing destructor unit-reply strictness gap is fixed in `3fb2ffc`.
+`Call.ResultUnit` validates a borrowed reply under the execution lock and rejects
+nonempty successful unit replies with protocol poisoning. Generated destructors
+use it; both facades and locks were regenerated. Compiled facade fixtures test
+canonical replies, malformed/status/limit errors, once-only Close, sibling
+invalidation, and healthy replacement instances. The malformed successful-reply
+regression was also demonstrated to fail against the old generator.
 
-Add a malformed successful destructor-reply regression and enforce the same
-empty-reply check with protocol poisoning. Use borrowed reply validation under
-the execution lock to avoid copying an invalid destructor payload, then
-regenerate both facades and locks. The source is in the constructor branch of
-[the Go generator](../internal/gen/gogen/gogen.go).
+The new point-boundary differential tests explicitly assert the reference status
+and canonical unit reply. The generic differential comparison still compares
+error messages without requiring equal non-OK status codes. Strengthen that
+general oracle in a focused quality change; do not infer status equivalence from
+matching messages.
 
 ## Next milestone
 

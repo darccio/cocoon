@@ -6,6 +6,148 @@ Benchmarks are a gate to investigate, not a reason to remove those checks.
 
 ## Current results
 
+The 2026-10-05 and 2026-10-06 multi-agent loop completed nine rounds. No
+performance optimization survived the full workload comparison. The branch
+retains a destructor correctness fix and stronger callback, handle, numeric,
+and optimizer regressions. The range predicate initially retained in `0dd1701`
+was withdrawn in `db580ca`; its tests remain. Binaryen remains at 133 with
+ordinary `-O3`, and the original Datadog Wasm and translated module are restored.
+
+The retained production binary is byte-identical to the fix-only binary used
+in the longer three-way comparison. Seven rotated one-second sample sets used
+Go 1.26.8, CGO disabled, no PGO, the AMD Ryzen 7 5800HS, 16 Go processors, and
+no CPU affinity. Loop-start, destructor-fix-only, and range-candidate order
+rotated; the unchanged independent reference followed each set. All compilation
+and quality jobs had finished before measurement. Both Cocoon builds contain
+the same final Datadog Go tests, including the newly added boundary tests.
+
+| Version | SQL median | SketchAdd median |
+| --- | --- | --- |
+| Matched loop-start production (`969dfca`) | 1.782 µs | 74.63 ns |
+| Retained production (`db580ca`) | 1.767 µs | 74.33 ns |
+| Independent reference | 1.617 µs | 46.65 ns |
+
+No retained timing gain or regression is established: SQL p=0.927, scalar
+p=0.710, batch p=1.000, and traces p=0.383, each with n=7. Batch medians are
+35.492 versus 35.558 µs; trace medians are 2.1380 versus 2.1595 ms. Go allocation
+counts remain one, zero, one, and one respectively. Construction contributes
+amortized bytes to stateless benchmarks; bytes/op changes do not imply an
+eliminated per-call allocation. These exploratory comparisons have not been
+adjusted for testing multiple candidates.
+
+Remaining same-machine reference overhead is 9.3 percent for SQL and
+59.3 percent for SketchAdd. SQL's median is below both the original 2.2154 µs
+limit and this run's 1.7787 µs limit, but that narrow margin is not a guarantee
+across sessions. SketchAdd exceeds both 55.44 ns and this run's 51.315 ns limit.
+Overall performance acceptance remains open. The change from the earlier
+11.3/66.8-percent overhead figures is not a code improvement: the paired
+loop-start comparison does not establish one.
+
+| Version | SQL samples in ns | SketchAdd samples in ns |
+| --- | --- | --- |
+| Loop start | 1755, 1767, 1834, 1796, 1800, 1782, 1741 | 75.38, 73.68, 71.93, 74.84, 74.63, 75.22, 71.98 |
+| Retained | 1738, 1823, 1846, 1767, 1763, 1766, 1809 | 71.32, 73.17, 74.33, 75.80, 78.12, 76.28, 72.41 |
+| Reference | 1609, 1597, 1675, 1617, 1560, 1647, 1640 | 45.23, 47.91, 47.09, 46.65, 45.34, 47.50, 45.97 |
+
+The final binary SHA-256 is
+`7657ad19a6fdb499d9650bede60c2f25df31e5ff9cfe2eed06dbac805e965fe2`;
+the matched loop-start binary is
+`4315e367c165904a824280a531420205e8ba665c16d51984860735933047d5e4`;
+the unchanged reference binary is
+`bf3f15d3241684b35b0b0b448799373e8d66951f955827cce38fd7e365237dd8`.
+The retained binary also matches the earlier `round3-point-base.test`, despite
+later test-only commits and regenerated source locks. The Datadog Wasm hash is
+`ae0119ca34206c2fcd8b69ae4e81421214417abb364d589c3afabcf16d8c6333`;
+translated Go is
+`f50d20e7fe091569353ac1ced7865a53cd23bc9add668c3aac0f5f3a0ac8eed4`.
+
+Full check, integration, race, cross-platform compilation, external CLI and
+Go-only smoke, and all five differential/parser/hardening fuzz targets pass
+after restoring the candidates. Go 1.26.8 and native linux/386 targeted tests
+pass. Both proof packages reproduce their artifacts, generated tests, and
+locks byte-for-byte. Runtime coverage remains 97.0 percent; Go and Rust
+generator coverage remains 96.7 and 94.6 percent. Each code/test commit passed
+darna and exact staged-snapshot Go tests. The loop's commits are local and have
+not been pushed; the preceding pass's CI completed successfully.
+
+Raw acceptance samples are `.cache/round8-attribution-{before,fix,reference}-{1..7}.txt`.
+The superseded 500 ms final screen is `.cache/loop-final-{before,final,reference}-*`.
+Profiles were captured separately from acceptance samples in
+`.cache/loop-retained-{sketch,sql}.prof`; the installed toolchains currently lack
+the `pprof` frontend, so fresh profile attribution remains a follow-up rather
+than an asserted result. Existing earlier attributed profiles remain below.
+
+### Multi agent experiment results
+
+Rounds 1 through 7 used seven alternating 500 ms pairs, one Go processor and
+CPU 14 affinity for screening. Longer confirmations used one-second pairs.
+Rounds 8 and 9 used the unrestricted 16-processor configuration above.
+No benchmark ran concurrently with compilation, lint, tests, fuzzing, or agent
+work. Outliers remain in the samples; inconclusive results are not proof of
+equivalence. Screening gains are not additive and do not override the final
+workload comparison.
+
+| Round | Experiment | Evidence and disposition |
+| --- | --- | --- |
+| 1 | Conditional reused Call reset | No detected change in any workload; removed. Callback replacement/reservation regressions retained in `c1c5f52`. |
+| 2 | Specialized successful unit decoding | Confirmation: scalar −2.20% (p=0.024), traces +1.64% (p=0.004); removed. |
+| 3 | Ordered finite range predicate | Scalar screen −1.93% (p=0.008), no detected SQL/trace change; initially retained, later withdrawn after rounds 8 and final screening. Numeric regressions retained. |
+| 4 | Single checked mutable slab lookup | Confirmation: scalar −5.35%, SQL +1.93%, batch +1.54%, traces +2.71%; removed. Handle retirement/reuse tests retained in `be98f8a`. |
+| 5 | Binaryen O4 | Confirmation: batch −0.46% (p=0.026), no established SQL/scalar gain; kept O3. Exact policy and semantic contract tests retained. |
+| 6 | O3 without StackIR | No established gain; noisy baseline outliers retained. Removed. Eager-select and operand-order tests retained. |
+| 7 | O3 to convergence | No established gain, with noisy candidate outliers; removed. Convergence semantic variant retained. |
+| 8 | Three-way attribution | Baseline→range build SQL +2.13% (p=0.011), no detected scalar change. No detected baseline→fix-only change; fix-only→range SQL inconclusive (p=0.128). Withdrew the range change without claiming its isolated causality. |
+| 9 | Unsigned float-bit classifier | Versus fix-only: batch −2.85% (p=0.007), SQL +2.55% (p=0.035), no detected scalar change; removed. |
+
+The initial unrestricted range screen also found SQL +3.03 percent (p=0.038)
+without establishing a scalar gain. Static inspection found the SQL export
+and parser source unchanged by either the destructor fix or predicate changes.
+Code layout, cache, or compiler effects are hypotheses, not demonstrated causes.
+Do not manually pad or edit generated modules to chase those timings.
+
+The destructor fix (`3fb2ffc`) closes a pre-existing canonical-unit gap. Its
+`ResultUnit` helper delegates to fully checked borrowed `ResultView` and rejects
+nonempty successful replies. Generated destructors use it; ordinary unit
+methods retain their existing borrowed-view/empty checks. It does not add work
+to either timed SQL or scalar benchmark path. A compiled mock-facade regression
+demonstrably fails against the old destructor generator. Mock fixture subprocess
+tests use CGO-disabled Go; the parent race invocation does not instrument that
+subprocess. Runtime and real proof tests separately run under the race detector.
+
+Binaryen candidates kept all existing features, validation, meta-DCE, memory
+limits, and AST hardening. An independent WAT/wazero fixture asserts expected
+numeric, signed-zero, NaN transport, rounding, trap ordering, memory effects,
+eager-select, and operand-order contracts for O3, O4, no-StackIR, and convergence.
+This supplements Go-versus-the-same-Wasm differential tests, which cannot detect
+a shared optimizer error. `make smoke` includes the fixture in CI.
+
+The O4 diagnostic optimization run took 1.36 seconds/127,916 KiB peak RSS
+versus O3's 1.01 seconds/118,328 KiB; these are single observations, not stable
+build-cost estimates. Three alternating convergence runs took 2.19–2.21 seconds
+versus O3's 1.05 seconds. Convergence keeps its final non-improving iteration;
+smaller output is not guaranteed by that policy.
+
+| Datadog optimizer | Wasm bytes | Translated Go bytes |
+| --- | --- | --- |
+| Range-based O3 experiment baseline | 293861 | 2240411 |
+| O4 candidate | 294285 | 2235047 |
+| No StackIR candidate | 294759 | 2242288 |
+| Convergence candidate | 293312 | 2238105 |
+
+These sizes compare the same range-predicate source, not the restored final
+source. Candidate Wasm hashes are O4
+`4084e0a45346fe69eba53cd9493211bc0ac5339133da33e426f8a1bb83a7d7d8`,
+no StackIR `5108d1e3eccca33c6f59d9e4fcdeb6cdff650749caa98b2af97e76fe8fa8702d`,
+convergence `b71afc1c54900a191020da9e83dd7d99f519fbd9712bb00d911cc111e6e7c310`,
+and the float-bit classifier
+`626db603bf535387ab4e3c91eb7c6cb3eafb820fb70c4bd64cc11ebce4c6ceeb`.
+Ignored raw logs use `.cache/round1-call-*`, `.cache/round2-unit-*`,
+`.cache/round3-point-*`, `.cache/round4-slab-*`, `.cache/round5-o4-*`,
+`.cache/round6-no-stack-ir-*`, `.cache/round7-converge-*`,
+`.cache/round8-attribution-*`, and `.cache/round9-bits-*`.
+
+## Second performance pass
+
 The second 2026-10-05 pass retained four host-side optimizations, with no change
 to the Wasm artifacts or translator pin. Seven interleaved 500 ms sample sets
 used Go 1.26.8, CGO disabled, no PGO, the AMD Ryzen 7 5800HS, 16 Go processors,
@@ -65,7 +207,7 @@ and exact staged-snapshot Go tests. Bounds, reply checks, panic containment,
 shared ownership, cancellation, and terminal draining Close remain intact.
 Raw final samples use `.cache/pass2-final-{before,final,reference}-{1..7}.txt`.
 The review also found a pre-existing destructor unit-reply strictness gap;
-the focused follow-up is saved in the [roadmap](roadmap.md#additional-abi-follow-up).
+it was subsequently fixed in the multi-agent loop above.
 
 ## First performance pass
 
