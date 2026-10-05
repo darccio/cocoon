@@ -37,6 +37,7 @@ func TestOptimizerSemantics(t *testing.T) {
 		{"O3", []string{"-O3"}},
 		{"O4", []string{"-O4"}},
 		{"O3-no-stack-ir", []string{"-O3", "--no-stack-ir"}},
+		{"O3-converge", []string{"-O3", "--converge"}},
 	} {
 		t.Run(variant.name, func(t *testing.T) {
 			optimized := filepath.Join(work, variant.name+".wasm")
