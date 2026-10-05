@@ -14,8 +14,8 @@
   "manifest_sha256": "4435fcd544252648f737407672b5401155cc8701e2aa9dcacf5be3898357edd6",
   "cargo_lock_sha256": "ab520ceea499b479f8ee1f5ab459b29ab226d8e60ff3c61297398914583de85c",
   "shim_sha256": "0abc5fac9468f9efc81599fe800fc28ada2c329f75cabbc1070c55fb8b94fab6",
-  "wasm_sha256": "da4e8ef9d94b0d11de0e46ab004234d6e19b28f00abf2496a6d81b10b03a5fb5",
-  "go_sha256": "1a73a677fa32b41426d362991b81806e63a345666bfa4a9675bdc53fe4ab1d4d",
+  "wasm_sha256": "ef0db188dad9a4c3cd4fc702b07cf0e5e5575905c7fb55b0c0ad3d92dcfe476c",
+  "go_sha256": "1712a7c5a8cedc766d11531efd47e178cb36be132b7e4408a97b5a857a210cac",
   "facade_sha256": "15a083b284d668e62d17c769f83953371278755403f6714bb178c9b2b56c8baf",
   "adapter_sha256": "0f51bbc1d97c3bd362b852bc5efb559c7a954aebceaecbd991b6d73dbdce5686",
   "contract_tests_sha256": "f947d93c81b60f0f358f68d6122feb74c4d19a794153da413f8ceaae787cae8f",
@@ -24,7 +24,7 @@
   "sources": [
     {
       "name": "cocoon-guest",
-      "sha256": "a1625840dadbcfc5e032054712bac030d7112382de4d3831128ff01a2ba13d71"
+      "sha256": "eac64de834f6f898346414d2f1c00e3b4ff80f8e74a7ba1278bba9eb8558de20"
     }
   ]
 }

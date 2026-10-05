@@ -14,8 +14,8 @@
   "manifest_sha256": "a3b1a897a5782f18655683143f4be91a2ab67be9a516f56c3207f3935da4e2cd",
   "cargo_lock_sha256": "8e06e4d6f6c331fbe9088a56ee01c2ddf9aeba9cfb45f703d05e9d6e374661c3",
   "shim_sha256": "e4ba9510be87ae6470a9eec2508693f10885259fb1140b461b5f73ec7ac8a159",
-  "wasm_sha256": "d9b0eee8b99d2a728dc231ed10e4579fba22d4602c9f2860c5c0ed93e93ffd7e",
-  "go_sha256": "eda72cdba7dbff35380d5208e091729d9f04ef56151072adc25c6c6f33a49e28",
+  "wasm_sha256": "ae0119ca34206c2fcd8b69ae4e81421214417abb364d589c3afabcf16d8c6333",
+  "go_sha256": "f50d20e7fe091569353ac1ced7865a53cd23bc9add668c3aac0f5f3a0ac8eed4",
   "facade_sha256": "2c81cfcbe36e23dacac97bca4eb0960685b98bbde151d31953ed95211da8e187",
   "adapter_sha256": "d376c5270fc644ec61b468c62fa7cd502c6253417b36084fbced50079afdc248",
   "contract_tests_sha256": "6795900c0e8fee9eb84e3851a398956861b8422f28bf830d1e0ac8c56180de3e",
@@ -24,7 +24,7 @@
   "sources": [
     {
       "name": "cocoon-guest",
-      "sha256": "a1625840dadbcfc5e032054712bac030d7112382de4d3831128ff01a2ba13d71"
+      "sha256": "eac64de834f6f898346414d2f1c00e3b4ff80f8e74a7ba1278bba9eb8558de20"
     },
     {
       "name": "libdatadog",

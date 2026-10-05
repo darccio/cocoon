@@ -128,8 +128,13 @@ pub fn reply_unit(result: Result<()>) -> i32 {
             b.descriptor.length = 0;
             OK
         }),
-        Err(error) => reply(Err(error)),
+        Err(error) => reply_unit_error(error),
     }
+}
+
+#[cold]
+fn reply_unit_error(error: Error) -> i32 {
+    reply(Err(error))
 }
 
 pub fn trim(keep: usize) {
@@ -409,6 +414,32 @@ mod tests {
         assert_eq!(reply_unit(Ok(())), OK);
         assert_eq!(output(), descriptor);
         assert_eq!(BUFFERS.with_borrow(|b| b.descriptor.length), 0);
+    }
+    #[test]
+    fn unit_reply_preserves_every_error_status() {
+        init(64, 128);
+        let descriptor = output();
+        for error in [
+            Error::argument("bad\0世界"),
+            Error::application("application error"),
+            Error::limit(),
+            Error::handle(),
+        ] {
+            let status = error.status;
+            let message = error.message.clone();
+            assert_eq!(reply_unit(Err(error)), status);
+            assert_eq!(output(), descriptor);
+            BUFFERS.with_borrow(|b| {
+                assert_eq!(b.output, message.as_bytes());
+                assert_eq!(b.descriptor.length as usize, message.len());
+            });
+            assert_eq!(reply_unit(Ok(())), OK);
+            assert_eq!(output(), descriptor);
+            BUFFERS.with_borrow(|b| {
+                assert!(b.output.is_empty());
+                assert_eq!(b.descriptor.length, 0);
+            });
+        }
     }
     #[test]
     fn scalar_slice() {
