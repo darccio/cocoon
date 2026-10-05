@@ -30,10 +30,19 @@ func TestOptimizerSemantics(t *testing.T) {
 	raw := filepath.Join(work, "input.wasm")
 	arguments := append([]string{"testdata/optimizer.wat", "-o", raw}, build.Features()...)
 	run(t, ".", nil, "wasm-as", arguments...)
-	for _, level := range []string{"-O3", "-O4"} {
-		t.Run(strings.TrimPrefix(level, "-"), func(t *testing.T) {
-			optimized := filepath.Join(work, level+".wasm")
-			arguments := append([]string{raw, level, "-o", optimized}, build.Features()...)
+	for _, variant := range []struct {
+		name string
+		args []string
+	}{
+		{"O3", []string{"-O3"}},
+		{"O4", []string{"-O4"}},
+		{"O3-no-stack-ir", []string{"-O3", "--no-stack-ir"}},
+	} {
+		t.Run(variant.name, func(t *testing.T) {
+			optimized := filepath.Join(work, variant.name+".wasm")
+			arguments := append([]string{raw}, variant.args...)
+			arguments = append(arguments, "-o", optimized)
+			arguments = append(arguments, build.Features()...)
 			run(t, ".", nil, "wasm-opt", arguments...)
 			runtime := wazero.NewRuntimeWithConfig(t.Context(), wazero.NewRuntimeConfigInterpreter())
 			t.Cleanup(func() {
@@ -101,6 +110,18 @@ func checkOptimizerTraps(t *testing.T, module api.Module) {
 	if got := optimizerResult(t, module, "guarded_load", 0, end); got != 42 {
 		t.Fatal("unselected trapping branch executed")
 	}
+	if got := optimizerResult(t, module, "eager_select", 1, 8); got != 42 {
+		t.Fatal("select returned the wrong alternative")
+	}
+	if got := optimizerResult(t, module, "eager_select", 0, 8); got != 0 {
+		t.Fatal("select ignored its condition")
+	}
+	if got := optimizerResult(t, module, "operand_order"); got != 6 {
+		t.Fatal("nested operand values changed")
+	}
+	if got, ok := module.Memory().ReadUint32Le(8); !ok || got != 123 {
+		t.Fatalf("nested operand evaluation order changed: got %d", got)
+	}
 	if got := optimizerResult(t, module, "divide", 4, 2); got != 2 {
 		t.Fatal("valid division changed")
 	}
@@ -115,6 +136,8 @@ func checkOptimizerTraps(t *testing.T, module api.Module) {
 		args []uint64
 	}{
 		{"guarded_load", []uint64{1, end}},
+		// Unlike an if branch, select evaluates an unselected operand too.
+		{"eager_select", []uint64{1, end}},
 		{"store_then_trap", []uint64{end}},
 		{"trap_then_store", []uint64{end}},
 		{"divide", []uint64{1, 0}},
