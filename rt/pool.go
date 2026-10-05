@@ -38,9 +38,13 @@ func (p *Pool[T]) Do(ctx context.Context, invoke func(instance *T) error) error 
 	}
 	var instance *T
 	select {
-	case <-ctx.Done():
-		return ctx.Err()
 	case instance = <-p.slots:
+	default:
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case instance = <-p.slots:
+		}
 	}
 	// Install the release before factory, callback, or recycler can panic.
 	completed := false

@@ -3,6 +3,7 @@ package rt_test
 import (
 	"context"
 	"errors"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -104,5 +105,107 @@ func TestPoolRecyclerPanic(t *testing.T) {
 	}
 	if err := p.Close(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+type cancelAfterBorrowContext struct {
+	context.Context //nolint:containedctx // Test-only wrapper injects cancellation at the post-borrow check.
+	cancel          context.CancelFunc
+	checks          int
+}
+
+func (c *cancelAfterBorrowContext) Err() error {
+	c.checks++
+	if c.checks == 2 {
+		c.cancel()
+	}
+	return c.Context.Err()
+}
+
+func TestPoolCancellationAfterReadyBorrow(t *testing.T) {
+	t.Parallel()
+	var created int
+	pool, err := rt.NewPool(1, func() (*int, error) { created++; return new(int), nil }, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := pool.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	for range 2 {
+		ctx, cancel := context.WithCancel(t.Context())
+		if err := pool.Do(&cancelAfterBorrowContext{Context: ctx, cancel: cancel}, func(_ *int) error {
+			t.Error("canceled borrow executed callback")
+			return nil
+		}); !errors.Is(err, context.Canceled) {
+			t.Error("cancellation after borrow ignored", err)
+		}
+		cancel()
+		if err := pool.Do(t.Context(), func(_ *int) error { return nil }); err != nil {
+			t.Fatal("canceled borrow lost capacity", err)
+		}
+	}
+	if created != 1 {
+		t.Fatalf("canceled borrow created or discarded a guest: %d factories", created)
+	}
+}
+
+type waitingPoolContext struct {
+	context.Context //nolint:containedctx // Test-only wrapper signals entry into the blocking admission path.
+	waiting         chan struct{}
+	once            sync.Once
+}
+
+func (c *waitingPoolContext) Done() <-chan struct{} {
+	c.once.Do(func() { close(c.waiting) })
+	return c.Context.Done()
+}
+
+func TestPoolUnavailableSlotWaitsForCancellation(t *testing.T) {
+	t.Parallel()
+	pool, err := rt.NewPool(1, func() (*int, error) { return new(int), nil }, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := pool.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	started, release := make(chan struct{}), make(chan struct{})
+	releaseHeld := sync.OnceFunc(func() { close(release) })
+	defer releaseHeld()
+	held := make(chan error, 1)
+	go func() {
+		held <- pool.Do(t.Context(), func(_ *int) error {
+			close(started)
+			<-release
+			return nil
+		})
+	}()
+	<-started
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	waiter := &waitingPoolContext{Context: ctx, waiting: make(chan struct{})}
+	result := make(chan error, 1)
+	go func() {
+		result <- pool.Do(waiter, func(_ *int) error {
+			t.Error("waiting canceled callback executed")
+			return nil
+		})
+	}()
+	<-waiter.waiting
+	cancel()
+	if err := <-result; !errors.Is(err, context.Canceled) {
+		t.Fatal("blocked admission ignored cancellation", err)
+	}
+	releaseHeld()
+	if err := <-held; err != nil {
+		t.Fatal(err)
+	}
+	if err := pool.Do(t.Context(), func(_ *int) error { return nil }); err != nil {
+		t.Fatal("waiting cancellation lost capacity", err)
 	}
 }
