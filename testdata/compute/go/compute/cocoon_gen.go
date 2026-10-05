@@ -964,8 +964,7 @@ func (l *Library) NewCounter(_arg0 uint64) (*Counter, error) {
 	_owner, _ownErr := rt.NewResource[Counter](_guest.instance, _output, func(_handle uint64) error {
 		return _guest.instance.Call("close", func(_call *rt.Call) error {
 			_status := rt.Status(_guest.module.Xcocoon_counter_close(int64(_handle)))
-			_, _closeErr := _call.Result("close", _status)
-			return _closeErr
+			return _call.ResultUnit("close", _status)
 		})
 	})
 	if _ownErr != nil {

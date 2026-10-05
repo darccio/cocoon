@@ -58,6 +58,8 @@ capacity. No view or `*rt.Call` may escape its call.
 `rt.Call.Result` returns an owned byte copy. Generated facades instead decode
 `ResultView` under the execution lock, copying retained string and byte fields
 and allocating owned scalar arrays. Typed results never borrow guest memory.
+`ResultUnit` applies the same validation and rejects nonempty successful replies;
+generated resource destructors use it without copying a discarded payload.
 
 | Status | Meaning |
 | --- | --- |

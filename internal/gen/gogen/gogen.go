@@ -276,7 +276,7 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 	b.WriteString(";\n")
 	switch {
 	case constructor:
-		fmt.Fprintf(b, "if _err!=nil { return nil,_err }; _owner,_ownErr:=rt.NewResource[%s](_guest.instance,_output,func(_handle uint64) error { return _guest.instance.Call(\"close\",func(_call *rt.Call) error { _status:=rt.Status(_guest.module.Xcocoon_%s_close(int64(_handle))); _,_closeErr:=_call.Result(\"close\",_status); return _closeErr }) }); if _ownErr!=nil { return nil,_ownErr }; return &%s{library:l,guest:_guest,owner:_owner},nil\n", resource, strings.ToLower(resource), resource)
+		fmt.Fprintf(b, "if _err!=nil { return nil,_err }; _owner,_ownErr:=rt.NewResource[%s](_guest.instance,_output,func(_handle uint64) error { return _guest.instance.Call(\"close\",func(_call *rt.Call) error { _status:=rt.Status(_guest.module.Xcocoon_%s_close(int64(_handle))); return _call.ResultUnit(\"close\",_status) }) }); if _ownErr!=nil { return nil,_ownErr }; return &%s{library:l,guest:_guest,owner:_owner},nil\n", resource, strings.ToLower(resource), resource)
 	case result != "":
 		b.WriteString("return _output,_err\n")
 	default:

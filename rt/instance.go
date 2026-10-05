@@ -291,6 +291,18 @@ func (c *Call) Result(op string, status Status) ([]byte, error) {
 	return append([]byte(nil), view...), nil
 }
 
+// ResultUnit validates a canonical empty success or an owned guest error.
+func (c *Call) ResultUnit(op string, status Status) error {
+	view, err := c.ResultView(op, status)
+	if err != nil {
+		return err
+	}
+	if len(view) != 0 {
+		return ErrProtocol
+	}
+	return nil
+}
+
 // ResultView validates a borrowed reply for decoding under the execution lock.
 // The view must not escape the call or survive another guest invocation. Decoders
 // must copy any strings, bytes, or record fields retained in their typed result.

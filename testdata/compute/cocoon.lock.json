@@ -16,7 +16,7 @@
   "shim_sha256": "0abc5fac9468f9efc81599fe800fc28ada2c329f75cabbc1070c55fb8b94fab6",
   "wasm_sha256": "ef0db188dad9a4c3cd4fc702b07cf0e5e5575905c7fb55b0c0ad3d92dcfe476c",
   "go_sha256": "1712a7c5a8cedc766d11531efd47e178cb36be132b7e4408a97b5a857a210cac",
-  "facade_sha256": "464068a167446e91e0f3a7339148633aab4ff40241c50e85e8044ed3d1f915d3",
+  "facade_sha256": "7bc625765b4e5639d339d464cfe702abdd5eb2214f3ac27ba3358cb0a24c06fa",
   "adapter_sha256": "0f51bbc1d97c3bd362b852bc5efb559c7a954aebceaecbd991b6d73dbdce5686",
   "contract_tests_sha256": "f947d93c81b60f0f358f68d6122feb74c4d19a794153da413f8ceaae787cae8f",
   "differential_tests_sha256": "ba1e3d68d7589f461c4ad5ca559e1a4749dc084e01281bab70560e3ef28a3f5b",
