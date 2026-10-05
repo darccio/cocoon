@@ -167,7 +167,7 @@ func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
 		i.poison()
 		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
 	}
-	if errors.Is(err, ErrProtocol) {
+	if err != nil && errors.Is(err, ErrProtocol) {
 		i.poison()
 	}
 	return err

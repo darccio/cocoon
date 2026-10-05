@@ -3,6 +3,7 @@ package rt_test
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math"
 	"testing"
 
@@ -79,6 +80,40 @@ func TestCallResetsReservationWithoutAllocating(t *testing.T) {
 	})
 	if allocations != 0 {
 		t.Fatalf("empty call allocated %g times", allocations)
+	}
+}
+
+func TestCallErrorChainsAndSuccessfulGrowth(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		result error
+		name   string
+		poison bool
+	}{
+		{nil, "success", false},
+		{rt.ErrProtocol, "protocol", true},
+		{fmt.Errorf("wrapped: %w", rt.ErrProtocol), "wrapped protocol", true},
+		{errors.Join(errors.New("other"), rt.ErrProtocol), "joined protocol", true},
+		{rt.ErrTooLarge, "limit", false},
+		{&rt.AppError{Op: "app", Status: rt.ErrApp}, "application", false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			i := newInstance(t, newModule())
+			epoch := i.Epoch()
+			err := i.Call("test", func(_ *rt.Call) error { return test.result })
+			if !errors.Is(err, test.result) || i.Healthy() == test.poison || (i.Epoch() != epoch) != test.poison {
+				t.Fatalf("call = %v, healthy = %v, epoch = %d", err, i.Healthy(), i.Epoch())
+			}
+		})
+	}
+	m := newModule()
+	i := newInstance(t, m)
+	if err := i.Call("growth", func(_ *rt.Call) error {
+		m.memory = make([]byte, 129)
+		return nil
+	}); !errors.Is(err, rt.ErrTooLarge) || i.Healthy() {
+		t.Fatal("successful callback bypassed the memory limit", err)
 	}
 }
 
