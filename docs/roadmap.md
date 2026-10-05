@@ -119,6 +119,22 @@ HTTP and sleep capabilities, and response readers that reject overflow rather
 than truncating. Then implement the pipeline proof using structured records.
 Decide how to distribute its much larger generated source at that point.
 
+### Tokio compatibility
+
+Rust async support does not imply compatibility with arbitrary Tokio programs.
+The proposed event loop can poll guest `Future`s, but Cocoon targets
+`wasm32-unknown-unknown`, with no WASI or browser runtime. Tokio documents limited
+[Wasm support](https://docs.rs/tokio/latest/tokio/#wasm-support): selected features
+are available, but timers require platform support and an indefinitely idle
+runtime can panic. Cocoon HTTP and sleep capabilities would not automatically
+provide Tokio's networking or timer drivers.
+
+If Tokio-based libraries are a requirement, add a separate compatibility proof
+before promising support. Define the supported feature subset, bridge waking
+and scheduling to the host-driven loop, and demonstrate cancellation, shutdown,
+and any required timer or I/O adapters. Native multithreaded Tokio and arbitrary
+socket-based crates are not assumed compatible with the current target.
+
 ## Resume and verification
 
 Read this file, [ABI contracts](abi.md), [design review](design-review.md), and
