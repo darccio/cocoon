@@ -6,7 +6,68 @@ Benchmarks are a gate to investigate, not a reason to remove those checks.
 
 ## Current results
 
-The 2026-10-05 pass retained three small optimizations: inline unit success
+The second 2026-10-05 pass retained four host-side optimizations, with no change
+to the Wasm artifacts or translator pin. Seven interleaved 500 ms sample sets
+used Go 1.26.8, CGO disabled, no PGO, the AMD Ryzen 7 5800HS, 16 Go processors,
+no CPU affinity, and the same query and increasing-value workloads. Pre-pass
+and current order alternated; the independent reference followed each pair.
+All compilation, linting, tests, and fuzzing had finished before measurement.
+
+| Version | SQL median | SketchAdd median |
+| --- | --- | --- |
+| Before second pass (`6082ad7`) | 1.880 µs | 80.00 ns |
+| Current (`0c653b3`) | 1.839 µs | 77.31 ns |
+| Independent reference | 1.652 µs | 46.34 ns |
+
+SketchAdd improves by 3.36 percent (p=0.001, n=7); SQL has no detected change
+(p=0.128). Batch sketch medians are 36.402 versus 36.468 µs (p=0.902);
+trace medians are 2.1968 versus 2.1637 ms (p=0.209). None establishes a timing
+regression. The pre-pass trace samples include a 2.976 ms outlier, retained
+rather than filtered. Allocation counts are unchanged: one for SQL, zero for
+scalar adds, one for batch adds, and one for traces. Stateless bytes/op include
+amortized lazy guest construction; changes in that metric are not evidence
+of an eliminated per-call allocation.
+
+Remaining same-machine reference overhead is 11.3 percent for SQL and
+66.8 percent for SketchAdd. Both exceed this run's 10-percent limits of
+1.8172 µs and 50.974 ns. SQL is below the original absolute 2.2154 µs limit
+in this run; SketchAdd remains above 55.44 ns. Overall acceptance remains open.
+The unchanged pre-pass binary also runs faster here than in the first pass,
+so the historical 96.45 to current 77.31 ns difference is not a code improvement.
+Use the paired 80.00 to 77.31 ns comparison.
+
+| Version | SQL samples in ns | SketchAdd samples in ns |
+| --- | --- | --- |
+| Before | 1904, 1880, 1923, 1856, 1825, 1950, 1815 | 80.28, 84.27, 80.00, 79.24, 79.53, 79.25, 82.58 |
+| Current | 1798, 1864, 1873, 1836, 1839, 1845, 1756 | 73.86, 78.76, 77.31, 76.32, 78.99, 77.65, 75.21 |
+| Reference | 1638, 1678, 1652, 1670, 1660, 1620, 1652 | 45.87, 46.34, 49.23, 52.08, 47.02, 44.88, 45.25 |
+
+Five separate 300 ms layer samples give medians of 46.07 ns for the guest,
+65.90 ns for the checked instance, 72.94 ns for resource use, and 80.00 ns
+for the diagnostic facade. Empty instance/resource callbacks take 14.23 and
+22.06 ns; lifecycle enter/leave takes 6.198 ns. Five separate 500 ms samples
+put the ready pool at 73.75 ns. These callbacks differ from the public benchmark
+and are not exact additive cost accounting.
+
+Separate three-second profiles attribute 55.6 percent of SketchAdd samples
+cumulatively to the translated export, 39.2 percent to the sketch algorithm,
+and 11.8 percent to reply validation. SQL's translated export accounts for
+85.9 percent cumulatively; its parser accounts for 79.6 percent. These percentages
+overlap, describe sampled execution rather than independent costs, and do not
+establish the next optimization's benefit. The final profile build ID is
+`c09b4d52203a98b361e0e66e1a3f7a18f8e66559`.
+
+`make check`, `make race`, `make cross`, `make integration`, `make smoke`, and
+`make fuzz` pass. Both proofs reproduce on repeat builds. Targeted tests also
+pass with Go 1.26.8 and native linux/386. Runtime coverage is now 97.0 percent,
+up from 95.6 percent before this pass. Each code or test commit passed darna
+and exact staged-snapshot Go tests. Bounds, reply checks, panic containment,
+shared ownership, cancellation, and terminal draining Close remain intact.
+Raw final samples use `.cache/pass2-final-{before,final,reference}-{1..7}.txt`.
+
+## First performance pass
+
+The first 2026-10-05 pass retained three small optimizations: inline unit success
 publication (`e099514`), a checked successful-status fast path (`14e056c`), and
 cold unit-error publication (`078c9c9`). The final seven interleaved 500 ms sample
 sets used Go 1.26.8, CGO disabled, no PGO, the AMD Ryzen 7 5800HS, and the same
@@ -189,6 +250,75 @@ removed independently of the cold error experiment.
 | Inline unit baseline | 2276, 2263, 2291, 2326, 2300 | 99.02, 99.12, 98.29, 102.8, 102.3 |
 | Inline resource lookup | 2266, 2296, 2273, 2250, 2299 | 99.41, 99.00, 99.53, 98.62, 101.4 |
 
+## Second performance pass
+
+The second 2026-10-05 pass retained four host-side changes. All screening
+comparisons used Go 1.26.8, CGO disabled, no PGO, seven alternating 500 ms
+sample pairs, CPU 14 affinity, and one Go processor. CPU affinity made the
+small scalar differences easier to distinguish. These screening values must
+not be compared directly with the earlier unrestricted 16-processor results.
+
+| Change | Measured operation | Before | After | Detected change |
+| --- | --- | --- | --- | --- |
+| Skip error matching for successful callbacks (`c7e148e`) | SketchAdd | 79.80 ns | 78.24 ns | −1.95 percent, p=0.001 |
+| Inline checked memory ranges (`469e865`) | SketchAdd | 79.27 ns | 77.83 ns | −1.82 percent, p=0.026 |
+| Direct lifecycle admission for resource calls (`aec4d6d`) | SketchAdd | 78.61 ns | 75.78 ns | −3.60 percent, p=0.001 |
+| Receive ready pool slots without a blocking select (`b30d62e`) | PoolAvailable | 109.60 ns | 72.37 ns | −33.97 percent, p=0.001 |
+
+These percentages describe separate comparisons and must not be added. No
+screening comparison established a significant SQL improvement. The pool
+experiment moved SQL from 1.861 to 1.802 µs, but p=0.079 does not establish a
+full-facade gain. The isolated pool benchmark is a diagnostic, not a substitute
+for SQL acceptance.
+
+Successful callbacks still undergo the post-call memory check; wrapped and
+joined protocol errors still poison their instance. Range errors now construct
+a private error value and format their unchanged diagnostic on demand. The
+smaller success path inlines with Go 1.26.8 while preserving logical-length,
+overflow, spare-capacity, and zero-length checks and
+`errors.Is(err, rt.ErrProtocol)`.
+
+Resource methods have no caller context, so checking `context.Background().Err()`
+was redundant. They now enter the same lifecycle directly, retaining nil-wrapper,
+nil-library, ownership, epoch, terminal admission, and draining Close behavior.
+Stateless operations still check their caller context. Both facades and locks
+were regenerated; both Wasm artifacts and translated guest sources are unchanged.
+
+The pool retains context checks before and after borrowing. A ready slot uses
+a nonblocking receive; an unavailable slot still waits on slot availability or
+context cancellation. The existing panic-safe release path is unchanged. New
+tests deterministically cancel after both lazy and initialized ready borrows,
+cancel while waiting, and verify capacity and instance reuse.
+
+| Comparison | Before samples in ns | After samples in ns |
+| --- | --- | --- |
+| Successful callback | 79.53, 80.37, 79.50, 80.21, 79.80, 81.09, 79.79 | 78.04, 79.00, 78.24, 78.07, 78.41, 78.20, 79.11 |
+| Checked ranges | 79.72, 79.27, 79.86, 80.07, 78.81, 78.59, 78.56 | 77.22, 77.06, 77.83, 77.20, 78.65, 78.74, 78.96 |
+| Resource admission | 79.28, 77.77, 77.18, 79.48, 80.20, 78.61, 77.45 | 76.87, 76.41, 75.55, 74.96, 75.78, 76.77, 74.69 |
+| Ready pool | 109.0, 109.6, 109.1, 112.3, 110.2, 111.4, 109.5 | 71.14, 74.13, 71.01, 73.20, 72.83, 71.05, 72.37 |
+
+### Rejected second pass experiments
+
+Publishing an encoded reply by taking its vector instead of copying into the
+cached output buffer passed native tests but regressed SQL from 1.946 to
+2.055 µs (5.60 percent, p=0.007) and traces from 2.205 to 2.278 ms
+(3.27 percent, p=0.001). Allocation counts were unchanged. Changing ownership
+also changes buffer lifetimes; the comparison does not isolate the regression's
+cause. The candidate and its regenerated artifacts were removed. Its Datadog
+Wasm hash was `d1eaa8b1dd37afd1fcf715f719df04a7de18447a10b925276b348959c4575d5a`.
+
+Combining resource unlock and KeepAlive defers moved SketchAdd from 75.82 to
+74.71 ns but did not establish a significant gain (p=0.259). The production
+change was removed. Its panic-unlock and GC-during-use regressions passed against
+the original implementation and were retained independently (`0c653b3`).
+
+An unrestricted initial range-inlining screen was inconclusive. Forcing 16 Go
+processors onto one CPU produced heavy scheduling variance and is not retained
+as performance evidence. The table above uses the cleaner one-processor
+confirmation, not either noisy screen. Raw logs remain in ignored `.cache`
+under `pass2-pinned`, `pass2-bounds-confirm`, `pass2-admission`, `pass2-pool`,
+`pass2-owned`, and `pass2-resource-exit` prefixes.
+
 ## Historical pre release results
 
 On 2026-10-04, five interleaved samples of the pre-change binary, independently
@@ -271,11 +401,14 @@ callbacks account for much of the remainder; cumulative percentages overlap.
 These observations suggest experiments, not proof that a particular rewrite
 will help.
 
-The 2026-10-05 pass added the isolated benchmarks and separate SQL profile above,
+The first 2026-10-05 pass added the isolated benchmarks and separate SQL profile above,
 retained unit-reply inlining, successful-reply status dispatch, and a focused
 cold unit-error helper. It rejected general cold error and resource lookup
-annotations that did not establish an improvement. Next, use the SQL profile
-to select guest-side experiments and reprofile the remaining scalar overhead.
+annotations that did not establish an improvement. The second pass optimized
+successful callback bookkeeping, checked range inlining, resource admission,
+and ready pool borrowing. It rejected owned reply publication and combined
+resource exit defers. Next, use fresh profiles to choose larger guest-side or
+callback-layout experiments; adding the screening gains is not valid accounting.
 Retain bounds checks, canonical replies, trap containment, shared ownership,
 and draining Close, with staged-snapshot tests for each atomic change. See the
 [roadmap](roadmap.md) for other pending acceptance work.

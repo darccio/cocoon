@@ -2,8 +2,8 @@
 
 This is the resume point for future development conversations. Updated
 2026-10-05. The synchronous M1 framework and Datadog proof are released privately
-as v0.1.0. Performance work resumed after the quality pass; acceptance remains
-unmet.
+as v0.1.0. Two performance passes are complete after the quality pass;
+performance acceptance remains unmet.
 Async and HTTP are a separate milestone, not partially implemented M1 features.
 
 ## Current working state
@@ -23,7 +23,7 @@ build. The release tag points to that qualified code commit. No license has
 been selected.
 
 Native linux/386 tests now pass outside the former sandbox. Current runtime
-coverage is 95.6 percent; the Rust and Go generators are 94.6 and 96.7 percent.
+coverage is 97.0 percent; the Rust and Go generators are 94.6 and 96.7 percent.
 
 The installed-CLI smoke test passes with Go 1.26.8 and 1.27.1. It initializes,
 formats, builds, verifies, and deterministically rebuilds a separate author's
@@ -82,31 +82,58 @@ that loss while preserving the scalar gain. Native tests now exercise all unit-e
 statuses and transitions back to canonical empty success replies. The weaker
 inline hint alone produced identical Datadog Wasm and was not retained.
 
-The final seven-sample comparison is 114.4 to 96.45 nanoseconds for SketchAdd,
+The first-pass final comparison is 114.4 to 96.45 nanoseconds for SketchAdd,
 a 15.69 percent reduction. SQL is statistically unchanged at 2.272 microseconds.
 Remaining same-machine reference overhead is 16.0 percent for SQL and
 73.8 percent for SketchAdd; original and same-machine 10-percent targets are
 still unmet. Batch sketch and trace comparisons show no detected timing or
 allocation regressions. All local quality, staged-snapshot, repeat-build, smoke,
 and generated differential fuzz checks pass for the final code, including
-Go 1.26.8 and native linux/386 tests. Runtime coverage remains 95.6 percent.
+Go 1.26.8 and native linux/386 tests. Runtime coverage remained 95.6 percent
+at that point.
 
-1. Use the final scalar profile to choose the next experiment. It attributes
-   53.7 percent cumulatively to translated guest execution, 38.6 percent to the
-   sketch algorithm, and 7.4 percent to reply validation. The isolated
+The second pass retained four host-side changes: successful callback error
+matching (`c7e148e`), checked range inlining (`469e865`), direct resource lifecycle
+admission (`aec4d6d`), and ready pool borrowing (`b30d62e`). CPU-pinned screening
+confirmed small scalar gains and a 34 percent isolated ready-pool improvement;
+those separate percentages are not additive. Existing panic and GC ownership
+regressions were also expanded (`0c653b3`). The generated facades and locks were
+updated without changing either Wasm artifact or translated guest source.
+
+The fresh seven-sample unrestricted comparison is 80.00 to 77.31 nanoseconds
+for SketchAdd, a 3.36 percent gain. SQL is 1.880 versus 1.839 microseconds with
+no detected timing change. Remaining reference overhead is 11.3 percent for
+SQL and 66.8 percent for SketchAdd. The unchanged baseline also runs faster
+in this session than previously; do not present historical-to-current absolute
+differences as code improvements. Both fresh same-machine 10-percent targets
+remain unmet. SQL is below its original absolute limit in this run, while the
+scalar benchmark still exceeds its original limit. Batch and trace comparisons
+show no detected timing or allocation-count regressions.
+
+Owned reply publication regressed SQL and traces and was discarded. Combining
+resource exit defers did not establish a gain and was discarded independently;
+its regressions remain against the original implementation. All full local
+quality gates, differential fuzzing, repeated proof builds, staged snapshots,
+Go 1.26.8 tests, and native linux/386 tests pass. Runtime coverage is 97.0 percent.
+Raw samples, screening conditions, profiles, and rejected experiments are
+recorded in the performance notes.
+
+1. Use the second-pass scalar profile to choose the next experiment. It attributes
+   55.6 percent cumulatively to translated guest execution, 39.2 percent to the
+   sketch algorithm, and 11.8 percent to reply validation. The isolated
    call-layer benchmarks (`8d3b074`) are available; keep measuring guest and
    host costs separately, including callback layout and checked reply decoding.
-2. Use the final SQL profile to choose guest-side experiments; 80.5 percent of
-   samples are cumulatively in the translated export. Its reduced
+2. Use the second-pass SQL profile to choose guest-side experiments; 85.9 percent
+   of samples are cumulatively in the translated export. Its reduced
    allocation count did not close the timing gap. Measure full facade calls as
    well as isolated layers before considering synchronization changes.
 3. Optimize measured hot paths without removing bounds checks, canonical reply
    validation, fault containment, shared ownership, or terminal draining Close.
    Add regression tests and regenerate affected proof artifacts with each change.
 4. Repeat isolated before/after and independent spike samples. Retain the
-   original absolute limits as well as the same-machine comparison. Neither
-   benchmark currently meets either interpretation of the 10-percent target;
-   do not mark M1 performance accepted.
+   original absolute limits as well as the same-machine comparison. Both
+   benchmarks still exceed the fresh same-machine limits, and SketchAdd also
+   exceeds its original limit. Do not mark M1 performance accepted.
 
 ## Follow up quality work
 
