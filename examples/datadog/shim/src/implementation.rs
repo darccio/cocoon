@@ -66,7 +66,7 @@ impl crate::cocoon_gen::API for Shim {
 }
 
 fn validate_point(value: f64) -> Result<()> {
-    if value.is_finite() && value >= 0.0 {
+    if (0.0..=f64::MAX).contains(&value) {
         Ok(())
     } else {
         Err(Error::argument(
@@ -109,5 +109,74 @@ mod tests {
             .unwrap();
         let decoded = DDSketch::from_encoded(&shim.sketch_encode(&mut sketch)).unwrap();
         assert_eq!(decoded.count(), 4.0);
+    }
+
+    #[test]
+    fn sketch_point_boundaries_preserve_errors_and_state() {
+        let mut shim = Shim::default();
+        let mut sketch = shim.sketch_new();
+        shim.sketch_add(&mut sketch, 1.0).unwrap();
+        let cases = [
+            (0, true),
+            (1, true),                     // Smallest subnormal.
+            (0x000f_ffff_ffff_ffff, true), // Largest subnormal.
+            (f64::MIN_POSITIVE.to_bits(), true),
+            (f64::MAX.to_bits(), true),
+            (f64::INFINITY.to_bits(), false),
+            (0x7ff0_0000_0000_0001, false), // Signaling NaN.
+            (0x7ff7_ffff_ffff_ffff, false), // Signaling NaN with another payload.
+            (0x7ff8_0000_0000_0000, false), // Quiet NaN.
+            (0x7fff_ffff_ffff_ffff, false), // Quiet NaN with another payload.
+        ];
+        for (magnitude, nonnegative_valid) in cases {
+            for sign in [0, 0x8000_0000_0000_0000] {
+                let bits = magnitude | sign;
+                let value = f64::from_bits(bits);
+                let valid = nonnegative_valid && (sign == 0 || magnitude == 0);
+                let before_count = shim.sketch_count(&mut sketch);
+                let before_encoded = shim.sketch_encode(&mut sketch);
+                let result = shim.sketch_add(&mut sketch, value);
+                if valid {
+                    assert_eq!(result, Ok(()), "bits={bits:016x}");
+                    assert_eq!(shim.sketch_count(&mut sketch), before_count + 1.0);
+                } else {
+                    assert_eq!(
+                        result,
+                        Err(Error::argument(
+                            "sketch points must be finite and nonnegative"
+                        )),
+                        "bits={bits:016x}"
+                    );
+                    assert_eq!(shim.sketch_count(&mut sketch), before_count);
+                    assert_eq!(shim.sketch_encode(&mut sketch), before_encoded);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn point_validation_matches_finite_nonnegative_domain() {
+        // Cover both signs, every exponent, and fraction boundaries, including
+        // the quiet/signaling NaN bit, without depending on host randomness.
+        for sign in [0, 0x8000_0000_0000_0000] {
+            for exponent in 0..=0x7ff {
+                for fraction in [
+                    0,
+                    1,
+                    0x0007_ffff_ffff_ffff,
+                    0x0008_0000_0000_0000,
+                    0x000f_ffff_ffff_fffe,
+                    0x000f_ffff_ffff_ffff,
+                ] {
+                    let bits = sign | (exponent << 52) | fraction;
+                    let value = f64::from_bits(bits);
+                    assert_eq!(
+                        validate_point(value).is_ok(),
+                        value.is_finite() && value >= 0.0,
+                        "bits={bits:016x}"
+                    );
+                }
+            }
+        }
     }
 }
