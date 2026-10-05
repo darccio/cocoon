@@ -48101,6 +48101,7 @@ func (m *Module) Xcocoon_sketch_close(v0 int64) int32 {
 func (m *Module) Xcocoon_sketch_add_many(v0 int64, v1, v2 int32) int32 {
 	var v3, v4, v5, v6, v7, v8, v9, v10, v11 int32
 	var v12 float64
+	var v13 int64
 	t0 := m.g0
 	v3 = t0 - i32(32)
 	m.g0 = v3
@@ -48237,82 +48238,95 @@ func (m *Module) Xcocoon_sketch_add_many(v0 int64, v1, v2 int32) int32 {
 							v11 = v5 << 3
 							v5 = i32(0)
 							{
-							l7:
+							l6:
 								{
-									t31 := math.Float64frombits(load64(m.memory, uint32(v5+v7)))
-									v12 = t31
-									if !(v12 >= float64(0)) {
-										goto l6
+									t31 := int64(load64(m.memory, uint32(v5+v7)))
+									v0 = t31
+									v13 = v0 & i64(0x7fffffffffffffff)
+									var p32 int32
+									if v13 == 0 {
+										p32 = 1
 									}
-									if !(v12 <= float64(0x1.fffffffffffffp+1023)) {
-										goto l6
+									var p33 int32
+									if uint64(v0-i64(1)) < uint64(i64(0xfffffffffffff)) {
+										p33 = 1
 									}
-									v5 = v5 + i32(8)
-									if v5 != v11 {
-										goto l7
+									t34 := p32 | p33
+									var p35 int32
+									if uint64(v13-i64(0x10000000000000)) < uint64(i64(0x7fe0000000000000)) {
+										p35 = 1
 									}
-									{
-										t40 := int32(load32(m.memory, uint32(v6)))
-										v6 = t40
-										v5 = i32(0)
-									l12:
-										{
-											t41 := math.Float64frombits(load64(m.memory, uint32(v5+v7)))
-											m.fn176(v1+i32(8), v4, t41)
-											t42 := int32(load32(m.memory, uint64(uint32(v1))+8))
-											v10 = t42
-											if v10 != 0 {
-												t45 := int32(load32(m.memory, uint64(uint32(v1))+12))
-												v4 = t45
-												store32(m.memory, uint64(uint32(v1))+40, uint32(i32(0)))
-												store64(m.memory, uint64(uint32(v1))+32, uint64(i64(0x100000000)))
-												store32(m.memory, uint64(uint32(v1))+48, uint32(i32(1055432)))
-												store64(m.memory, uint64(uint32(v1))+52, uint64(i64(0x60000020)))
-												store32(m.memory, uint64(uint32(v1))+44, uint32(v1+i32(32)))
-												t46 := int32(load32(m.memory, uint64(uint32(v4))+16))
-												t47 := m.t0[cocoon_table_index(uint64(uint(t46)), len(m.t0))].(func(int32, int32) int32)(v10, v1+i32(44))
-												if t47 == 0 {
-													t48 := int32(load32(m.memory, uint64(uint32(v1))+40))
-													store32(m.memory, uint64(uint32(v1))+24, uint32(t48))
-													t49 := int64(load64(m.memory, uint64(uint32(v1))+32))
-													store64(m.memory, uint64(uint32(v1))+16, uint64(t49))
-													t50 := int32(load32(m.memory, uint32(v4)))
-													v5 = t50
-													if v5 != 0 {
-														m.t0[cocoon_table_index(uint64(uint(v5)), len(m.t0))].(func(int32))(v10)
-													}
-													t51 := int32(load32(m.memory, uint64(uint32(v4))+4))
-													v5 = t51
-													if v5 != 0 {
-														_ = int32(load32(m.memory, uint64(uint32(v4))+8))
-														m.fn1(v10, v5)
-													}
-													t53 := int32(load32(m.memory, uint64(uint32(v1))+24))
-													store32(m.memory, uint64(uint32(v2))+8, uint32(t53))
-													t54 := int64(load64(m.memory, uint64(uint32(v1))+16))
-													store64(m.memory, uint32(v2), uint64(t54))
-													store32(m.memory, uint64(uint32(v2))+12, uint32(i32(1)))
-													if v6 == 0 {
-														goto l10
-													}
-													m.fn1(v7, v6<<3)
-													goto l10
-												}
-												m.fn27(i32(1055472), i32(55), v1+i32(63), i32(1055456), i32(1055528))
-												panic("unreachable")
-											}
-											t43 := v11
-											v5 = v5 + i32(8)
-											if t43 != v5 {
-												goto l12
-											}
+									var p36 int32
+									if v0 >= i64(0) {
+										p36 = 1
+									}
+									if t34|p35&p36 != 0 {
+										v5 = v5 + i32(8)
+										if v5 != v11 {
+											goto l6
 										}
-										goto l13
+										{
+											t45 := int32(load32(m.memory, uint32(v6)))
+											v6 = t45
+											v5 = i32(0)
+										l11:
+											{
+												t46 := math.Float64frombits(load64(m.memory, uint32(v5+v7)))
+												m.fn176(v1+i32(8), v4, t46)
+												t47 := int32(load32(m.memory, uint64(uint32(v1))+8))
+												v10 = t47
+												if v10 != 0 {
+													t50 := int32(load32(m.memory, uint64(uint32(v1))+12))
+													v4 = t50
+													store32(m.memory, uint64(uint32(v1))+40, uint32(i32(0)))
+													store64(m.memory, uint64(uint32(v1))+32, uint64(i64(0x100000000)))
+													store32(m.memory, uint64(uint32(v1))+48, uint32(i32(1055432)))
+													store64(m.memory, uint64(uint32(v1))+52, uint64(i64(0x60000020)))
+													store32(m.memory, uint64(uint32(v1))+44, uint32(v1+i32(32)))
+													t51 := int32(load32(m.memory, uint64(uint32(v4))+16))
+													t52 := m.t0[cocoon_table_index(uint64(uint(t51)), len(m.t0))].(func(int32, int32) int32)(v10, v1+i32(44))
+													if t52 == 0 {
+														t53 := int32(load32(m.memory, uint64(uint32(v1))+40))
+														store32(m.memory, uint64(uint32(v1))+24, uint32(t53))
+														t54 := int64(load64(m.memory, uint64(uint32(v1))+32))
+														store64(m.memory, uint64(uint32(v1))+16, uint64(t54))
+														t55 := int32(load32(m.memory, uint32(v4)))
+														v5 = t55
+														if v5 != 0 {
+															m.t0[cocoon_table_index(uint64(uint(v5)), len(m.t0))].(func(int32))(v10)
+														}
+														t56 := int32(load32(m.memory, uint64(uint32(v4))+4))
+														v5 = t56
+														if v5 != 0 {
+															_ = int32(load32(m.memory, uint64(uint32(v4))+8))
+															m.fn1(v10, v5)
+														}
+														t58 := int32(load32(m.memory, uint64(uint32(v1))+24))
+														store32(m.memory, uint64(uint32(v2))+8, uint32(t58))
+														t59 := int64(load64(m.memory, uint64(uint32(v1))+16))
+														store64(m.memory, uint32(v2), uint64(t59))
+														store32(m.memory, uint64(uint32(v2))+12, uint32(i32(1)))
+														if v6 == 0 {
+															goto l9
+														}
+														m.fn1(v7, v6<<3)
+														goto l9
+													}
+													m.fn27(i32(1055472), i32(55), v1+i32(63), i32(1055456), i32(1055528))
+													panic("unreachable")
+												}
+												t48 := v11
+												v5 = v5 + i32(8)
+												if t48 != v5 {
+													goto l11
+												}
+											}
+											goto l12
+										}
 									}
 								}
-							l6:
-								t32 := m.fn4(i32(44), i32(1))
-								v4 = t32
+								t37 := m.fn4(i32(44), i32(1))
+								v4 = t37
 								if v4 == 0 {
 									m.fn2(i32(1), i32(44))
 									panic("unreachable")
@@ -48320,69 +48334,69 @@ func (m *Module) Xcocoon_sketch_add_many(v0 int64, v1, v2 int32) int32 {
 								store64(m.memory, uint64(uint32(v2))+8, uint64(i64(0x20000002c)))
 								store32(m.memory, uint64(uint32(v2))+4, uint32(v4))
 								store32(m.memory, uint32(v2), uint32(i32(44)))
-								t33 := int32(load32(m.memory, uint32(i32(1055128))))
-								store32(m.memory, uint64(uint32(v4))+40, uint32(t33))
-								t34 := int64(load64(m.memory, uint32(i32(1055120))))
-								store64(m.memory, uint64(uint32(v4))+32, uint64(t34))
-								t35 := int64(load64(m.memory, uint32(i32(1055112))))
-								store64(m.memory, uint64(uint32(v4))+24, uint64(t35))
-								t36 := int64(load64(m.memory, uint32(i32(1055104))))
-								store64(m.memory, uint64(uint32(v4))+16, uint64(t36))
-								t37 := int64(load64(m.memory, uint32(i32(1055096))))
-								store64(m.memory, uint64(uint32(v4))+8, uint64(t37))
-								t38 := int64(load64(m.memory, uint32(i32(1055088))))
-								store64(m.memory, uint32(v4), uint64(t38))
-								t39 := int32(load32(m.memory, uint32(v6)))
-								v2 = t39
+								t38 := int32(load32(m.memory, uint32(i32(1055128))))
+								store32(m.memory, uint64(uint32(v4))+40, uint32(t38))
+								t39 := int64(load64(m.memory, uint32(i32(1055120))))
+								store64(m.memory, uint64(uint32(v4))+32, uint64(t39))
+								t40 := int64(load64(m.memory, uint32(i32(1055112))))
+								store64(m.memory, uint64(uint32(v4))+24, uint64(t40))
+								t41 := int64(load64(m.memory, uint32(i32(1055104))))
+								store64(m.memory, uint64(uint32(v4))+16, uint64(t41))
+								t42 := int64(load64(m.memory, uint32(i32(1055096))))
+								store64(m.memory, uint64(uint32(v4))+8, uint64(t42))
+								t43 := int64(load64(m.memory, uint32(i32(1055088))))
+								store64(m.memory, uint32(v4), uint64(t43))
+								t44 := int32(load32(m.memory, uint32(v6)))
+								v2 = t44
 								if v2 == 0 {
-									goto l10
+									goto l9
 								}
 								m.fn1(v7, v2<<3)
-								goto l10
+								goto l9
 							}
 						}
-						t44 := int32(load32(m.memory, uint32(v6)))
-						v6 = t44
+						t49 := int32(load32(m.memory, uint32(v6)))
+						v6 = t49
 					}
-				l13:
+				l12:
 					if v6 != 0 {
 						m.fn1(v7, v6<<3)
 					}
 					store32(m.memory, uint32(v2), uint32(i32(-1)))
-					goto l10
-				l10:
+					goto l9
+				l9:
 					m.g0 = v1 - i32(-64)
-					t55 := int32(load32(m.memory, uint64(uint32(v3))+4))
-					v1 = t55
+					t60 := int32(load32(m.memory, uint64(uint32(v3))+4))
+					v1 = t60
 					if v1 != i32(-1) {
-						t56 := int32(load32(m.memory, uint64(uint32(v3))+16))
-						v2 = t56
-						t57 := int32(load32(m.memory, uint64(uint32(v3))+12))
-						v6 = t57
-						t58 := int32(load32(m.memory, uint64(uint32(v3))+8))
-						v4 = t58
+						t61 := int32(load32(m.memory, uint64(uint32(v3))+16))
+						v2 = t61
+						t62 := int32(load32(m.memory, uint64(uint32(v3))+12))
+						v6 = t62
+						t63 := int32(load32(m.memory, uint64(uint32(v3))+8))
+						v4 = t63
 						goto l2
 					}
 					if v8 != 0 {
 						m.fn1(v9, v8)
 					}
-					t59 := int32(load32(m.memory, uint32(i32(1101424))))
-					store32(m.memory, uint32(i32(1101424)), uint32(t59+i32(1)))
-					t60 := int32(m.memory[uint32(i32(1101820))])
-					if t60 != i32(1) {
+					t64 := int32(load32(m.memory, uint32(i32(1101424))))
+					store32(m.memory, uint32(i32(1101424)), uint32(t64+i32(1)))
+					t65 := int32(m.memory[uint32(i32(1101820))])
+					if t65 != i32(1) {
 						m.fn105()
 					}
-					t61 := int32(load32(m.memory, uint32(i32(1101776))))
-					if t61 != 0 {
+					t66 := int32(load32(m.memory, uint32(i32(1101776))))
+					if t66 != 0 {
 						m.fn24(i32(1054560))
 						panic("unreachable")
 					}
-					t62 := int32(load32(m.memory, uint32(i32(1101796))))
-					store32(m.memory, uint32(i32(1101804)), uint32(t62))
+					t67 := int32(load32(m.memory, uint32(i32(1101796))))
+					store32(m.memory, uint32(i32(1101804)), uint32(t67))
 					store32(m.memory, uint32(i32(1101800)), uint32(i32(0)))
 					store32(m.memory, uint32(i32(1101808)), uint32(i32(0)))
 					p2 = i32(0)
-					goto l15
+					goto l14
 				}
 			}
 			m.fn24(i32(1054560))
@@ -48396,21 +48410,22 @@ func (m *Module) Xcocoon_sketch_add_many(v0 int64, v1, v2 int32) int32 {
 		p3 = v6
 	l0:
 		v4 = p3
-		t63 := int32(load32(m.memory, uint32(i32(1101424))))
-		store32(m.memory, uint32(i32(1101424)), uint32(t63+i32(1)))
+		t68 := int32(load32(m.memory, uint32(i32(1101424))))
+		store32(m.memory, uint32(i32(1101424)), uint32(t68+i32(1)))
 		store32(m.memory, uint64(uint32(v3))+16, uint32(v2))
 		store32(m.memory, uint64(uint32(v3))+12, uint32(v4))
 		store32(m.memory, uint64(uint32(v3))+8, uint32(v8))
 		store32(m.memory, uint64(uint32(v3))+4, uint32(v1))
-		t64 := m.fn60(v3 + i32(4))
-		p2 = t64
+		t69 := m.fn60(v3 + i32(4))
+		p2 = t69
 	}
-l15:
+l14:
 	m.g0 = v3 + i32(32)
 	return p2
 }
 func (m *Module) Xcocoon_sketch_add(v0 int64, v1 float64) int32 {
 	var v2, v3, v4, v5, v6 int32
+	var v7 int64
 	t0 := m.g0
 	v3 = t0 - i32(16)
 	m.g0 = v3
@@ -48443,17 +48458,28 @@ func (m *Module) Xcocoon_sketch_add(v0 int64, v1 float64) int32 {
 						v2 = t10 + i32(-64)
 						m.g0 = v2
 						{
+							v0 = int64(math.Float64bits(v1))
+							v7 = v0 & i64(0x7fffffffffffffff)
 							var p11 int32
-							if v1 <= float64(0x1.fffffffffffffp+1023) {
+							if v7 == 0 {
 								p11 = 1
 							}
 							var p12 int32
-							if v1 >= float64(0) {
+							if uint64(v0-i64(1)) < uint64(i64(0xfffffffffffff)) {
 								p12 = 1
 							}
-							if p11&p12 == 0 {
-								t13 := m.fn4(i32(44), i32(1))
-								v4 = t13
+							t13 := p11 | p12
+							var p14 int32
+							if uint64(v7-i64(0x10000000000000)) < uint64(i64(0x7fe0000000000000)) {
+								p14 = 1
+							}
+							var p15 int32
+							if v0 >= i64(0) {
+								p15 = 1
+							}
+							if t13|p14&p15 == 0 {
+								t16 := m.fn4(i32(44), i32(1))
+								v4 = t16
 								if v4 == 0 {
 									m.fn2(i32(1), i32(44))
 									panic("unreachable")
@@ -48461,56 +48487,56 @@ func (m *Module) Xcocoon_sketch_add(v0 int64, v1 float64) int32 {
 								store64(m.memory, uint64(uint32(v3))+8, uint64(i64(0x20000002c)))
 								store32(m.memory, uint64(uint32(v3))+4, uint32(v4))
 								store32(m.memory, uint32(v3), uint32(i32(44)))
-								t14 := int32(load32(m.memory, uint32(i32(1055128))))
-								store32(m.memory, uint64(uint32(v4))+40, uint32(t14))
-								t15 := int64(load64(m.memory, uint32(i32(1055120))))
-								store64(m.memory, uint64(uint32(v4))+32, uint64(t15))
-								t16 := int64(load64(m.memory, uint32(i32(1055112))))
-								store64(m.memory, uint64(uint32(v4))+24, uint64(t16))
-								t17 := int64(load64(m.memory, uint32(i32(1055104))))
-								store64(m.memory, uint64(uint32(v4))+16, uint64(t17))
-								t18 := int64(load64(m.memory, uint32(i32(1055096))))
-								store64(m.memory, uint64(uint32(v4))+8, uint64(t18))
-								t19 := int64(load64(m.memory, uint32(i32(1055088))))
-								store64(m.memory, uint32(v4), uint64(t19))
+								t17 := int32(load32(m.memory, uint32(i32(1055128))))
+								store32(m.memory, uint64(uint32(v4))+40, uint32(t17))
+								t18 := int64(load64(m.memory, uint32(i32(1055120))))
+								store64(m.memory, uint64(uint32(v4))+32, uint64(t18))
+								t19 := int64(load64(m.memory, uint32(i32(1055112))))
+								store64(m.memory, uint64(uint32(v4))+24, uint64(t19))
+								t20 := int64(load64(m.memory, uint32(i32(1055104))))
+								store64(m.memory, uint64(uint32(v4))+16, uint64(t20))
+								t21 := int64(load64(m.memory, uint32(i32(1055096))))
+								store64(m.memory, uint64(uint32(v4))+8, uint64(t21))
+								t22 := int64(load64(m.memory, uint32(i32(1055088))))
+								store64(m.memory, uint32(v4), uint64(t22))
 								goto l2
 							}
 							m.fn176(v2+i32(8), v4, v1)
-							t20 := int32(load32(m.memory, uint64(uint32(v2))+8))
-							v5 = t20
+							t23 := int32(load32(m.memory, uint64(uint32(v2))+8))
+							v5 = t23
 							if v5 != 0 {
-								t21 := int32(load32(m.memory, uint64(uint32(v2))+12))
-								v4 = t21
+								t24 := int32(load32(m.memory, uint64(uint32(v2))+12))
+								v4 = t24
 								store32(m.memory, uint64(uint32(v2))+40, uint32(i32(0)))
 								store64(m.memory, uint64(uint32(v2))+32, uint64(i64(0x100000000)))
 								store32(m.memory, uint64(uint32(v2))+48, uint32(i32(1055432)))
 								store64(m.memory, uint64(uint32(v2))+52, uint64(i64(0x60000020)))
 								store32(m.memory, uint64(uint32(v2))+44, uint32(v2+i32(32)))
-								t22 := int32(load32(m.memory, uint64(uint32(v4))+16))
-								t23 := m.t0[cocoon_table_index(uint64(uint(t22)), len(m.t0))].(func(int32, int32) int32)(v5, v2+i32(44))
-								if t23 != 0 {
+								t25 := int32(load32(m.memory, uint64(uint32(v4))+16))
+								t26 := m.t0[cocoon_table_index(uint64(uint(t25)), len(m.t0))].(func(int32, int32) int32)(v5, v2+i32(44))
+								if t26 != 0 {
 									m.fn27(i32(1055472), i32(55), v2+i32(63), i32(1055456), i32(1055528))
 									panic("unreachable")
 								}
-								t24 := int32(load32(m.memory, uint64(uint32(v2))+40))
-								store32(m.memory, uint64(uint32(v2))+24, uint32(t24))
-								t25 := int64(load64(m.memory, uint64(uint32(v2))+32))
-								store64(m.memory, uint64(uint32(v2))+16, uint64(t25))
-								t26 := int32(load32(m.memory, uint32(v4)))
-								v6 = t26
+								t27 := int32(load32(m.memory, uint64(uint32(v2))+40))
+								store32(m.memory, uint64(uint32(v2))+24, uint32(t27))
+								t28 := int64(load64(m.memory, uint64(uint32(v2))+32))
+								store64(m.memory, uint64(uint32(v2))+16, uint64(t28))
+								t29 := int32(load32(m.memory, uint32(v4)))
+								v6 = t29
 								if v6 != 0 {
 									m.t0[cocoon_table_index(uint64(uint(v6)), len(m.t0))].(func(int32))(v5)
 								}
-								t27 := int32(load32(m.memory, uint64(uint32(v4))+4))
-								v6 = t27
+								t30 := int32(load32(m.memory, uint64(uint32(v4))+4))
+								v6 = t30
 								if v6 != 0 {
 									_ = int32(load32(m.memory, uint64(uint32(v4))+8))
 									m.fn1(v5, v6)
 								}
-								t29 := int32(load32(m.memory, uint64(uint32(v2))+24))
-								store32(m.memory, uint64(uint32(v3))+8, uint32(t29))
-								t30 := int64(load64(m.memory, uint64(uint32(v2))+16))
-								store64(m.memory, uint32(v3), uint64(t30))
+								t32 := int32(load32(m.memory, uint64(uint32(v2))+24))
+								store32(m.memory, uint64(uint32(v3))+8, uint32(t32))
+								t33 := int64(load64(m.memory, uint64(uint32(v2))+16))
+								store64(m.memory, uint32(v3), uint64(t33))
 								store32(m.memory, uint64(uint32(v3))+12, uint32(i32(1)))
 								goto l2
 							}
@@ -48520,41 +48546,41 @@ func (m *Module) Xcocoon_sketch_add(v0 int64, v1 float64) int32 {
 						m.g0 = v2 - i32(-64)
 						goto l4
 					l4:
-						t31 := int32(load32(m.memory, uint32(v3)))
-						v2 = t31
+						t34 := int32(load32(m.memory, uint32(v3)))
+						v2 = t34
 						if v2 == i32(-1) {
 							goto l5
 						}
-						t32 := int32(load32(m.memory, uint64(uint32(v3))+4))
-						v4 = t32
-						t33 := int64(load64(m.memory, uint64(uint32(v3))+8))
-						p7 = t33
+						t35 := int32(load32(m.memory, uint64(uint32(v3))+4))
+						v4 = t35
+						t36 := int64(load64(m.memory, uint64(uint32(v3))+8))
+						p7 = t36
 					}
 				l0:
 					v0 = p7
-					t34 := int32(load32(m.memory, uint32(i32(1101424))))
-					store32(m.memory, uint32(i32(1101424)), uint32(t34+i32(1)))
+					t37 := int32(load32(m.memory, uint32(i32(1101424))))
+					store32(m.memory, uint32(i32(1101424)), uint32(t37+i32(1)))
 					store64(m.memory, uint64(uint32(v3))+8, uint64(v0))
 					store32(m.memory, uint64(uint32(v3))+4, uint32(v4))
 					store32(m.memory, uint32(v3), uint32(v2))
-					t35 := m.fn60(v3)
-					p6 = t35
+					t38 := m.fn60(v3)
+					p6 = t38
 					goto l6
 				}
 			l5:
-				t36 := int32(load32(m.memory, uint32(i32(1101424))))
-				store32(m.memory, uint32(i32(1101424)), uint32(t36+i32(1)))
-				t37 := int32(m.memory[uint32(i32(1101820))])
-				if t37 != i32(1) {
+				t39 := int32(load32(m.memory, uint32(i32(1101424))))
+				store32(m.memory, uint32(i32(1101424)), uint32(t39+i32(1)))
+				t40 := int32(m.memory[uint32(i32(1101820))])
+				if t40 != i32(1) {
 					m.fn105()
 				}
-				t38 := int32(load32(m.memory, uint32(i32(1101776))))
-				if t38 != 0 {
+				t41 := int32(load32(m.memory, uint32(i32(1101776))))
+				if t41 != 0 {
 					m.fn24(i32(1054560))
 					panic("unreachable")
 				}
-				t39 := int32(load32(m.memory, uint32(i32(1101796))))
-				store32(m.memory, uint32(i32(1101804)), uint32(t39))
+				t42 := int32(load32(m.memory, uint32(i32(1101796))))
+				store32(m.memory, uint32(i32(1101804)), uint32(t42))
 				store32(m.memory, uint32(i32(1101800)), uint32(i32(0)))
 				store32(m.memory, uint32(i32(1101808)), uint32(i32(0)))
 				p6 = i32(0)

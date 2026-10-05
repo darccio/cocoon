@@ -66,7 +66,7 @@ impl crate::cocoon_gen::API for Shim {
 }
 
 fn validate_point(value: f64) -> Result<()> {
-    if (0.0..=f64::MAX).contains(&value) {
+    if value.is_finite() && value >= 0.0 {
         Ok(())
     } else {
         Err(Error::argument(
