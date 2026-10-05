@@ -175,11 +175,15 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 			b.WriteString("return r.owner.Close() }\n")
 			return
 		}
-		b.WriteString("l:=r.library; _ctx:=context.Background();\n")
+		b.WriteString("l:=r.library;\n")
 	} else if constructor {
-		b.WriteString("_ctx:=context.Background();\n")
+		fmt.Fprintf(b, "if l==nil { %s };\n", failure("rt.ErrClosed"))
 	}
-	fmt.Fprintf(b, "if _err:=l.admission(_ctx); _err!=nil { %s }; defer l.life.Leave();\n", failure("_err"))
+	admission := "l.admission(_ctx)"
+	if resource != "" {
+		admission = "l.life.Enter()"
+	}
+	fmt.Fprintf(b, "if _err:=%s; _err!=nil { %s }; defer l.life.Leave();\n", admission, failure("_err"))
 	hasBuffers := false
 	for _, param := range function.Params {
 		if m.Variable(param.Type) {

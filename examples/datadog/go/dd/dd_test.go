@@ -190,6 +190,31 @@ func TestPositiveDatadogDifferential(t *testing.T) {
 	compareOperation(t, g, reference, "cocoon_sketch_add", []cocoontest.Arg{{Value: handle}, {Value: math.Float64bits(1)}})
 }
 
+func TestResourceAdmissionWithoutContext(t *testing.T) {
+	t.Parallel()
+	var absent *Library
+	if _, err := absent.NewSketch(); !errors.Is(err, rt.ErrClosed) {
+		t.Fatal("nil library constructor admitted", err)
+	}
+	library := openTest(t, Options{Instances: 1})
+	sketch, err := library.NewSketch()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := library.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := sketch.Add(1); !errors.Is(err, rt.ErrClosed) {
+		t.Fatal("resource method admitted after library close", err)
+	}
+	if _, err := sketch.Count(); !errors.Is(err, rt.ErrClosed) {
+		t.Fatal("scalar method admitted after library close", err)
+	}
+	if err := sketch.Close(); !errors.Is(err, rt.ErrClosed) {
+		t.Fatal("resource destructor lost terminal instance state", err)
+	}
+}
+
 func TestUnitRepliesAfterDataAndErrors(t *testing.T) {
 	t.Parallel()
 	g, reference := newDifferential(t)

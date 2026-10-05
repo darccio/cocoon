@@ -506,8 +506,10 @@ type Sketch struct {
 }
 
 func (l *Library) NewSketch() (*Sketch, error) {
-	_ctx := context.Background()
-	if _err := l.admission(_ctx); _err != nil {
+	if l == nil {
+		return nil, rt.ErrClosed
+	}
+	if _err := l.life.Enter(); _err != nil {
 		return nil, _err
 	}
 	defer l.life.Leave()
@@ -550,8 +552,7 @@ func (r *Sketch) Add(_arg0 float64) error {
 		return &rt.HandleError{Op: "add", Reason: "nil resource"}
 	}
 	l := r.library
-	_ctx := context.Background()
-	if _err := l.admission(_ctx); _err != nil {
+	if _err := l.life.Enter(); _err != nil {
 		return _err
 	}
 	defer l.life.Leave()
@@ -577,8 +578,7 @@ func (r *Sketch) AddMany(_arg0 []float64) error {
 		return &rt.HandleError{Op: "add_many", Reason: "nil resource"}
 	}
 	l := r.library
-	_ctx := context.Background()
-	if _err := l.admission(_ctx); _err != nil {
+	if _err := l.life.Enter(); _err != nil {
 		return _err
 	}
 	defer l.life.Leave()
@@ -624,8 +624,7 @@ func (r *Sketch) Count() (float64, error) {
 		return 0, &rt.HandleError{Op: "count", Reason: "nil resource"}
 	}
 	l := r.library
-	_ctx := context.Background()
-	if _err := l.admission(_ctx); _err != nil {
+	if _err := l.life.Enter(); _err != nil {
 		return 0, _err
 	}
 	defer l.life.Leave()
@@ -654,8 +653,7 @@ func (r *Sketch) Encode() ([]byte, error) {
 		return nil, &rt.HandleError{Op: "encode", Reason: "nil resource"}
 	}
 	l := r.library
-	_ctx := context.Background()
-	if _err := l.admission(_ctx); _err != nil {
+	if _err := l.life.Enter(); _err != nil {
 		return nil, _err
 	}
 	defer l.life.Leave()

@@ -932,8 +932,10 @@ type Counter struct {
 }
 
 func (l *Library) NewCounter(_arg0 uint64) (*Counter, error) {
-	_ctx := context.Background()
-	if _err := l.admission(_ctx); _err != nil {
+	if l == nil {
+		return nil, rt.ErrClosed
+	}
+	if _err := l.life.Enter(); _err != nil {
 		return nil, _err
 	}
 	defer l.life.Leave()
@@ -976,8 +978,7 @@ func (r *Counter) Add(_arg0 uint64) (uint64, error) {
 		return 0, &rt.HandleError{Op: "add", Reason: "nil resource"}
 	}
 	l := r.library
-	_ctx := context.Background()
-	if _err := l.admission(_ctx); _err != nil {
+	if _err := l.life.Enter(); _err != nil {
 		return 0, _err
 	}
 	defer l.life.Leave()
@@ -1006,8 +1007,7 @@ func (r *Counter) Count() (uint64, error) {
 		return 0, &rt.HandleError{Op: "count", Reason: "nil resource"}
 	}
 	l := r.library
-	_ctx := context.Background()
-	if _err := l.admission(_ctx); _err != nil {
+	if _err := l.life.Enter(); _err != nil {
 		return 0, _err
 	}
 	defer l.life.Leave()

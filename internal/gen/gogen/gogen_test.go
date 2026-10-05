@@ -40,6 +40,26 @@ func TestFacadeAndAdapter(t *testing.T) {
 	}
 }
 
+func TestResourceAdmissionUsesTheSameLifecycle(t *testing.T) {
+	t.Parallel()
+	m, err := manifest.Parse([]byte(apiManifest))
+	if err != nil {
+		t.Fatal(err)
+	}
+	facade, err := gogen.Facade(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(facade, []byte("context.Background()")) {
+		t.Fatal("resource checks a context that cannot be canceled")
+	}
+	for _, expected := range []string{"l.admission(_ctx)", "l.life.Enter()", "defer l.life.Leave()", "if l == nil", "r.library == nil"} {
+		if !bytes.Contains(facade, []byte(expected)) {
+			t.Fatalf("missing admission contract %q", expected)
+		}
+	}
+}
+
 const apiManifest = `
 [package]
 name="dd"
