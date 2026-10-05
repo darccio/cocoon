@@ -280,7 +280,10 @@ func TestResultViewValidationAndLifetime(t *testing.T) {
 		{nil, "success", 3, 16, rt.OK},
 		{rt.ErrTooLarge, "output limit", 33, 16, rt.OK},
 		{rt.ErrProtocol, "logical length", 3, 63, rt.OK},
+		{rt.ErrProtocol, "empty beyond logical length", 0, 65, rt.OK},
 		{rt.ErrProtocol, "reserved status", 0, 16, rt.Pending},
+		{rt.ErrProtocol, "unknown status", 0, 16, rt.Status(6)},
+		{rt.ErrProtocol, "negative status", 0, 16, rt.Status(-1)},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()

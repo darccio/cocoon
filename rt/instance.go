@@ -296,8 +296,10 @@ func (c *Call) ResultView(op string, status Status) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := FromStatus(op, status, view); err != nil {
-		return nil, err
+	if status != OK {
+		if err := FromStatus(op, status, view); err != nil {
+			return nil, err
+		}
 	}
 	return view, nil
 }
