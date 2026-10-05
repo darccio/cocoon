@@ -64,6 +64,8 @@ up from 95.6 percent before this pass. Each code or test commit passed darna
 and exact staged-snapshot Go tests. Bounds, reply checks, panic containment,
 shared ownership, cancellation, and terminal draining Close remain intact.
 Raw final samples use `.cache/pass2-final-{before,final,reference}-{1..7}.txt`.
+The review also found a pre-existing destructor unit-reply strictness gap;
+the focused follow-up is saved in the [roadmap](roadmap.md#additional-abi-follow-up).
 
 ## First performance pass
 

@@ -170,6 +170,21 @@ execution outside the sandbox because its syscall filter rejects 32-bit tests.
   qualified upgrade; already-bounded helpers require corresponding drift-check
   updates and regenerated proof artifacts, not removal of the safety checks.
 
+### Additional ABI follow up
+
+The second-pass review identified a pre-existing strictness gap in generated
+resource destructors. Their callbacks use `Call.Result`, which validates status,
+output limits, and memory bounds but does not require an empty successful
+unit reply. Ordinary unit methods additionally reject a nonempty reply. The
+authored Rust destructors currently publish canonical empty successes; no
+production failure was observed in this pass.
+
+Add a malformed successful destructor-reply regression and enforce the same
+empty-reply check with protocol poisoning. Use borrowed reply validation under
+the execution lock to avoid copying an invalid destructor payload, then
+regenerate both facades and locks. The source is in the constructor branch of
+[the Go generator](../internal/gen/gogen/gogen.go).
+
 ## Next milestone
 
 Add async resources and a terminal event loop, real guest-future cancellation,
