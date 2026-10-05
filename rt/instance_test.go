@@ -88,11 +88,38 @@ func TestRangeErrorDiagnostics(t *testing.T) {
 
 func TestCallResetsReservationWithoutAllocating(t *testing.T) {
 	i := newInstance(t, newModule())
-	if err := i.Call("reserve", func(call *rt.Call) error { return call.PrepareInput(4) }); err != nil {
+	if err := i.Call("reserve", func(call *rt.Call) error {
+		if err := call.PrepareInput(4); err != nil {
+			return err
+		}
+		_, err := call.PutBytes([]byte("ab"))
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := i.Call("empty", func(call *rt.Call) error {
+		pointer, putErr := call.PutBytes(nil)
+		if pointer != 0 {
+			t.Fatalf("reservation pointer leaked between calls: %d", pointer)
+		}
+		return putErr
+	}); err != nil {
 		t.Fatal(err)
 	}
 	if err := i.Call("fresh", func(call *rt.Call) error { _, putErr := call.PutBytes([]byte{1}); return putErr }); !errors.Is(err, rt.ErrTooLarge) {
 		t.Fatal("reservation leaked between calls", err)
+	}
+	if err := i.Call("new reservation", func(call *rt.Call) error {
+		if err := call.PrepareInput(2); err != nil {
+			return err
+		}
+		pointer, putErr := call.PutString("xy")
+		if pointer != 16 {
+			t.Fatalf("used input offset leaked between calls: %d", pointer)
+		}
+		return putErr
+	}); err != nil {
+		t.Fatal(err)
 	}
 	allocations := testing.AllocsPerRun(100, func() {
 		if err := i.Call("empty", func(*rt.Call) error { return nil }); err != nil {
@@ -101,6 +128,36 @@ func TestCallResetsReservationWithoutAllocating(t *testing.T) {
 	})
 	if allocations != 0 {
 		t.Fatalf("empty call allocated %g times", allocations)
+	}
+}
+
+func TestCallRestoresStateAfterCallbackReplacement(t *testing.T) {
+	t.Parallel()
+	m := newModule()
+	i := newInstance(t, m)
+	if err := i.Call("replace", func(call *rt.Call) error {
+		*call = rt.Call{}
+		return rt.ErrTooLarge
+	}); !errors.Is(err, rt.ErrTooLarge) || !i.Healthy() {
+		t.Fatal("expected callback error poisoned instance", err)
+	}
+	if err := i.Call("reuse", func(call *rt.Call) error {
+		if err := call.PrepareInput(3); err != nil {
+			return err
+		}
+		pointer, err := call.PutString("abc")
+		if err != nil {
+			return err
+		}
+		binary.LittleEndian.PutUint32(m.memory, pointer)
+		binary.LittleEndian.PutUint32(m.memory[4:], 3)
+		data, err := call.Result("reuse", rt.OK)
+		if err == nil && string(data) != "abc" {
+			t.Fatalf("reused call reply = %q", data)
+		}
+		return err
+	}); err != nil {
+		t.Fatal("callback replacement broke the next call", err)
 	}
 }
 
