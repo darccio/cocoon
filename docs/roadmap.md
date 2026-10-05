@@ -2,7 +2,8 @@
 
 This is the resume point for future development conversations. Updated
 2026-10-05. The synchronous M1 framework and Datadog proof are released privately
-as v0.1.0. Performance acceptance is deferred by the user and remains unmet.
+as v0.1.0. Performance work resumed after the quality pass; acceptance remains
+unmet.
 Async and HTTP are a separate milestone, not partially implemented M1 features.
 
 ## Current working state
@@ -45,30 +46,60 @@ Cargo's cache when its implementation changes. Both proof artifacts and locks
 match across relocated checkouts and the clean CI checkout, including repeated
 rebuilds.
 
-## Deferred performance work
+## Performance work
 
-The user chose to defer further optimization until after the first complete
-MVP. Performance acceptance remains unmet; it is not a gate for that release.
+The user resumed optimization on 2026-10-05 after the first complete MVP and
+follow-up quality pass. Performance acceptance remains unmet; it was not a gate
+for v0.1.0.
 
-The same-machine comparison is complete and recorded in
-[performance notes](performance.md), including all five samples and build
-provenance. Three tested, darna-validated commits specialize unit guest replies,
-cache the fixed output descriptor address, and decode typed replies without an
-intermediate copy. SketchAdd improved from 114.4 to 103.2 nanoseconds; SQL remains
-about 2.30 microseconds while reducing Go allocations from two to one. Both
-original acceptance limits remain unmet: 2.2154 microseconds and 55.44 nanoseconds.
-Those measurements precede the final source-path and compiler-metadata
-reproducibility fixes; remeasure the release artifacts when performance work
-resumes.
+Fresh release-artifact measurements and historical results are recorded in
+[performance notes](performance.md), including raw samples and build
+provenance. The release baseline is 2.225 microseconds for SQL and 113.5
+nanoseconds for SketchAdd. Diagnostic benchmarks now separate guest execution,
+checked instance calls, resource ownership, facade calls, and empty runtime
+callbacks. Separate CPU profiles attribute 53.9 percent of SketchAdd and
+79.2 percent of SQL samples cumulatively to their translated exports.
 
-1. Add isolated measurements of direct guest execution, empty instance calls,
-   and resource calls using identical workloads. The post-change SketchAdd
-   profile attributes about 52 percent to translated guest execution and
-   9 percent cumulatively to reply validation; remaining host costs need
-   separate measurements before changing synchronization.
-2. Experiment with Rust hot-path inlining and cold error-path layout, measuring
-   each change independently. Profile SQL separately; its reduced allocation
-   count did not produce a meaningful timing improvement.
+The first retained experiment (`e099514`) forces Rust to inline canonical unit
+replies. Paired SketchAdd medians improve from 113.8 to 98.53 nanoseconds; SQL remains
+roughly unchanged. Both proof artifacts and locks were regenerated, and a new
+differential regression exercises empty replies after nonempty data and errors.
+Bounds, reply validation, fault containment, shared ownership, and draining
+Close are unchanged. Both original acceptance limits remain unmet:
+2.2154 microseconds and 55.44 nanoseconds.
+
+The second retained experiment (`14e056c`) avoids general status dispatch only
+after fully checking a successful reply. Seven alternating one-second sample
+pairs improve SketchAdd by a further 1.75 percent without a detected SQL change.
+New runtime regressions reject unknown and negative status codes and zero-length
+success replies beyond logical memory. Cold error constructors and forced
+resource lookup inlining did not establish benefits and were removed; their
+measurements remain in the performance notes.
+
+The broader comparison exposed a 2.6 percent SQL slowdown from the combined
+changes. A focused cold helper for unit-error publication (`078c9c9`) recovered
+that loss while preserving the scalar gain. Native tests now exercise all unit-error
+statuses and transitions back to canonical empty success replies. The weaker
+inline hint alone produced identical Datadog Wasm and was not retained.
+
+The final seven-sample comparison is 114.4 to 96.45 nanoseconds for SketchAdd,
+a 15.69 percent reduction. SQL is statistically unchanged at 2.272 microseconds.
+Remaining same-machine reference overhead is 16.0 percent for SQL and
+73.8 percent for SketchAdd; original and same-machine 10-percent targets are
+still unmet. Batch sketch and trace comparisons show no detected timing or
+allocation regressions. All local quality, staged-snapshot, repeat-build, smoke,
+and generated differential fuzz checks pass for the final code, including
+Go 1.26.8 and native linux/386 tests. Runtime coverage remains 95.6 percent.
+
+1. Use the final scalar profile to choose the next experiment. It attributes
+   53.7 percent cumulatively to translated guest execution, 38.6 percent to the
+   sketch algorithm, and 7.4 percent to reply validation. The isolated
+   call-layer benchmarks (`8d3b074`) are available; keep measuring guest and
+   host costs separately, including callback layout and checked reply decoding.
+2. Use the final SQL profile to choose guest-side experiments; 80.5 percent of
+   samples are cumulatively in the translated export. Its reduced
+   allocation count did not close the timing gap. Measure full facade calls as
+   well as isolated layers before considering synchronization changes.
 3. Optimize measured hot paths without removing bounds checks, canonical reply
    validation, fault containment, shared ownership, or terminal draining Close.
    Add regression tests and regenerate affected proof artifacts with each change.
@@ -79,8 +110,9 @@ resumes.
 
 ## Follow up quality work
 
-The follow-up quality pass is complete as of 2026-10-05. Performance remains
-deferred; no async implementation was added in this pass.
+The follow-up quality pass is complete as of 2026-10-05. Its nine commits are
+pushed, and [all three CI jobs](https://github.com/darccio/cocoon/actions/runs/37357278079)
+passed. No async implementation was added in this pass.
 
 `make check`, `make race`, `make cross`, `make integration`, and `make smoke`
 passed for this pass. Both real proof builds reproduce the release artifacts
