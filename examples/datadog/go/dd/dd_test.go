@@ -190,6 +190,32 @@ func TestPositiveDatadogDifferential(t *testing.T) {
 	compareOperation(t, g, reference, "cocoon_sketch_add", []cocoontest.Arg{{Value: handle}, {Value: math.Float64bits(1)}})
 }
 
+func TestUnitRepliesAfterDataAndErrors(t *testing.T) {
+	t.Parallel()
+	g, reference := newDifferential(t)
+	_, data := compareOperation(t, g, reference, "cocoon_sketch_new", nil)
+	handle := binary.LittleEndian.Uint64(data)
+	arguments := []cocoontest.Arg{{Value: handle}, {Value: math.Float64bits(1)}}
+	for _, value := range []float64{-1, math.NaN(), math.Inf(1)} {
+		// A constructor or scalar reply leaves nonempty output in both guests.
+		if status, reply := compareOperation(t, g, reference, "cocoon_sketch_add", arguments); status != rt.OK || len(reply) != 0 {
+			t.Fatalf("unit reply after data: status=%d, reply=%x", status, reply)
+		}
+		arguments[1].Value = math.Float64bits(value)
+		if status, _ := compareOperation(t, g, reference, "cocoon_sketch_add", arguments); status != rt.ErrArg {
+			t.Fatalf("invalid point status=%d", status)
+		}
+		arguments[1].Value = math.Float64bits(1)
+		if status, reply := compareOperation(t, g, reference, "cocoon_sketch_add", arguments); status != rt.OK || len(reply) != 0 {
+			t.Fatalf("unit reply after error: status=%d, reply=%x", status, reply)
+		}
+		compareOperation(t, g, reference, "cocoon_sketch_count", arguments[:1])
+	}
+	if status, reply := compareOperation(t, g, reference, "cocoon_sketch_close", arguments[:1]); status != rt.OK || len(reply) != 0 {
+		t.Fatalf("close reply after data: status=%d, reply=%x", status, reply)
+	}
+}
+
 // Encode an independently authored v0.4 MessagePack payload without another
 // dependency. One trace contains count SQL spans, including a SQL-query tag.
 func tracePayload(count int) []byte {

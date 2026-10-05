@@ -119,6 +119,7 @@ pub fn reply(result: Result<Vec<u8>>) -> i32 {
 }
 
 /// Publishes a canonical empty success reply without constructing a byte vector.
+#[inline(always)]
 pub fn reply_unit(result: Result<()>) -> i32 {
     match result {
         Ok(()) => BUFFERS.with_borrow_mut(|b| {
