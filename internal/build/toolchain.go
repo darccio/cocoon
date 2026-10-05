@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/darccio/cocoon/internal/manifest"
@@ -88,7 +89,8 @@ func Doctor(ctx context.Context, runner Runner, directory string, pins manifest.
 	if err != nil {
 		return ToolVersions{}, err
 	}
-	if !strings.Contains(string(components), "rust-src\n") || !strings.Contains(string(components), "rust-std-wasm32-unknown-unknown\n") {
+	installed := strings.Fields(string(components))
+	if !slices.Contains(installed, "rust-src") || !slices.Contains(installed, "rust-std-wasm32-unknown-unknown") {
 		return ToolVersions{}, fmt.Errorf("rust %s requires rust-src and wasm32-unknown-unknown", pins.Rust)
 	}
 	versions := ToolVersions{Rust: pins.Rust, Binaryen: pins.Binaryen, Wasm2Go: pins.Wasm2Go, CompilerMetadata: digest(compilerNormalizationSource)}
