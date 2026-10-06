@@ -3,7 +3,11 @@ package unitfixture
 import (
 	"errors"
 	"math"
+	"reflect"
+	"runtime"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/darccio/cocoon/rt"
 )
@@ -36,6 +40,134 @@ func fixtureItem(t *testing.T, library *Library) (*Item, uint64) {
 		t.Fatal(err)
 	}
 	return item, handle
+}
+
+func fixtureAlias(t *testing.T, item *Item) *Item {
+	t.Helper()
+	// Reflection models a copy without triggering the deliberate NoCopy vet diagnostic.
+	value := reflect.New(reflect.TypeOf(item).Elem())
+	value.Elem().Set(reflect.ValueOf(item).Elem())
+	alias, ok := value.Interface().(*Item)
+	if !ok {
+		t.Fatal("copied wrapper changed type")
+	}
+	return alias
+}
+
+func awaitFixtureSignal(t *testing.T, signal <-chan struct{}) {
+	t.Helper()
+	timer := time.NewTimer(5 * time.Second)
+	defer timer.Stop()
+	select {
+	case <-signal:
+	case <-timer.C:
+		t.Fatal("fixture operation did not start")
+	case <-t.Context().Done():
+		t.Fatal(t.Context().Err())
+	}
+}
+
+func awaitFixtureResult(t *testing.T, result <-chan error) error {
+	t.Helper()
+	timer := time.NewTimer(5 * time.Second)
+	defer timer.Stop()
+	select {
+	case err := <-result:
+		return err
+	case <-timer.C:
+		t.Fatal("fixture operation did not finish")
+	case <-t.Context().Done():
+		t.Fatal(t.Context().Err())
+	}
+	return nil
+}
+
+func awaitFixtureClosing(t *testing.T, library *Library) {
+	t.Helper()
+	timer := time.NewTimer(5 * time.Second)
+	defer timer.Stop()
+	for {
+		err := library.life.Enter()
+		if errors.Is(err, rt.ErrClosed) {
+			return
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		library.life.Leave()
+		select {
+		case <-timer.C:
+			t.Fatal("library did not enter terminal admission")
+		case <-t.Context().Done():
+			t.Fatal(t.Context().Err())
+		default:
+			runtime.Gosched()
+		}
+	}
+}
+
+func TestGeneratedLibraryCloseDrainsResourceCall(t *testing.T) {
+	t.Parallel()
+	library := fixtureLibrary(t)
+	item, handle := fixtureItem(t, library)
+	alias := fixtureAlias(t, item)
+	guest := item.guest
+	module := guest.module
+	started, release := make(chan struct{}), make(chan struct{})
+	module.addStarted, module.addRelease = started, release
+	var releaseOnce sync.Once
+	unblock := func() { releaseOnce.Do(func() { close(release) }) }
+	// Also release on a failing assertion, before the library cleanup drains.
+	t.Cleanup(unblock)
+	addDone := make(chan error, 1)
+	go func() { addDone <- item.Add() }()
+	awaitFixtureSignal(t, started)
+
+	closeDone := make(chan error, 1)
+	go func() { closeDone <- library.Close() }()
+	awaitFixtureClosing(t, library)
+	concurrentCloseDone := make(chan error, 1)
+	go func() { concurrentCloseDone <- library.Close() }()
+	for _, done := range []<-chan error{closeDone, concurrentCloseDone} {
+		select {
+		case err := <-done:
+			t.Fatal("library closed while an admitted resource call was active", err)
+		default:
+		}
+	}
+	for _, invoke := range []func() error{
+		item.Add,
+		alias.Add,
+		func() error { _, err := library.NewItem(); return err },
+		func() error { return library.Unit(t.Context()) },
+	} {
+		result := make(chan error, 1)
+		go func() { result <- invoke() }()
+		if err := awaitFixtureResult(t, result); !errors.Is(err, rt.ErrClosed) {
+			t.Fatal("terminal admission accepted a generated call", err)
+		}
+	}
+
+	unblock()
+	if err := awaitFixtureResult(t, addDone); err != nil {
+		t.Fatal("shutdown interrupted an admitted resource call", err)
+	}
+	for _, done := range []<-chan error{closeDone, concurrentCloseDone} {
+		if err := awaitFixtureResult(t, done); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if module.addCalls != 1 || module.lastAddHandle != handle || guest.instance.Healthy() || guest.module != nil || library.home != nil {
+		t.Fatal("shutdown did not drain exactly one call and release its home")
+	}
+	epoch := guest.instance.Epoch()
+	if err := library.Close(); err != nil || guest.instance.Epoch() != epoch {
+		t.Fatal("repeated library close released the home again", err)
+	}
+	closeErr := item.Close()
+	if !errors.Is(closeErr, rt.ErrClosed) || alias.Close() != closeErr || module.closeCalls[handle] != 0 {
+		t.Fatal("copied resource destructor did not retain its once-only closed-home result", closeErr)
+	}
 }
 
 func TestGeneratedDestructorCanonicalAndExpectedErrors(t *testing.T) {

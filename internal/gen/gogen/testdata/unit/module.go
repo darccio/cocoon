@@ -16,14 +16,17 @@ type fixtureReply struct {
 }
 
 type module struct {
-	memory     []byte
-	closeCalls map[uint64]int
-	closeReply fixtureReply
-	addReply   fixtureReply
-	unitReply  fixtureReply
-	nextHandle uint64
-	addCalls   int
-	unitCalls  int
+	memory        []byte
+	closeCalls    map[uint64]int
+	closeReply    fixtureReply
+	addReply      fixtureReply
+	unitReply     fixtureReply
+	addStarted    chan<- struct{}
+	addRelease    <-chan struct{}
+	nextHandle    uint64
+	lastAddHandle uint64
+	addCalls      int
+	unitCalls     int
 }
 
 func newModule(_ Options) (*module, *rt.Host) {
@@ -60,8 +63,13 @@ func (m *module) Xcocoon_item_new() int32 {
 	return m.publish(fixtureReply{pointer: 16, size: 8})
 }
 
-func (m *module) Xcocoon_item_add(_ int64) int32 {
+func (m *module) Xcocoon_item_add(handle int64) int32 {
 	m.addCalls++
+	m.lastAddHandle = uint64(handle) // #nosec G115 -- Preserve the Wasm i64 handle's unsigned bits.
+	if m.addStarted != nil {
+		close(m.addStarted)
+		<-m.addRelease
+	}
 	return m.publish(m.addReply)
 }
 
