@@ -1,0 +1,90 @@
+package wasm
+
+import (
+	"encoding/json"
+	"math"
+	"os"
+	"testing"
+)
+
+func TestNumericFloorSat(t *testing.T) {
+	data, err := os.ReadFile("cases.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cases []struct {
+		Name string `json:"name"`
+		Bits uint64 `json:"bits"`
+		Want int32  `json:"want"`
+	}
+	if err := json.Unmarshal(data, &cases); err != nil {
+		t.Fatal(err)
+	}
+	if len(cases) == 0 {
+		t.Fatal("missing independent numeric goldens")
+	}
+	module := New()
+	for _, test := range cases {
+		value := math.Float64frombits(test.Bits)
+		if got := module.Xfloor_sat(value); got != test.Want {
+			t.Fatalf("floor-sat mismatch for %s (%016x): %d, want %d", test.Name, test.Bits, got, test.Want)
+		}
+		module.Xreset()
+		if got := module.Xfloor_effect(value); got != test.Want || module.Xcounter() != 1 {
+			t.Fatal("numeric argument was not evaluated exactly once", test.Name, got)
+		}
+	}
+}
+
+func TestNumericFloatRounding(t *testing.T) {
+	module := New()
+	if got := module.Xf64_unfused(1+0x1p-27, 1-0x1p-27, -1); got != 0 {
+		t.Fatalf("f64 multiply/add rounding changed: %016x", got)
+	}
+	if got := module.Xf32_unfused(1+0x1p-13, 1-0x1p-13, -1); got != 0 {
+		t.Fatalf("f32 multiply/add rounding changed: %08x", got)
+	}
+	negativeZero := math.Float64frombits(1 << 63)
+	if got := module.Xf64_unfused(negativeZero, 1, negativeZero); uint64(got) != 1<<63 {
+		t.Fatalf("signed zero rounding changed: %016x", got)
+	}
+	if got := module.Xrounding_order(1); got != 0 {
+		t.Fatalf("floating additions reassociated: %016x", got)
+	}
+	for _, test := range []struct{ input, want uint64 }{{1, 0}, {3, 2}} {
+		if got := module.Xsubnormal_half(math.Float64frombits(test.input)); uint64(got) != test.want {
+			t.Fatalf("subnormal rounding changed: %016x, want %016x", got, test.want)
+		}
+	}
+}
+
+func TestNumericArgumentTrapsAndEffects(t *testing.T) {
+	module := New()
+	for _, test := range []struct {
+		invoke  func()
+		name    string
+		counter int32
+	}{
+		{func() { module.Xfloor_trap(65536) }, "store before load", 7},
+		{func() { module.Xeffect_then_trap(65536, 1.75) }, "operand evaluation order", 1},
+	} {
+		module.Xreset()
+		func() {
+			defer func() {
+				if recover() == nil {
+					t.Fatal("numeric argument lost its bounds trap", test.name)
+				}
+			}()
+			test.invoke()
+		}()
+		if got := module.Xcounter(); got != test.counter {
+			t.Fatal("numeric argument trap reordered effects", test.name, got)
+		}
+		if got := module.Xfloor_sat(1.75); got != 1 {
+			t.Fatal("numeric trap made the module unusable")
+		}
+	}
+	if got := module.Xfloor_trap(8); got != 0 || module.Xcounter() != 9 {
+		t.Fatal("valid numeric load or its later side effect changed", got)
+	}
+}
