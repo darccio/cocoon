@@ -6,6 +6,175 @@ Benchmarks are a gate to investigate, not a reason to remove those checks.
 
 ## Current results
 
+The fifth performance pass on 2026-10-06 investigated exact guest math lowering
+and tested a guarded floor/saturated-conversion fast path with separate guest,
+host, and adversarial review agents. Neither the unrestricted screen nor the
+longer pinned confirmation established a timing improvement. The candidate
+was removed; production code, both Wasm proofs, translated modules, facades,
+and locks are unchanged. Performance acceptance remains open.
+
+Two independent test commits remain: exact sketch-bin transitions and a verified
+negative-bin benchmark (`1672671`), and executable numeric lowering contracts
+included in `make smoke` (`b03d81b`). These are correctness/measurement additions,
+not a claimed speedup. No profile or compiler-default change was retained.
+
+### Exact guest math and conversion trial
+
+The pinned libdatadog mapping at `libdd-ddsketch/src/lib.rs:295` computes a bin
+from `floor(value.ln() * multiplier + index_offset)`. Its Wasm logarithm comes
+from Rust 1.97's compiler-builtins/libm implementation, not Go's `math.Log`.
+The translated hot path is `fn176`; the baseline compound floor/conversion is
+at `examples/datadog/go/dd/internal/wasm/module.go:35812`.
+
+Assembly inspection found that the dense log polynomial already stays in XMM
+registers without floating-point spills or helper calls. The explicit float64
+conversions do not add standalone instructions there; they preserve rounding
+boundaries and prevent multiply/add fusion or reassociation. `math.Floor` is
+already a guarded SSE4.1 `ROUNDSD`, and saturated conversion is inlined. The
+58.29-percent guest, 43.58-percent math, and 10.16-percent result-validation
+profile categories overlap. The roughly 14-percent flat polynomial and
+2.14-percent flat conversion samples are attribution, not available speedups.
+No exact, beneficial polynomial rewrite was identified.
+
+The trial rewrote only a direct, correctly bound
+`i32_trunc_sat_f64_s(math.Floor(expr))` into a helper with this guarded body:
+
+```go
+if f >= 0 && f < 0x1p31 {
+    return int32(f)
+}
+return i32_trunc_sat_f64_s(math.Floor(f))
+```
+
+In that representable interval, truncation toward zero equals floor; all
+negative, NaN, infinite, and out-of-range values use the original fallback.
+The operand AST, including its explicit float conversions, was preserved and
+evaluated once. See the [Go numeric-conversion rules](https://go.dev/ref/spec#Conversions_between_numeric_types),
+[rounding rules](https://go.dev/ref/spec#Floating-point_operators), and
+[Wasm saturated-conversion definition](https://webassembly.github.io/spec/core/exec/numerics.html#op-trunc-sat).
+This is an integer-result equivalence argument, not a floating-point-environment
+or NaN-payload equivalence claim.
+
+The experimental AST pass required the exact unique helper signature/body,
+real unshadowed math import, bound callee, one argument, and no ellipsis or
+reserved-name collision. Review found that text alone also permits shadowed
+built-in numeric types: `type int32 = float64` changes the fast path's result.
+The trial therefore rejected bound non-predeclared numeric types, with a
+regression test. Conflicting explicit math aliases were also rejected. The
+fallback was appended after original-site rewriting to prevent recursion.
+Datadog had one match; compute had none. These guards were tested but are not
+shipped because the entire optimization was withdrawn.
+
+Values below one can still populate positive-index bins. All existing varied
+values do; they do not qualify the negative-index fallback. The new eight-value
+corpus spans `1e-12` through `2e-12`, and the original Wasm independently proves
+that each value populates a negative bin.
+
+### Fifth-pass measurements
+
+All binaries use Go 1.26.8, CGO disabled, `GOAMD64=v1`, and explicit `-pgo=off`
+on the AMD Ryzen 7 5800HS. Seven rotated before/after/reference triples run
+without compilation, lint, tests, fuzzing, or agent work. No samples are removed.
+The independent reference is unchanged; only aligned SQL/scalar inputs support
+overhead comparisons. Reference batch/trace inputs and pool size differ, and
+the new negative-bin workload has no matched reference benchmark.
+
+The first screen uses 16 Go processors, no affinity, and 500 ms per benchmark:
+
+| Workload | Original | Candidate | Result |
+| --- | --- | --- | --- |
+| SQL | 1.905 µs | 1.913 µs | No detected change, p=0.927 |
+| SketchAdd | 76.23 ns | 75.62 ns | No detected change, p=0.512 |
+| SketchAddMany1k | 37.09 µs | 36.82 µs | No detected change, p=0.710 |
+| ObfuscateTraces1k | 2.285 ms | 2.332 ms | No detected change, p=0.209 |
+| SketchAddVaried | 76.58 ns | 75.27 ns | No detected change, p=0.209 |
+| ObfuscateSQLVaried | 2.450 µs | 2.430 µs | No detected change, p=0.383 |
+| SketchAddNegativeBins | 76.09 ns | 79.47 ns | No detected change, p=0.097 |
+
+The longer confirmation uses one Go processor, CPU 14, and one-second samples:
+
+| Workload | Original | Candidate | Result |
+| --- | --- | --- | --- |
+| SQL | 1.821 µs | 1.820 µs | No detected change, p=0.710 |
+| SketchAdd | 74.37 ns | 73.28 ns | No detected change, p=0.165 |
+| SketchAddMany1k | 35.22 µs | 35.89 µs | No detected change, p=0.097 |
+| ObfuscateTraces1k | 2.157 ms | 2.196 ms | No detected change, p=0.209 |
+| SketchAddVaried | 74.74 ns | 74.08 ns | No detected change, p=0.644 |
+| ObfuscateSQLVaried | 2.339 µs | 2.352 µs | No detected change, p=0.833 |
+| SketchAddNegativeBins | 73.97 ns | 75.69 ns | No detected change, p=0.165 |
+
+The apparent scalar shifts are −0.80 and −1.47 percent; negative-bin shifts
+are +4.44 and +2.33 percent. None establishes a gain or regression. Variability
+remains substantial even with affinity, including 24-percent scalar and
+75-percent trace confidence-interval bounds in the confirmation. The rejection
+is for insufficient evidence, not proof of equivalence or impossibility.
+All Go allocation counts remain unchanged; trace bytes vary slightly with
+amortized setup and collection. P-values are exploratory and unadjusted.
+
+Original/reference SQL and scalar medians are 1.905/1.669 µs and 76.23/48.40 ns
+in the screen: 14.1 and 57.5 percent overhead. Pinned medians are
+1.821/1.621 µs and 74.37/46.05 ns: 12.3 and 61.5 percent overhead. Neither
+fresh same-run 10-percent target is met. SQL remains below its original
+2.2154 µs limit; scalar remains above 55.44 ns. Differences from the preceding
+pass are session variation, not a retained source improvement.
+
+### Retained contracts and qualification
+
+Nine adjacent binary64 boundaries were located by bit-pattern search against
+the unchanged Wasm interpreter, not a host logarithm. They span negative bins,
+the zero/positive-bin transitions, values around one, very small and large
+exponents, and the zero-counter threshold. Fresh singletons prevent the
+2048-bin collapse policy from hiding a wrong bin. Scalar and batch paths check
+exact Count bits and complete protobuf bytes; triples and zero/tiny/negative-bin
+mixes are also compared. The authored protobuf reader includes leading zero
+counts when locating the first populated bin, with its own regression.
+
+The independent WAT fixture runs pinned assembly, optimization, actual
+wasm2go translation, and actual hardening before compiling the resulting Go.
+Both Go and wazero check explicit integer/bit goldens: integer-limit neighbors,
+signed zero, subnormals, finite extremes, infinities, signed signaling/quiet
+NaNs, separate f32/f64 multiply/add rounding, addition order, once-only side
+effects, bounds traps, and post-trap continuation. A deliberately broken helper
+must fail with a semantic mismatch, not merely a compilation error. The fixture
+also passes against the original hardener, independently of the candidate.
+
+Candidate qualification passed strict check, both real proof builds and repeat
+builds, Rust checks, race tests, five differential/structural fuzz targets,
+external/relocation/Go-only smoke, and all five cross-compilation targets.
+Numeric contracts ran natively on linux/386 and amd64-v3 as well as amd64-v1.
+Arm64 was cross-compiled, not natively executed in this session. The smoke
+fixture's CGO-disabled child is not race-instrumented by a parent race run.
+Candidate hardening coverage was 94.6 percent, with the new pass at 95.5 percent;
+restored hardening remains 94.0 percent. No coverage gain is claimed from code
+that was removed. Restored production passes the retained contracts and proof
+rebuilds, and its benchmark binary is byte-identical to the frozen baseline.
+Each retained commit passes darna and exact staged-snapshot tests.
+
+### Fifth-pass provenance
+
+The before/after binaries include identical authored Datadog tests from
+`1672671`. Their SHA-256 hashes are
+`4ac489cc3c8e993570706aa4259cd64ed7e1da27f47a2dc66d901e47fa3a0ffa` and
+`81bb7a7248e8758c540429ecb6e3d95bc970c0591af30d2a7fb8bad30aa99237`.
+Their build IDs are `22fd5ce8f45a38453adc4f12c11106e2ea46992e` and
+`9b7b88349f8771e52228a4fbc3420faf06e7f9fb`. The independent reference binary
+hash is `bf3f15d3241684b35b0b0b448799373e8d66951f955827cce38fd7e365237dd8`.
+Among generated proof artifacts, the candidate changed only translated Go
+and its lock digest, to
+`0e16305e4792902b3b6bd307bcd47ddc3e0783b4c8db918978233dfab8afb631`;
+the retained Go hash is again
+`f50d20e7fe091569353ac1ced7865a53cd23bc9add668c3aac0f5f3a0ac8eed4`.
+Datadog Wasm remains
+`ae0119ca34206c2fcd8b69ae4e81421214417abb364d589c3afabcf16d8c6333`.
+Compute and all other proof artifacts/lock fields are unchanged.
+
+Complete raw logs and summaries are in ignored `.cache` under
+`round12-floor-screen` and `round12-floor-pinned`; the rejected source patch
+is saved as `.cache/round12-floor-candidate.patch`. It is experimental evidence,
+not maintained production code. The retained commits are local and unpushed.
+
+## Fourth performance pass
+
 The fourth performance pass on 2026-10-06 tested profile-guided compilation
 (PGO) and a fused checked resource-call path, with separate host, guest, and
 adversarial review agents. No production source change or default profile
@@ -146,8 +315,8 @@ flat). Both retained profiles match build ID
 
 In the retained profile, the log polynomial's dense source line accounts for
 about 14 percent flat and saturated float conversion for about 2.14 percent
-flat. Those are sampled attribution, not promised optimization gains. Inspect
-exact guest math/lowering next; preserve rounding and sketch bin boundaries.
+flat. Those are sampled attribution, not promised optimization gains. The fifth
+pass above investigates exact lowering; preserve rounding and sketch bin boundaries.
 Never substitute approximate math or edit generated modules alone.
 
 Restored production is byte-identical to the frozen pre-experiment benchmark
@@ -734,8 +903,10 @@ successful callback bookkeeping, checked range inlining, resource admission,
 and ready pool borrowing. It rejected owned reply publication and combined
 resource exit defers. The third loop retained correctness and optimizer-contract
 tests, not a timing gain. The fourth pass found a synthetic PGO scalar benefit
-with a batch regression and rejected fused resource calls. Next, investigate
-exact guest math/lowering; adding screening gains is not valid accounting.
+with a batch regression and rejected fused resource calls. The fifth found no
+justified log-polynomial rewrite and no established guarded-conversion gain.
+Next, prioritize measured batch-only or guest SQL experiments and representative
+application profiles; adding screening gains is not valid accounting.
 Retain bounds checks, canonical replies, trap containment, shared ownership,
 and draining Close, with staged-snapshot tests for each atomic change. See the
 [roadmap](roadmap.md) for other pending acceptance work.

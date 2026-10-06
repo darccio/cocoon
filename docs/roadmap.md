@@ -2,8 +2,9 @@
 
 This is the resume point for future development conversations. Updated
 2026-10-06. The synchronous M1 framework and Datadog proof are released privately
-as v0.1.0. The quality pass and four performance passes are complete, including
-the nine-round multi-agent loop and the PGO/resource-call follow-up.
+as v0.1.0. The quality pass and five performance passes are complete, including
+the nine-round multi-agent loop, the PGO/resource-call follow-up, and exact
+numeric-lowering investigation.
 Performance acceptance remains unmet.
 Async and HTTP are a separate milestone, not partially implemented M1 features.
 
@@ -200,33 +201,73 @@ polynomial accounts for about 14 percent flat, saturated conversion about
 sample sets, compiler/profile/binary provenance, and experiment limits are in
 [performance notes](performance.md).
 
-1. Investigate exact guest log/math lowering using source and assembly attribution.
-   Preserve IEEE/Wasm rounding, explicit float-width conversions, and sketch
-   bin boundaries; do not substitute approximate math or edit generated Go alone.
-2. Consider an exact guarded common-case saturated float-conversion fast path.
-   Its small sampled share suggests limited upside. Preserve NaN and overflow
-   clamps; require fail-closed signature/body checks, nextafter boundary tests,
-   numeric/trap contracts, both proof rebuilds, 386/arm64 qualification, and
-   differential tests before measuring every workload.
-3. Consider a batch-only bit-classification experiment, leaving scalar validation
+### Fifth performance pass
+
+On 2026-10-06, separate guest, host, and adversarial agents inspected the exact
+log lowering and tested a guarded nonnegative floor/saturated-conversion fast
+path. The polynomial already compiles without floating-point spills or helper
+calls; its explicit casts preserve rounding. No safe beneficial polynomial
+rewrite was identified. The conversion candidate preserved its operand and
+original fallback, with strict helper/import/binding checks. Review also caught
+and closed a built-in type-shadowing hole before measurement.
+
+Neither seven-sample comparison established a gain. Unrestricted 500 ms scalar
+medians were 76.23 to 75.62 ns (p=0.512); the one-second CPU-14 confirmation was
+74.37 to 73.28 ns (p=0.165). The independently verified negative-bin corpus
+trended slower in both runs, also inconclusively. Variability remained substantial
+even with affinity; no samples were discarded. The complete candidate was
+removed. Production, Wasm, translated modules, facades, and locks remain
+unchanged, and the restored binary is byte-identical to the frozen baseline.
+The apparent scalar shifts are not a retained improvement.
+
+Useful tests remain in `1672671` and `b03d81b`: nine true adjacent bin boundaries
+located in unchanged Wasm, full Count/protobuf scalar/batch comparisons,
+zero/tiny/negative-bin mixes, a verified negative-bin benchmark, and an
+independent numeric fixture that executes actual translated/hardened Go and
+wazero against explicit integer/rounding/side-effect/trap goldens. A deliberately
+wrong generated helper must fail semantically. `make smoke` includes the new
+fixture, which also passes against the original hardener.
+
+Qualification covers strict check, both real/repeat proof builds, Rust checks,
+race, five fuzz targets, external/relocation/Go-only smoke, native linux/386 and
+amd64-v3 numeric contracts, and all five cross-compilation targets. Arm64 was
+cross-compiled, not natively executed in this session. The numeric fixture's
+CGO-disabled child is not race-instrumented by a parent race run. Restored
+hardening coverage remains 94.0 percent; removed-code coverage is not a gain.
+Retained commits pass darna and exact staged-snapshot tests and remain local,
+unpushed. Results, limits, hashes, and raw-log locations are in the performance
+notes. No default PGO profile was added.
+
+### Remaining performance work
+
+1. Consider a batch-only bit-classification experiment, leaving scalar validation
    unchanged. The full predicate experiment improved batches but regressed SQL;
    partial targeting is a hypothesis, not a promised improvement. Retain the
    exhaustive domain and whole-batch atomicity tests and qualify all workloads.
-4. Keep PGO opt-in at the consuming application's main package. Obtain a profile
-   representative of deployed traffic before shipping one; synthetic benchmark
-   weighting and the batch regression limit the current evidence. Any further
-   experiment needs a new held-out corpus, not tuning against the current
-   holdouts. Compare each implementation with its own profile under matched conditions.
-5. Use the retained SQL profile and call-layer diagnostics (`8d3b074`) to choose
+2. Use the retained SQL profile and call-layer diagnostics (`8d3b074`) to choose
    guest-side experiments. The matching SQL profile puts 85.15 percent
    cumulatively in the guest export and 77.87 percent in `fn96`; identify its
    source/assembly hot path before changing it. Measure full facade calls as
    well as isolated layers before considering synchronization changes.
-6. Optimize measured hot paths without removing bounds checks, canonical reply
+3. Keep PGO opt-in at the consuming application's main package. Obtain a profile
+   representative of deployed traffic before shipping one; synthetic benchmark
+   weighting and the batch regression limit the current evidence. Any further
+   experiment needs a new held-out corpus, not tuning against the current
+   holdouts. Compare each implementation with its own profile under matched conditions.
+4. Revisit exact numeric lowering only with a new assembly-backed hypothesis,
+   not the rejected guard again. A combined sign/clamp lowering or exact IEEE-bit
+   guard is an untested possibility, with limited expected upside. Preserve
+   explicit rounding and bin boundaries; validate built-in type and import
+   bindings as well as signatures/bodies, and run the retained executable
+   oracle, both proof builds, native 386/arm64 qualification where available,
+   and all workloads including negative bins. Do not substitute approximate
+   math or edit generated modules alone.
+5. Optimize measured hot paths without removing bounds checks, canonical reply
    validation, fault containment, shared ownership, or terminal draining Close.
    Add regression tests and regenerate affected proof artifacts with each change.
-7. Repeat isolated before/after and independent spike samples for all four
-   original and both held-out workloads. Retain original absolute limits and
+6. Repeat isolated before/after and independent spike samples for all four
+   original workloads, both varied workloads, and the new negative-bin workload.
+   Retain original absolute limits and
    fresh same-machine comparisons; scalar remains above both. SQL's margin
    varies across sessions and requires continued checking. Do not mark M1
    performance accepted or add separate screening gains together.
