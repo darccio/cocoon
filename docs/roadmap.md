@@ -2,8 +2,9 @@
 
 This is the resume point for future development conversations. Updated
 2026-10-06. The synchronous M1 framework and Datadog proof are released privately
-as v0.1.0. Two performance passes and a third multi-agent performance loop are
-complete after the quality pass. Performance acceptance remains unmet.
+as v0.1.0. The quality pass and four performance passes are complete, including
+the nine-round multi-agent loop and the PGO/resource-call follow-up.
+Performance acceptance remains unmet.
 Async and HTTP are a separate milestone, not partially implemented M1 features.
 
 ## Current working state
@@ -23,7 +24,7 @@ build. The release tag points to that qualified code commit. No license has
 been selected.
 
 Native linux/386 tests now pass outside the former sandbox. Current runtime
-coverage is 97.0 percent; the Rust and Go generators are 94.6 and 96.7 percent.
+coverage is 97.8 percent; the Rust and Go generators are 94.6 and 96.7 percent.
 
 The installed-CLI smoke test passes with Go 1.26.8 and 1.27.1. It initializes,
 formats, builds, verifies, and deterministically rebuilds a separate author's
@@ -153,34 +154,82 @@ Do not attribute differences from older sessions to code changes. Raw samples,
 candidate hashes, rejection evidence, and final provenance are in
 [performance notes](performance.md). This loop's commits have not been pushed.
 
-1. Analyze the fresh isolated `.cache/loop-retained-{sketch,sql}.prof` files.
-   The installed toolchains lack the `pprof` frontend, so their new attribution
-   is still pending. Existing second-pass attribution is a useful starting
-   point, not a substitute for inspecting the retained binary.
-2. Consider a batch-only bit-classification experiment, leaving scalar validation
+### Fourth performance pass
+
+The 2026-10-06 follow-up used guest, host, and adversarial review agents for
+PGO and fused resource calls. Each implementation trained its own equal-time
+four-class CPU profile with PGO disabled. New varied scalar and SQL benchmarks
+were excluded from training (`2d95490`). The initial unrestricted screen did
+not establish a scalar gain. A seven-sample, one-second CPU 14 confirmation
+found PGO scalar improvement of 5.65 percent and held-out scalar improvement
+of 4.81 percent. The final seven-sample, one-second unrestricted confirmation
+replicates scalar gains of 5.36 percent (77.37 to 73.22 ns) and 4.98 percent
+on held-out values. SQL improves 4.23 percent and traces 2.78 percent, but batches
+regress 1.26 percent. PGO stays opt-in because of that trade-off and the synthetic
+training mix; no `default.pgo` or automatic library-wide PGO was installed.
+These measurements do not establish a production workload speedup.
+
+Same-run own-PGO reference overhead is 12.3 percent for SQL and 55.0 percent
+for scalar, versus 11.4 and 62.8 percent without PGO. Both fresh same-machine
+10-percent targets remain unmet. SQL remains below its original absolute limit,
+while scalar still exceeds 55.44 ns. Do not attribute differences from the
+preceding loop's reference figures to a source change.
+
+The fused checked resource-call experiment retained all synchronization and
+safety checks but did not establish its intended scalar benefit in either
+screen or confirmation. It was removed, including the proposed `Resource.Call`
+and `Call.Handle` APIs. Production, Wasm, translated modules, facades, and locks
+remain unchanged. The restored benchmark binaries are byte-identical to the
+frozen pre-experiment builds, both with and without PGO.
+
+Useful ownership/nested-execution regressions remain in `f2d0158`, and the
+compiled generated-facade terminal admission/drain regression in `85b55d0`.
+Runtime coverage rises from 97.0 to 97.8 percent. Restored code passes strict
+check, integration, cross compilation, external/relocation/Go-only smoke,
+five fuzz targets, Go 1.26.8 PGO-enabled tests and race checks, and native
+linux/386 targeted tests. A real external consumer runs with PGO off/on.
+Retained test commits pass darna and exact staged-snapshot tests. These and
+the preceding loop's commits remain local and unpushed.
+
+A cached Go-built `pprof` frontend was recovered; the tooling blocker is
+resolved. The matching retained scalar profile attributes 58.29 percent
+cumulatively to guest execution, 43.58 percent to sketch math, and 10.16 percent
+to reply validation. These categories overlap and must not be added. The log
+polynomial accounts for about 14 percent flat, saturated conversion about
+2.14 percent flat; those are attribution, not predicted speedups. Complete
+sample sets, compiler/profile/binary provenance, and experiment limits are in
+[performance notes](performance.md).
+
+1. Investigate exact guest log/math lowering using source and assembly attribution.
+   Preserve IEEE/Wasm rounding, explicit float-width conversions, and sketch
+   bin boundaries; do not substitute approximate math or edit generated Go alone.
+2. Consider an exact guarded common-case saturated float-conversion fast path.
+   Its small sampled share suggests limited upside. Preserve NaN and overflow
+   clamps; require fail-closed signature/body checks, nextafter boundary tests,
+   numeric/trap contracts, both proof rebuilds, 386/arm64 qualification, and
+   differential tests before measuring every workload.
+3. Consider a batch-only bit-classification experiment, leaving scalar validation
    unchanged. The full predicate experiment improved batches but regressed SQL;
    partial targeting is a hypothesis, not a promised improvement. Retain the
    exhaustive domain and whole-batch atomicity tests and qualify all workloads.
-3. Inspect checked common-case saturated float conversion in the measured sketch
-   algorithm. Preserve NaN and overflow clamps. Any translator-helper change
-   needs fail-closed AST shape checks, explicit numeric/trap contracts, both
-   proof rebuilds, and differential qualification; never edit generated Go alone.
-4. Use the second-pass scalar profile to choose the next experiment. It attributes
-   55.6 percent cumulatively to translated guest execution, 39.2 percent to the
-   sketch algorithm, and 11.8 percent to reply validation. The isolated
-   call-layer benchmarks (`8d3b074`) are available; keep measuring guest and
-   host costs separately, including callback layout and checked reply decoding.
-5. Use the second-pass SQL profile to choose guest-side experiments; 85.9 percent
-   of samples are cumulatively in the translated export. Its reduced
-   allocation count did not close the timing gap. Measure full facade calls as
+4. Keep PGO opt-in at the consuming application's main package. Obtain a profile
+   representative of deployed traffic before shipping one; synthetic benchmark
+   weighting and the batch regression limit the current evidence. Any further
+   experiment needs a new held-out corpus, not tuning against the current
+   holdouts. Compare each implementation with its own profile under matched conditions.
+5. Use the retained SQL profile and call-layer diagnostics (`8d3b074`) to choose
+   guest-side experiments. The matching SQL profile puts 85.15 percent
+   cumulatively in the guest export and 77.87 percent in `fn96`; identify its
+   source/assembly hot path before changing it. Measure full facade calls as
    well as isolated layers before considering synchronization changes.
 6. Optimize measured hot paths without removing bounds checks, canonical reply
    validation, fault containment, shared ownership, or terminal draining Close.
    Add regression tests and regenerate affected proof artifacts with each change.
-7. Repeat isolated before/after and independent spike samples. Retain the
-   original absolute limits as well as the same-machine comparison. SketchAdd
-   still exceeds both limits; SQL's narrow current margin requires continued
-   checking. Do not mark M1 performance accepted or add screening gains together.
+7. Repeat isolated before/after and independent spike samples for all four
+   original and both held-out workloads. Retain original absolute limits and
+   fresh same-machine comparisons; scalar remains above both. SQL's margin
+   varies across sessions and requires continued checking. Do not mark M1
+   performance accepted or add separate screening gains together.
 
 ## Follow up quality work
 

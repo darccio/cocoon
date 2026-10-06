@@ -6,6 +6,187 @@ Benchmarks are a gate to investigate, not a reason to remove those checks.
 
 ## Current results
 
+The fourth performance pass on 2026-10-06 tested profile-guided compilation
+(PGO) and a fused checked resource-call path, with separate host, guest, and
+adversarial review agents. No production source change or default profile
+was retained.
+The useful additions are held-out varied workloads (`2d95490`), ownership and
+nested execution regressions (`f2d0158`), and a compiled generated-facade shutdown
+regression (`85b55d0`). Runtime coverage increased from 97.0 to 97.8 percent.
+The Wasm, translated modules, generated facades, and proof locks are unchanged.
+The longer unrestricted comparison confirms a 5.36-percent scalar PGO gain,
+including a 4.98-percent held-out gain, but batches regress 1.26 percent. PGO
+remains an opt-in trade-off, and performance acceptance remains open.
+
+### Profile guided compilation
+
+Both Cocoon and the independent reference trained their own CPU profile, with
+PGO explicitly disabled. Only the original SQL, increasing-value scalar,
+1,000-value batch, and 1,000-trace benchmarks were selected. Each class ran for
+two seconds with 16 Go processors and no affinity. This is equal nominal time
+per class, not a production request mix. Cocoon's new varied-value and varied-SQL
+benchmarks were held out from training. The reference retains the earlier
+independently built/hardened overlay; its batch and trace inputs and pool size
+differ from Cocoon's, so reference overhead comparisons use aligned SQL and
+scalar workloads only.
+
+The AMD Ryzen 7 5800HS comparisons use Go 1.26.8, CGO disabled, and explicit
+`-pgo=off` or an absolute path to that implementation's own profile. Seven
+sample sets rotate the four variants: Cocoon off/on and reference off/on.
+Compilation, tests, fuzzing, lint, and agent work stop before timing. Profiles
+are captured separately from unprofiled measurements; outliers are not removed.
+All p-values are exploratory and unadjusted for repeated comparisons.
+
+The initial unrestricted 500 ms screen did not establish a scalar improvement
+(75.99 to 74.41 ns, p=0.383) or a varied-scalar improvement
+(76.46 to 74.36 ns, p=0.318). Varied SQL improved 4.56 percent (p=0.038);
+the other original workloads had no detected timing change. A longer pinned
+confirmation used one Go processor, CPU 14, and one-second samples:
+
+| Workload | PGO off | PGO on | Pinned result |
+| --- | --- | --- | --- |
+| SQL | 1.833 µs | 1.733 µs | −5.46%, p=0.010 |
+| SketchAdd | 74.34 ns | 70.14 ns | −5.65%, p=0.026 |
+| SketchAddMany1k | 35.27 µs | 35.29 µs | No detected change, p=0.902 |
+| ObfuscateTraces1k | 2.164 ms | 2.083 ms | No detected change, p=0.097 |
+| SketchAddVaried | 73.53 ns | 69.99 ns | −4.81%, p=0.001 |
+| ObfuscateSQLVaried | 2.320 µs | 2.245 µs | −3.23%, p=0.011 |
+
+The matched PGO reference scalar median is 45.36 ns, leaving 54.6 percent
+overhead in this pinned run. Its SQL improves from 1.587 to 1.517 µs
+(−4.41%, p=0.002); scalar, batch, and traces have no detected reference gain.
+PGO does not close either the original 55.44 ns scalar limit or the pinned
+same-machine 49.896 ns limit. Allocation counts are unchanged for all six
+Cocoon workloads. Amortized construction bytes are not per-call allocations.
+
+The final unrestricted confirmation returned to 16 Go processors and no
+affinity, with seven rotated one-second sample sets and the same frozen
+profiles and binaries. It establishes a synthetic scalar benefit beyond the
+pinned run, but also exposes a batch regression:
+
+| Workload | PGO off | PGO on | Unrestricted result |
+| --- | --- | --- | --- |
+| SQL | 1.843 µs | 1.765 µs | −4.23%, p=0.001 |
+| SketchAdd | 77.37 ns | 73.22 ns | −5.36%, p=0.004 |
+| SketchAddMany1k | 35.945 µs | 36.399 µs | +1.26%, p=0.004 |
+| ObfuscateTraces1k | 2.164 ms | 2.104 ms | −2.78%, p=0.001 |
+| SketchAddVaried | 77.15 ns | 73.31 ns | −4.98%, p=0.003 |
+| ObfuscateSQLVaried | 2.376 µs | 2.253 µs | −5.18%, p=0.001 |
+
+Percentages use unrounded medians. The reference improves SQL from 1.655 to
+1.572 µs (−5.02%, p=0.001); its scalar is 47.52 versus 47.23 ns (p=0.710),
+with no detected batch or trace change. No-PGO-to-no-PGO overhead is 11.4
+percent for SQL and 62.8 percent for scalar. PGO-to-own-PGO overhead is 12.3
+and 55.0 percent. Both PGO same-run 10-percent limits remain unmet:
+1.7292 µs for SQL and 51.953 ns for scalar. SQL is below the original absolute
+2.2154 µs limit; scalar still exceeds 55.44 ns. Allocation counts remain
+unchanged. The slower batch is a measured trade-off, not an accepted universal
+optimization. The earlier screen's inconclusive scalar result remains recorded.
+
+No benchmark profile is installed as `default.pgo`. Synthetic gains do not
+establish a production speedup, and profiles belong to the consuming application.
+The [profile recipe](#benchmarking-and-profiles) preserves explicit controls and
+excludes the held-out workloads. Training weights were not tuned against these
+held-out results; further tuning needs independent traffic and a new holdout.
+
+### Rejected fused resource calls
+
+The candidate replaced generated `Resource.Use` → `Instance.Call` adapters
+with one callback and a shared checked execution core. Both locks, ownership
+and epoch checks, full call reset, panic containment, memory limits, reply
+validation, and lifecycle admission/drain remained intact. It added
+`Resource.Call` and callback-scoped `Call.Handle` only for this experiment;
+neither API remains in the branch.
+
+Seven rotated unrestricted 500 ms triples found no established gain in any
+of the six workloads. Scalar medians were 74.81 versus 72.07 ns (p=0.259),
+and varied scalar was 78.03 versus 74.71 ns (p=0.535). The longer CPU 14,
+one-processor, one-second confirmation also did not improve scalar calls:
+
+| Workload | Original path | Fused candidate | Pinned result |
+| --- | --- | --- | --- |
+| SQL | 1.851 µs | 1.808 µs | −2.32%, p=0.043 |
+| SketchAdd | 73.06 ns | 73.43 ns | No detected change, p=0.318 |
+| SketchAddMany1k | 35.04 µs | 35.17 µs | No detected change, p=0.805 |
+| ObfuscateTraces1k | 2.140 ms | 2.147 ms | No detected change, p=0.535 |
+| SketchAddVaried | 74.34 ns | 73.14 ns | No detected change, p=0.318 |
+| ObfuscateSQLVaried | 2.329 µs | 2.340 µs | No detected change, p=0.833 |
+
+The candidate was removed because the intended scalar benefit was not
+established. These results do not prove equivalence. The observed SQL change
+does not isolate causality: its generated operation and guest parser were
+unchanged. All Go allocation counts were unchanged.
+
+The retained tests exercise full-width interleaved handles, contained nested
+guest failures, active ownership through GC followed by eventual cleanup,
+alias Close and shared destructor results, and shared-instance serialization.
+The compiled facade fixture blocks an admitted guest call, observes actual
+terminal admission, rejects new resource/constructor/stateless calls, then
+checks drain and once-only home release. Its subprocess is CGO-disabled; the
+parent race invocation does not instrument that child. Runtime and real proof
+tests separately pass under the race detector.
+
+### Profiles and qualification
+
+A working Go-built `pprof` frontend was recovered from
+`.cache/go/00/00f01208b59cc8aadfd1faa6e2680739540033a3f6e8fedd79f8e89539b0530e-d/pprof`.
+The distribution toolchains still omit that frontend; profile inspection is
+no longer blocked. The matching retained pre-holdout scalar profile attributes
+58.29 percent cumulatively to the guest export, 43.58 percent to sketch math,
+and 10.16 percent to `ResultView`. A separate PGO scalar profile attributes
+53.17, 41.80, and 8.99 percent respectively. These cumulative categories
+overlap and cannot be added or treated as independent costs. Their difference
+does not establish which compiler optimization caused a timing change.
+
+The matching retained SQL profile puts 85.15 percent cumulatively in the
+guest export and 77.87 percent in translated function `fn96` (49.02 percent
+flat). Both retained profiles match build ID
+`5005a40a835d17d4d76c9237ae6169b3c810febe` and the pre-holdout binary hash
+`7657ad19a6fdb499d9650bede60c2f25df31e5ff9cfe2eed06dbac805e965fe2`.
+
+In the retained profile, the log polynomial's dense source line accounts for
+about 14 percent flat and saturated float conversion for about 2.14 percent
+flat. Those are sampled attribution, not promised optimization gains. Inspect
+exact guest math/lowering next; preserve rounding and sketch bin boundaries.
+Never substitute approximate math or edit generated modules alone.
+
+Restored production is byte-identical to the frozen pre-experiment benchmark
+binaries, both with and without PGO. Full check, integration, cross-platform
+compilation, external/relocation/Go-only smoke, all five fuzz targets, Go 1.26.8
+PGO-enabled tests and race checks, and native linux/386 targeted tests pass.
+Both proofs rebuild to the original artifacts and locks. An independently
+authored external consumer also builds and runs with PGO off/on, exercising
+numeric boundaries, atomic batch errors, SQL decoding, and terminal admission.
+Each retained test commit passes darna and exact staged-snapshot Go/proof tests.
+The pass's commits are local and unpushed.
+
+The Cocoon profile SHA-256 is
+`f75e852793200b22ce61668326860e9047cc7150404cced26cad489bafbc3af2`;
+the reference profile is
+`1334598cd2ffbd0fd8e3684c9c22ea3909e233ae7bfcc94603958ad8aa0792c7`.
+Cocoon off/on binary hashes are
+`d5fdf9913af526e3e93779283186146557af9ca3ba4bb6c7328c3bf23b471a80` and
+`d9c949317052141c92ee7371cc734a34f66179f077f6ac6101ec8f58bb0a20dc`;
+reference off/on hashes are
+`bf3f15d3241684b35b0b0b448799373e8d66951f955827cce38fd7e365237dd8` and
+`f8f51b711bd9571a09609937e15860e8fdc00fcac927bdde45fdfe777471d06f`.
+The rejected fused binary is
+`7a8706ad61ca772448bb517b7614459f4b3dce26eed06a9453837ac95206d1fb`.
+The off training and PGO scalar profile build IDs are respectively
+`83928cd627234b621c12e8f5ac6d8179b7d3fc44` and
+`e3b76825c536eb9e92f0fe3e9f17df5058fd90d5`.
+
+Ignored raw logs use `.cache/round10-pgo-{off,on,reference-off,reference-on}-{1..7}.txt`,
+`.cache/round10-pgo-confirm-*`, `.cache/round11-fused-{before,after,reference}-{1..7}.txt`,
+`.cache/round10-pgo-final-*`, and `.cache/round11-fused-confirm-*`. Training profiles are
+`.cache/round10-{cocoon,reference}-mixed.prof`; separate PGO scalar attribution
+uses `.cache/round10-pgo-sketch.prof`. Restored qualification logs use
+`.cache/round11-restored-*`; staged checks use `.cache/round11-staged-*`.
+Matching retained profile summaries are `.cache/round11-retained-*-top.txt`
+and `.cache/round11-retained-sql-cumulative.txt`.
+
+## Third performance loop results
+
 The 2026-10-05 and 2026-10-06 multi-agent loop completed nine rounds. No
 performance optimization survived the full workload comparison. The branch
 retains a destructor correctness fix and stronger callback, handle, numeric,
@@ -73,9 +254,9 @@ not been pushed; the preceding pass's CI completed successfully.
 Raw acceptance samples are `.cache/round8-attribution-{before,fix,reference}-{1..7}.txt`.
 The superseded 500 ms final screen is `.cache/loop-final-{before,final,reference}-*`.
 Profiles were captured separately from acceptance samples in
-`.cache/loop-retained-{sketch,sql}.prof`; the installed toolchains currently lack
-the `pprof` frontend, so fresh profile attribution remains a follow-up rather
-than an asserted result. Existing earlier attributed profiles remain below.
+`.cache/loop-retained-{sketch,sql}.prof`. A cached frontend recovered during the
+fourth pass makes these available for attribution; the retained scalar and SQL
+findings are recorded above. Existing earlier attributed profiles remain below.
 
 ### Multi agent experiment results
 
@@ -484,7 +665,7 @@ without Go allocation, protected by an allocation regression test.
 
 The original spike medians, recorded on a different cloud VM, were 2.014 µs
 and 50.4 ns. The original within-10-percent limits remain **2.2154 µs and
-55.44 ns**. Neither is met. Current results also exceed 110 percent of the
+55.44 ns**. Neither was met in that session. Those results also exceeded 110 percent of the
 fresh same-machine spike medians; do not mark M1 performance accepted.
 
 For reproducible accounting, the five unprofiled samples in nanoseconds were:
@@ -551,8 +732,10 @@ cold unit-error helper. It rejected general cold error and resource lookup
 annotations that did not establish an improvement. The second pass optimized
 successful callback bookkeeping, checked range inlining, resource admission,
 and ready pool borrowing. It rejected owned reply publication and combined
-resource exit defers. Next, use fresh profiles to choose larger guest-side or
-callback-layout experiments; adding the screening gains is not valid accounting.
+resource exit defers. The third loop retained correctness and optimizer-contract
+tests, not a timing gain. The fourth pass found a synthetic PGO scalar benefit
+with a batch regression and rejected fused resource calls. Next, investigate
+exact guest math/lowering; adding screening gains is not valid accounting.
 Retain bounds checks, canonical replies, trap containment, shared ownership,
 and draining Close, with staged-snapshot tests for each atomic change. See the
 [roadmap](roadmap.md) for other pending acceptance work.
@@ -570,19 +753,30 @@ CGO_ENABLED=0 /usr/lib64/go/1.26/bin/go test -pgo=off -c \
   -test.benchtime=500ms -test.count=5 -test.benchmem
 ```
 
-Collect profiles separately from unprofiled acceptance samples:
+Collect profiles separately from unprofiled acceptance samples. For the
+synthetic four-class experiment, explicitly exclude the varied held-out and
+call-layer diagnostic benchmarks:
 
 ```sh
-CGO_ENABLED=0 go test ./examples/datadog/go/dd -run '^$' \
-  -bench . -benchtime=5s -cpuprofile=.cache/dd.prof -o .cache/dd.test
-go tool pprof -top .cache/dd.prof
+CGO_ENABLED=0 /usr/lib64/go/1.26/bin/go test -pgo=off -c \
+  -o .cache/dd-profile.test ./examples/datadog/go/dd
+GOMAXPROCS=16 .cache/dd-profile.test -test.run '^$' \
+  -test.bench '^(BenchmarkObfuscateSQL|BenchmarkSketchAdd|BenchmarkSketchAddMany1k|BenchmarkObfuscateTraces1k)$' \
+  -test.benchtime=2s -test.cpuprofile=.cache/dd-mixed.prof
+go tool pprof -top .cache/dd-profile.test .cache/dd-mixed.prof
 ```
 
-Collect representative workload profiles rather than only a tiny scalar loop.
-Merge compatible CPU profiles with `go tool pprof -proto a.prof b.prof > default.pgo`
-in a networked/user shell. Place `default.pgo` beside the consuming main package,
-or pass `go build -pgo=/path/to/default.pgo`. Go PGO changes host compilation,
-not the pinned Rust/Wasm translation or schema. Compare with `-pgo=off`, retain
-profiles only when they represent deployed traffic, and rerun tests/race checks
-after changing compiler options. Profiles can contain application symbols and
-paths; review them before sharing.
+This gives each class equal nominal time, not a representative request mix.
+For deployment, collect profiles from the consuming application's workload.
+Merge compatible profiles with `go tool pprof -proto a.prof b.prof > default.pgo`,
+place `default.pgo` beside that application's main package, or pass
+`go build -pgo=/absolute/path/to/profile ./cmd/app`. A library does not enable
+PGO globally for its consumers; Cocoon does not ship a default profile.
+See the [Go PGO guide](https://go.dev/doc/pgo) for consuming-main placement and
+profile selection.
+
+Go PGO changes host compilation, not the pinned Rust/Wasm translation or
+schema. Compare with explicit `-pgo=off`, profile each implementation separately,
+and rerun tests and race checks after changing compiler options. Benchmark
+profiles remain experimental until representative of deployed traffic.
+Profiles can contain application symbols and paths; review them before sharing.
