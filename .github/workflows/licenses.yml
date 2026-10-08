@@ -1,0 +1,34 @@
+name: licenses
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  licenses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: cocoon
+    steps:
+      - name: Check out Cocoon
+        uses: actions/checkout@v4
+        with:
+          path: cocoon
+          persist-credentials: false
+      - name: Check out the pinned Datadog example dependency
+        uses: actions/checkout@v4
+        with:
+          repository: DataDog/libdatadog
+          ref: 7f3b16fe1b4bfc2a016ef869459e915ee02d6d6a
+          path: libdatadog
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cocoon/go.mod
+          cache-dependency-path: cocoon/go.sum
+      - name: Install the toolchain specified by rust-toolchain.toml
+        run: rustup show active-toolchain
+      - name: Test the collector
+        run: go test ./tools/licenses
+      - name: Check dependency coverage and upstream notices
+        run: make licenses-check

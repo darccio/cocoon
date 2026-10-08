@@ -1,0 +1,4 @@
+# Preserve upstream license evidence verbatim across platforms.
+LICENSE-3rdparty.csv text eol=lf
+LICENSE-3rdparty.txt -text -whitespace
+tools/licenses/notices/* -text -whitespace

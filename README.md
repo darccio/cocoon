@@ -1,5 +1,12 @@
 # Cocoon
 
+Cocoon's original code is licensed under [Apache-2.0](LICENSE). Dependencies
+retain their own licenses. [LICENSE-3rdparty.csv](LICENSE-3rdparty.csv) records
+resolved versions and license evidence, and [LICENSE-3rdparty.txt](LICENSE-3rdparty.txt)
+preserves upstream license and attribution texts. Regenerate with `make licenses`;
+CI verifies it with `make licenses-check`. See the
+[inventory documentation](tools/licenses/README.md) for scope and review steps.
+
 Cocoon turns a safe Rust shim into an ordinary Go package. Its checked-in output
 needs no Rust compiler, Wasm engine, cgo, or native shared library at runtime.
 The synchronous M1 framework supports typed values, records, shared resources,

@@ -7,8 +7,15 @@ export PATH := $(BINARYEN_BIN):$(PATH)
 GOLANGCI_LINT ?= $(if $(wildcard $(CURDIR)/.cache/bin/golangci-lint),$(CURDIR)/.cache/bin/golangci-lint,golangci-lint)
 PACKAGES := ./... ./testdata/compute/go/compute/...
 
-.PHONY: check test lint fmt race coverage cross rust integration smoke fuzz bench
+.PHONY: check test lint fmt race coverage cross rust integration smoke fuzz bench licenses licenses-check
 check: test lint
+
+# Resolve every Go module and Cargo workspace, including indirect/test/tool deps.
+licenses:
+	go run -mod=readonly ./tools/licenses
+
+licenses-check:
+	go run -mod=readonly ./tools/licenses -check
 test:
 	CGO_ENABLED=0 go test $(PACKAGES)
 	CGO_ENABLED=0 go vet $(PACKAGES)
