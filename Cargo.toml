@@ -2,6 +2,9 @@
 resolver = "3"
 members = ["rust/cocoon-guest", "rust/patches/getrandom"]
 
+[workspace.package]
+license = "Apache-2.0"
+
 [profile.release]
 opt-level = 3
 lto = true

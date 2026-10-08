@@ -9,7 +9,7 @@ remaining work and how to resume development in a later conversation.
 
 ## Private repository access
 
-The repository is private and no license has been selected yet. Installation
+The repository is private and licensed under Apache-2.0. Installation
 requires authorized GitHub access. Authenticate Git first, for example with
 `gh auth login` and `gh auth setup-git`, then exclude this private module from
 the public Go proxy and checksum service:

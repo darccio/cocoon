@@ -3,6 +3,7 @@ name = "getrandom"
 version = "0.2.17"
 edition = "2024"
 publish = false
+license.workspace = true
 description = "Cocoon-specific entropy adapter for getrandom 0.2 consumers"
 
 [features]
