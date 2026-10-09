@@ -70,10 +70,14 @@ func TestExternalWorkflow(t *testing.T) {
 	// Relocate both the project and guest support crate. This catches path
 	// strings in compiled Rust that same-directory rebuilding cannot detect.
 	relocated := filepath.Join(work, "relocated author with spaces")
-	guest := filepath.Join(work, "relocated guest with spaces")
+	guestRoot := filepath.Join(work, "relocated cocoon with spaces")
+	guest := filepath.Join(guestRoot, "rust", "cocoon-guest")
 	mkdir(t, relocated)
-	for relative, data := range snapshot(t, filepath.Join(root, "rust", "cocoon-guest")) {
-		write(t, filepath.Join(guest, relative), string(data))
+	for relative, data := range snapshot(t, filepath.Join(root, "rust")) {
+		write(t, filepath.Join(guestRoot, "rust", relative), string(data))
+	}
+	for _, metadata := range []string{"Cargo.toml", "Cargo.lock"} {
+		write(t, filepath.Join(guestRoot, metadata), string(read(t, filepath.Join(root, metadata))))
 	}
 	for _, metadata := range []string{"go.mod", "go.sum"} {
 		write(t, filepath.Join(relocated, metadata), string(read(t, filepath.Join(author, metadata))))
