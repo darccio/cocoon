@@ -1,207 +1,247 @@
 # Cocoon
 
-Cocoon's original code is licensed under [Apache-2.0](LICENSE). Dependencies
-retain their own licenses. [LICENSE-3rdparty.csv](LICENSE-3rdparty.csv) records
-resolved versions and license evidence, and [LICENSE-3rdparty.txt](LICENSE-3rdparty.txt)
-preserves upstream license and attribution texts. Regenerate with `make licenses`;
-CI verifies it with `make licenses-check`. See the
-[inventory documentation](tools/licenses/README.md) for scope and review steps.
+[![CI](https://github.com/darccio/cocoon/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/darccio/cocoon/actions/workflows/quality.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/darccio/cocoon/rt.svg)](https://pkg.go.dev/github.com/darccio/cocoon/rt)
+[![Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-Cocoon turns a safe Rust shim into an ordinary Go package. Its checked-in output
-needs no Rust compiler, Wasm engine, cgo, or native shared library at runtime.
-The synchronous M1 framework supports typed values, records, shared resources,
-bounded calls, terminal shutdown, and declared host capabilities. Async and HTTP
-are deliberately not implemented yet. The [roadmap](docs/roadmap.md) records
-remaining work and how to resume development in a later conversation.
+**Rust libraries. Pure Go packages.**
 
-## Private repository access
+Cocoon turns a Rust shim into a Go package you can import, build, and distribute
+with ordinary Go tools. Declare the API in TOML, implement it in Rust, and Cocoon
+compiles it through WebAssembly into Go source.
 
-The repository is private and licensed under Apache-2.0. Installation
-requires authorized GitHub access. Authenticate Git first, for example with
-`gh auth login` and `gh auth setup-git`, then exclude this private module from
-the public Go proxy and checksum service:
+Applications consuming the generated package need only Go. Rust, Binaryen, and
+the Wasm translator are tools for the package author; the generated package
+runs without cgo, a Wasm engine, or native shared libraries.
 
-```sh
-GOPRIVATE=github.com/darccio/cocoon go install github.com/darccio/cocoon/cmd/cocoon@v0.1.0
-GOPRIVATE=github.com/darccio/cocoon go get github.com/darccio/cocoon@v0.1.0
-```
+- **Reuse Rust code:** expose functions, typed records, and stateful resources
+  through a generated Go API.
+- **Keep Go deployments simple:** check in generated sources and cross-compile
+  with the Go toolchain.
+- **Control the boundary:** declare host capabilities, bound inputs, outputs,
+  and instance memory, and manage resources with explicit `Close` methods.
+- **Reproduce builds:** pin the generator and toolchain, with source and artifact
+  fingerprints recorded in `cocoon.lock.json`.
 
-The first release is [v0.1.0](https://github.com/darccio/cocoon/releases/tag/v0.1.0).
-Keep any other existing `GOPRIVATE` entries when configuring your environment.
-Consumers of checked-in Go packages need only Go; authoring a new Rust shim also requires
-a matching v0.1.0 source checkout for `rust/cocoon-guest` and the tools below.
+Cocoon is an early-stage project. Synchronous functions and resources are
+implemented; async operations and HTTP support are planned. See the
+[roadmap](docs/roadmap.md) for current work.
 
-## Try the checked-in packages
+## Quick start
 
-Go 1.26 or newer is sufficient for consumers:
+Use **Go 1.26 or newer**. The checked-in Datadog example exposes Rust SQL and
+trace obfuscation and DDSketch operations through a Go package. Try SQL
+obfuscation in a new module:
 
 ```sh
-CGO_ENABLED=0 go test ./...
-CGO_ENABLED=0 go test ./testdata/compute/go/compute/...
-go build -o bin/cocoon ./cmd/cocoon
+mkdir cocoon-demo
+cd cocoon-demo
+go mod init example.com/cocoon-demo
+go get github.com/darccio/cocoon/examples/datadog/go/dd@latest
 ```
 
-The proof consumer is `github.com/darccio/cocoon/examples/datadog/go/dd`:
+Save this as `main.go`:
 
 ```go
-library, err := dd.Open(dd.Options{Instances: 1})
-if err != nil {
-    return err
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/darccio/cocoon/examples/datadog/go/dd"
+)
+
+func main() {
+	library, err := dd.Open(dd.Options{Instances: 1})
+	if err != nil {
+		panic(err)
+	}
+	defer func() { _ = library.Close() }()
+
+	query, err := library.ObfuscateSQL(
+		context.Background(), "SELECT * FROM users WHERE id = 42",
+	)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(query)
 }
-defer func() { _ = library.Close() }()
-query, err := library.ObfuscateSQL(ctx, "SELECT * FROM users WHERE id = 42")
 ```
 
-It exposes SQL and v0.4 MessagePack trace obfuscation and pointer-only `*Sketch`
-resources. Explicitly close resources before closing their library. Go wrapper
-copies share one ownership cell, but `go vet` warns against making such copies.
-The small [compute fixture](testdata/compute/cocoon.toml) covers every numeric
-scalar/slice, nested records, multiple input buffers, and a real safe Rust panic.
-
-## Build or author a shim
-
-Generation requires Rust **1.97.0**, Binaryen **133**, and the Go tool dependency
-`github.com/ncruces/wasm2go` **v0.4.16**. This module already pins the translator.
-For a separate author module, first add that tool with
-`go get -tool github.com/ncruces/wasm2go@v0.4.16` and add the Cocoon Go dependency.
-
 ```sh
-rustup toolchain install 1.97.0 --profile minimal
-rustup component add rust-src rustfmt clippy --toolchain 1.97.0
-rustup target add wasm32-unknown-unknown --toolchain 1.97.0
+CGO_ENABLED=0 go run .
 ```
 
-Install Binaryen 133 and put `wasm-opt`, `wasm-as`, and `wasm-metadce` on `PATH`.
-Use the [official release bundle](https://github.com/WebAssembly/binaryen/releases/tag/version_133)
-so local proof rebuilds and CI use identical executables; a version number alone
-does not identify a binary. On linux/amd64, install the exact bundle used by CI:
+Output:
 
-```sh
-curl --fail --location https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz -o binaryen.tar.gz
-echo '2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489  binaryen.tar.gz' | sha256sum --check
-tar -xzf binaryen.tar.gz
-export PATH="$PWD/binaryen-version_133/bin:$PATH"
+```text
+SELECT * FROM users WHERE id = ?
 ```
 
-From a Cocoon source checkout, check the tools and initialize a project:
+This uses the generated Go sources already included in Cocoon. You do not need
+to install Rust or clone libdatadog to run it. Explore the
+[Datadog API declarations](examples/datadog/cocoon.toml) and
+[usage tests](examples/datadog/go/dd/dd_test.go) for trace and sketch examples.
 
-```sh
-go run ./cmd/cocoon doctor
-go run ./cmd/cocoon init --name example testdata/my-example
+## How it works
+
+```mermaid
+flowchart LR
+    A["Rust shim + TOML API"] -->|"compile and verify"| B["WebAssembly"]
+    B -->|"translate and harden"| C["Go source + typed API"]
+    C -->|"go build"| D["Your application"]
 ```
 
-`init` works inside an existing Go module. Outside this repository, provide
-`--guest /path/to/cocoon/rust/cocoon-guest`. It creates an independent Cargo
-workspace, an echo manifest, safe implementation, generated trait/facade, and
-Cargo lockfile. It refuses existing authored files; it does not initialize Git
-or alter your module dependencies.
+Cocoon generates both sides of the API boundary. Rust compiles the shim to
+WebAssembly; Binaryen optimizes it; [wasm2go](https://github.com/ncruces/wasm2go)
+translates it to Go. Cocoon verifies the module and hardens the translated code
+before publishing the generated package.
 
-For a separate author module, after installing the CLI and the pinned tools:
+The generated API handles encoding, instance pooling, resource ownership, and
+fault reporting. It imports Cocoon's [`rt`](rt) support package, whose production
+dependencies are all in Go's standard library. Wazero is used for differential
+tests against the original Wasm, and is absent from production imports.
+
+## Build your own package
+
+Authors need Go **1.26+**, Rust **1.97.0**, Binaryen **133**, and wasm2go
+**v0.4.16**. Install the pinned Rust and Binaryen tools using the
+[build guide](docs/building.md#install-the-build-tools), and put Go's binary
+installation directory on your `PATH`.
+
+In a fresh directory, create an author module and install the CLI at the same
+version as its Go dependency:
 
 ```sh
+mkdir cocoon-workspace
+cd cocoon-workspace
+mkdir my-library
+cd my-library
 go mod init example.com/my-library
-GOPRIVATE=github.com/darccio/cocoon go get github.com/darccio/cocoon@v0.1.0
+go get github.com/darccio/cocoon@latest
 go get -tool github.com/ncruces/wasm2go@v0.4.16
-cocoon init --guest /absolute/path/to/cocoon/rust/cocoon-guest project
-cocoon doctor --manifest project/cocoon.toml
-cocoon build --manifest project/cocoon.toml
+
+COCOON_VERSION=$(go list -m -f '{{.Version}}' github.com/darccio/cocoon)
+go install github.com/darccio/cocoon/cmd/cocoon@"$COCOON_VERSION"
+
+git clone --branch "$COCOON_VERSION" --depth 1 \
+  https://github.com/darccio/cocoon.git ../cocoon
+cocoon init --name hello --guest ../cocoon/rust/cocoon-guest .
+```
+
+The sibling checkout supplies the matching Rust support crate. Keep that
+version-pinned checkout beside your project for rebuilds; consumers need only
+your generated Go package. `init` creates `cocoon.toml`, a standalone Cargo
+workspace under `shim/`, and the generated API under `go/hello/`. It supplies an
+echo implementation and refuses to overwrite existing authored files.
+
+The function declaration in `cocoon.toml` describes the boundary:
+
+```toml
+[[func]]
+name = "echo"
+params = [{ name = "input", type = "string" }]
+returns = "string"
+fallible = true
+```
+
+The implementation lives in `shim/src/implementation.rs`:
+
+```rust
+#[derive(Default)]
+pub struct Shim;
+
+impl crate::cocoon_gen::API for Shim {
+    fn echo(&mut self, input: String) -> cocoon_guest::Result<String> {
+        Ok(input)
+    }
+}
+```
+
+Build and test the package:
+
+```sh
+cocoon doctor
+cocoon build
 go mod tidy
-CGO_ENABLED=0 go test ./project/go/example/...
+CGO_ENABLED=0 go test ./go/hello/...
 ```
 
-Edit `cocoon.toml`, run `cocoon gen`, then implement the generated Rust `API`
-trait in `shim/src/implementation.rs`. That module has `forbid(unsafe_code)`;
-pointer handling stays in generated glue and the reviewed guest support crate.
-Use the [Datadog manifest](examples/datadog/cocoon.toml) as a resource example.
+Your application can now import `example.com/my-library/go/hello` and call
+`library.Echo(ctx, "hello")` after opening it with `hello.Open(hello.Options{})`.
+The shim implementation is compiled with `forbid(unsafe_code)`; pointer handling
+belongs to Cocoon's generated glue and guest support crate.
 
-```sh
-go run ./cmd/cocoon gen --manifest testdata/my-example/cocoon.toml
-go run ./cmd/cocoon build --manifest testdata/my-example/cocoon.toml
-go run ./cmd/cocoon verify --manifest testdata/my-example/cocoon.toml \
-  testdata/my-example/go/example/testdata/module.wasm
-```
+When you change the API, edit `cocoon.toml`, run `cocoon gen`, implement the
+updated Rust trait, and run `cocoon build` again. Keep the manifest, authored
+shim, Cargo lockfile, generated Go sources and tests, reference Wasm, and
+`cocoon.lock.json` together in version control. The
+[build guide](docs/building.md) covers rebuilding, distributing, and verifying
+packages.
 
-`gen` writes source contracts; `build` finalizes the translated module, adapter,
-generated contract/differential/bulk-memory tests, exact reference Wasm, and
-`cocoon.lock.json`. Commit generated output with its manifest and authored shim.
-Only generated-marked source files may be replaced. All artifacts are staged
-before publication and earlier replacements roll back on failure. Individual
-renames are atomic; the group is not an atomic filesystem snapshot. Do not read
-or compile output during publication. `gen` and `build` exclude one another with
-`.cocoon-build/lock`; after an interrupted process, remove that exact stale lock
-only after confirming no build is running.
+| Command | Purpose |
+| --- | --- |
+| `cocoon init` | Create a shim and API inside an existing Go module. |
+| `cocoon gen` | Generate Rust contracts and the Go facade from the manifest. |
+| `cocoon build` | Compile, verify, translate, and generate the package and tests. |
+| `cocoon verify path/to/module.wasm` | Verify a Wasm module against the manifest. |
+| `cocoon doctor` | Check that the pinned build tools are available. |
 
-The build uses `--locked`, build-std, panic=abort, a bounded linear memory, exact
-manifest export roots, meta-DCE, `wasm-opt -O3`, structural/feature verification,
-and the unsafe translator followed by checked AST hardening. `RUSTC_BOOTSTRAP=1`
-is scoped to the pinned build-std subprocess, not a general nightly toolchain.
-Compiler source roots for the module, local dependencies, Rust sysroot, and
-Cargo cache are remapped to stable `/cocoon/...` paths. Encoded compiler flags
-also preserve paths containing spaces. These mappings normalize compiler
-output, not arbitrary strings emitted by your shim or a build script; see
-[Rust source path remapping](https://doc.rust-lang.org/rustc/remap-source-paths.html).
-Cargo also hashes absolute paths of dependencies outside the shim workspace
-into compiler metadata. Cocoon wraps target Rust compilation to derive stable
-crate identities from the locked graph, canonical source roots, package
-versions, and compiler settings. It preserves Cargo's expected output filenames
-and keeps host build scripts and compiler probes unchanged. Features and the
-standard-library compilation role remain distinct; diagnostic presentation
-does not affect artifact identity. The exact normalizer source is fingerprinted
-in the lock and compiler flags, so changing it invalidates Cargo's cached units.
-The build subprocess selects the pinned compiler explicitly and replaces
-ambient Cargo compiler wrappers; these changes do not affect your shell.
-If an offline machine lacks standard-library dependencies, fetch them on a
-networked machine with:
+`gen`, `build`, `verify`, and `doctor` use `cocoon.toml` in the current directory;
+pass `--manifest path/to/cocoon.toml` to select another project.
 
-```sh
-RUSTC_BOOTSTRAP=1 cargo +1.97.0 fetch --locked \
-  --manifest-path "$(rustc +1.97.0 --print sysroot)/lib/rustlib/src/rust/library/Cargo.toml"
-```
+## Behavior and limits
 
-## Datadog rebuild
+Reuse a library across calls and close it when finished. Stateless operations
+use a bounded instance pool; stateful resources belong to one serialized
+instance. Keep resource wrappers as pointers and close them before closing
+their library. Library shutdown rejects new work and waits for admitted calls.
 
-The generated Go consumer does not need libdatadog. Rebuilding it needs a clean
-local checkout at `../libdatadog`, revision
-`7f3b16fe1b4bfc2a016ef869459e915ee02d6d6a`:
+Cocoon is intended for trusted, reviewed Rust payloads. Crates must build for
+`wasm32-unknown-unknown`; the supported host capabilities are logging, entropy,
+and a clock. WASI, async operations, HTTP, and guest threads are not supported.
 
-```sh
-cargo fetch --manifest-path examples/datadog/shim/Cargo.toml
-make integration
-```
+Execution is synchronous. Context cancellation can prevent a call from
+starting or stop waiting for a pool slot; it cannot interrupt an executing
+guest. Recoverable guest traps poison the instance and invalidate its handles.
+Fatal Go stack exhaustion and process out-of-memory failures cannot be
+recovered. Memory limits apply to each instance, not the entire process.
+See [ABI and lifecycle](docs/abi.md) and the
+[design review](docs/design-review.md) for the full contracts.
 
-Locks record full schema/raw manifest hashes, exact tools, compiler metadata
-normalizer and Binaryen executable hashes, local source content and revisions,
-Cargo lock and shim hashes, and hashes of Wasm, translated Go,
-facade, adapter, and generated tests. They contain no build-machine paths or
-timestamps. The independently authored getrandom 0.2 compatibility crate routes
-Wasm entropy through Cocoon even when a dependency enables its `js` feature;
-it is not a general replacement for every upstream getrandom backend.
+## Documentation
 
-## Quality and limits
+| Guide | Contents |
+| --- | --- |
+| [Building and distributing packages](docs/building.md) | Tool setup, generated files, reproducibility, and example rebuilds. |
+| [ABI and lifecycle](docs/abi.md) | Types, encoding, ownership, errors, and shutdown. |
+| [Design review](docs/design-review.md) | Boundary checks, fault handling, and capability restrictions. |
+| [Performance](docs/performance.md) | Benchmarks, measurements, and PGO work. |
+| [Roadmap](docs/roadmap.md) | Current implementation status and upcoming work. |
+| [Dependency licenses](tools/licenses/README.md) | Inventory scope, regeneration, and attribution review. |
 
-```sh
-make check       # tests, vet, and 49 explicitly selected strict linters
-make race        # runtime and generated consumers
-make rust        # native guest/getrandom tests and all-feature Clippy
-make cross       # compile tests + vet for arm64, 386, Darwin, Windows, js/wasm
-make smoke       # installed CLI, deterministic new shim, Go-only consumer
-make fuzz        # parsers, hardener, and generated wazero differential adapters
-make coverage
-make bench
-```
+## Contributing and support
 
-Use golangci-lint **2.13.1**; older analyzer builds cannot read newer Go export
-data. CI is configured to execute linux/amd64 and native arm64 tests and rebuild
-both proof packages with pinned tools. Wazero is test-only; production imports
-stay in the Go runtime and standard library. See [ABI and lifecycle](docs/abi.md),
-[security decisions](docs/design-review.md), and [performance/PGO](docs/performance.md).
+Bug reports, small reproducible examples, documentation fixes, and pull requests
+are welcome. Use [GitHub issues](https://github.com/darccio/cocoon/issues) for
+questions, bugs, and feature proposals. For build problems, include your Go
+version, platform, `cocoon doctor` output, and the failing command.
 
-Cocoon targets trusted, reviewed Rust payloads. Recoverable traps poison the
-instance and invalidate its handles; host-import panics are distinct errors.
-It is not a hostile-code sandbox: fatal Go stack exhaustion/process OOM cannot
-be recovered, and synchronous execution cannot be forcibly interrupted.
-Context cancellation prevents admission or stops waiting for a pool slot; an
-already executing call runs to completion. Callbacks/imports must not reenter
-their instance or library shutdown. Linear-memory limits are per instance, not
-a process-wide budget; Go capacity, copies, compilation caches, and concurrent
-instances consume additional memory. Limits must also fit the host's Go `int`.
+To work on Cocoon itself, clone the repository and follow the
+[contributor checks](docs/building.md#contributor-checks). Changes to generated
+code should include the source or generator change that produced them.
+
+## License
+
+Cocoon's original code is licensed under [Apache-2.0](LICENSE). Dependencies and
+generated payloads retain their upstream licenses.
+[LICENSE-3rdparty.csv](LICENSE-3rdparty.csv) identifies resolved dependencies and
+license evidence; [LICENSE-3rdparty.txt](LICENSE-3rdparty.txt) preserves upstream
+license and attribution texts, including the Rust standard library.
+
+Regenerate the inventory with `make licenses` and validate it with
+`make licenses-check`. CI checks both files. When distributing a generated
+package, retain the license and attribution notices that apply to its Rust
+inputs and embedded payload as well as Cocoon's [LICENSE](LICENSE) and
+[NOTICE](NOTICE).
