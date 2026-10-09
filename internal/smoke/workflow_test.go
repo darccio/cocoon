@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/build"
+	"dario.cat/cocoon/internal/build"
 )
 
 // TestExternalWorkflow exercises the installed CLI and a Go-only distribution.
@@ -38,8 +38,8 @@ func TestExternalWorkflow(t *testing.T) {
 	run(t, root, append(environment, "GOBIN="+bin), goExecutable, "install", "./cmd/cocoon")
 	cocoon := filepath.Join(bin, "cocoon")
 	run(t, author, environment, goExecutable, "mod", "init", "example.com/cocoon-author")
-	run(t, author, environment, goExecutable, "mod", "edit", "-go=1.26.0", "-replace=github.com/darccio/cocoon="+root)
-	run(t, author, environment, goExecutable, "get", "github.com/darccio/cocoon@v0.0.0")
+	run(t, author, environment, goExecutable, "mod", "edit", "-go=1.26.0", "-replace=dario.cat/cocoon="+root)
+	run(t, author, environment, goExecutable, "get", "dario.cat/cocoon@v0.0.0")
 	run(t, author, environment, goExecutable, "get", "-tool", "github.com/ncruces/wasm2go@v0.4.16")
 	run(t, author, environment, cocoon, "init", "--guest", filepath.Join(root, "rust", "cocoon-guest"), "project")
 	manifest := filepath.Join(author, "project", "cocoon.toml")
@@ -100,9 +100,9 @@ func TestExternalWorkflow(t *testing.T) {
 	copyProductionGo(t, outputs, filepath.Join(distribution, "project", "go"))
 	copyProductionGo(t, filepath.Join(root, "rt"), filepath.Join(runtimeOnly, "rt"))
 	copyProductionGo(t, filepath.Join(root, "examples", "datadog", "go", "dd"), filepath.Join(runtimeOnly, "examples", "datadog", "go", "dd"))
-	write(t, filepath.Join(distribution, "go.mod"), "module example.com/cocoon-author\ngo 1.26.0\nrequire github.com/darccio/cocoon v0.0.0\n")
-	write(t, filepath.Join(runtimeOnly, "go.mod"), "module github.com/darccio/cocoon\ngo 1.26.0\n")
-	write(t, filepath.Join(consumer, "go.mod"), fmt.Sprintf("module example.com/cocoon-consumer\ngo 1.26.0\nrequire (\nexample.com/cocoon-author v0.0.0\ngithub.com/darccio/cocoon v0.0.0\n)\nreplace example.com/cocoon-author => %q\nreplace github.com/darccio/cocoon => %q\n", distribution, runtimeOnly))
+	write(t, filepath.Join(distribution, "go.mod"), "module example.com/cocoon-author\ngo 1.26.0\nrequire dario.cat/cocoon v0.0.0\n")
+	write(t, filepath.Join(runtimeOnly, "go.mod"), "module dario.cat/cocoon\ngo 1.26.0\n")
+	write(t, filepath.Join(consumer, "go.mod"), fmt.Sprintf("module example.com/cocoon-consumer\ngo 1.26.0\nrequire (\nexample.com/cocoon-author v0.0.0\ndario.cat/cocoon v0.0.0\n)\nreplace example.com/cocoon-author => %q\nreplace dario.cat/cocoon => %q\n", distribution, runtimeOnly))
 	write(t, filepath.Join(consumer, "consumer_test.go"), consumerTest)
 	if linkErr := os.Symlink(goExecutable, filepath.Join(goOnlyBin, "go")); linkErr != nil {
 		t.Fatal(linkErr)
@@ -112,13 +112,13 @@ func TestExternalWorkflow(t *testing.T) {
 	run(t, consumer, consumerEnvironment, goExecutable, "test", "./...")
 	dependencies := run(t, consumer, consumerEnvironment, goExecutable, "list", "-deps", "-test", "-f", "{{if and (not .Standard) (not .ForTest)}}{{.ImportPath}}{{end}}", "./...")
 	imports := strings.Fields(string(dependencies))
-	for _, required := range []string{"example.com/cocoon-author/project/go/example", "github.com/darccio/cocoon/rt", "github.com/darccio/cocoon/examples/datadog/go/dd"} {
+	for _, required := range []string{"example.com/cocoon-author/project/go/example", "dario.cat/cocoon/rt", "dario.cat/cocoon/examples/datadog/go/dd"} {
 		if !slices.Contains(imports, required) {
 			t.Fatalf("consumer dependency audit omitted %s", required)
 		}
 	}
 	for _, dependency := range imports {
-		if !strings.HasPrefix(dependency, "example.com/cocoon-") && dependency != "github.com/darccio/cocoon/rt" && !strings.HasPrefix(dependency, "github.com/darccio/cocoon/examples/datadog/go/dd") {
+		if !strings.HasPrefix(dependency, "example.com/cocoon-") && dependency != "dario.cat/cocoon/rt" && !strings.HasPrefix(dependency, "dario.cat/cocoon/examples/datadog/go/dd") {
 			t.Fatalf("consumer unexpectedly depends on %s", dependency)
 		}
 	}
@@ -210,8 +210,8 @@ import (
     "strings"
     "testing"
     example "example.com/cocoon-author/project/go/example"
-    "github.com/darccio/cocoon/examples/datadog/go/dd"
-    "github.com/darccio/cocoon/rt"
+    "dario.cat/cocoon/examples/datadog/go/dd"
+    "dario.cat/cocoon/rt"
 )
 func TestInstalledOutput(t *testing.T) {
     library, err := example.Open(example.Options{Instances: 1})

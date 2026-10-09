@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 type failureRunner struct {

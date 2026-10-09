@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/cli"
+	"dario.cat/cocoon/internal/cli"
 )
 
 func TestHelpAndInvalidCommands(t *testing.T) {

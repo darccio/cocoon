@@ -1,7 +1,7 @@
 # Cocoon
 
 [![CI](https://github.com/darccio/cocoon/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/darccio/cocoon/actions/workflows/quality.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/darccio/cocoon/rt.svg)](https://pkg.go.dev/github.com/darccio/cocoon/rt)
+[![Go Reference](https://pkg.go.dev/badge/dario.cat/cocoon/rt.svg)](https://pkg.go.dev/dario.cat/cocoon/rt)
 [![Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 **Rust libraries. Pure Go packages.**
@@ -29,7 +29,8 @@ implemented; async operations and HTTP support are planned. See the
 
 ## Quick start
 
-Use **Go 1.26 or newer**. The checked-in Datadog example exposes Rust SQL and
+Use **Go 1.26 or newer**. Cocoon is published as `dario.cat/cocoon` starting with
+`v0.2.0`. The checked-in Datadog example exposes Rust SQL and
 trace obfuscation and DDSketch operations through a Go package. Try SQL
 obfuscation in a new module:
 
@@ -37,7 +38,7 @@ obfuscation in a new module:
 mkdir cocoon-demo
 cd cocoon-demo
 go mod init example.com/cocoon-demo
-go get github.com/darccio/cocoon/examples/datadog/go/dd@latest
+go get dario.cat/cocoon/examples/datadog/go/dd@latest
 ```
 
 Save this as `main.go`:
@@ -49,7 +50,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/darccio/cocoon/examples/datadog/go/dd"
+	"dario.cat/cocoon/examples/datadog/go/dd"
 )
 
 func main() {
@@ -119,11 +120,11 @@ cd cocoon-workspace
 mkdir my-library
 cd my-library
 go mod init example.com/my-library
-go get github.com/darccio/cocoon@latest
+go get dario.cat/cocoon@latest
 go get -tool github.com/ncruces/wasm2go@v0.4.16
 
-COCOON_VERSION=$(go list -m -f '{{.Version}}' github.com/darccio/cocoon)
-go install github.com/darccio/cocoon/cmd/cocoon@"$COCOON_VERSION"
+COCOON_VERSION=$(go list -m -f '{{.Version}}' dario.cat/cocoon)
+go install dario.cat/cocoon/cmd/cocoon@"$COCOON_VERSION"
 
 git clone --branch "$COCOON_VERSION" --depth 1 \
   https://github.com/darccio/cocoon.git ../cocoon

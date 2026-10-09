@@ -1,6 +1,6 @@
 [package]
 name="compute"
-go_import="github.com/darccio/cocoon/testdata/compute/go/compute"
+go_import="dario.cat/cocoon/testdata/compute/go/compute"
 rust_crate="cocoon-compute-shim"
 [limits]
 max_input="64KiB"

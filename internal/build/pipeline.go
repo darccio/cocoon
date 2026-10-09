@@ -14,10 +14,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/darccio/cocoon/internal/gen"
-	"github.com/darccio/cocoon/internal/gen/gogen"
-	"github.com/darccio/cocoon/internal/harden"
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/gen"
+	"dario.cat/cocoon/internal/gen/gogen"
+	"dario.cat/cocoon/internal/harden"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 // Features enables the supported synchronous Rust instruction subset.

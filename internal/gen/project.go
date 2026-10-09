@@ -9,9 +9,9 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/darccio/cocoon/internal/gen/gogen"
-	"github.com/darccio/cocoon/internal/gen/rustgen"
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/gen/gogen"
+	"dario.cat/cocoon/internal/gen/rustgen"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 // Project generates the trait and facade; build finalizes the typed adapter.

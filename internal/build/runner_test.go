@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 func TestBoundedDiagnostics(t *testing.T) {

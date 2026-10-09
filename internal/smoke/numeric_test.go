@@ -17,9 +17,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/darccio/cocoon/internal/build"
-	"github.com/darccio/cocoon/internal/harden"
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/build"
+	"dario.cat/cocoon/internal/harden"
+	"dario.cat/cocoon/internal/manifest"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 )

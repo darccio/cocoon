@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/harden"
+	"dario.cat/cocoon/internal/harden"
 )
 
 const bulk = `package example

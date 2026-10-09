@@ -3,8 +3,8 @@ package dd
 
 import (
 	"context"
+	"dario.cat/cocoon/rt"
 	"encoding/binary"
-	"github.com/darccio/cocoon/rt"
 	"log/slog"
 	"math"
 	"runtime"

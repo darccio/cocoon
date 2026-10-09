@@ -1,7 +1,7 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-08. The synchronous M1 framework and Datadog proof were released privately
+2026-10-09. The synchronous M1 framework and Datadog proof were released privately
 as v0.1.0. The quality pass and five performance passes are complete, including
 the nine-round multi-agent loop, the PGO/resource-call follow-up, and exact
 numeric-lowering investigation.
@@ -17,13 +17,16 @@ environment variables are required.
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
 have passed locally. Rebuilding both proof packages reproduces their committed
-artifacts and lock hashes. The private repository and first release are
+artifacts and lock hashes. The first private release was
 [github.com/darccio/cocoon v0.1.0](https://github.com/darccio/cocoon/releases/tag/v0.1.0).
 All three [release qualification CI jobs](https://github.com/darccio/cocoon/actions/runs/37235658925)
 passed: native amd64 and arm64 Go quality gates and the fresh pinned end-to-end
 build. The release tag points to that qualified code commit. The repository is
 now licensed under Apache-2.0, with a reproducible dependency license inventory
-and CI coverage checks. The original v0.1.0 tag predates those licensing changes.
+and CI coverage checks. The original v0.1.0 tag predates those licensing changes
+and is retracted.
+[v0.2.0](https://github.com/darccio/cocoon/releases/tag/v0.2.0) publishes the
+module as `dario.cat/cocoon`; the GitHub repository remains the source host.
 
 Native linux/386 tests now pass outside the former sandbox. Current runtime
 coverage is 97.8 percent; the Rust and Go generators are 94.6 and 96.7 percent.

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/gen/gogen"
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/gen/gogen"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 func TestContractGeneration(t *testing.T) {

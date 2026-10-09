@@ -9,8 +9,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/darccio/cocoon/cocoontest"
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/cocoontest"
+	"dario.cat/cocoon/rt"
 )
 
 func TestReferenceLifecycleAndMissingExports(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 // Generate emits a complete synchronous shim module for crate::Shim: API + Default.

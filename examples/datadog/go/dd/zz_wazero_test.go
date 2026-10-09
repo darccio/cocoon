@@ -3,10 +3,10 @@ package dd
 
 import (
 	"bytes"
+	"dario.cat/cocoon/cocoontest"
+	"dario.cat/cocoon/rt"
 	_ "embed"
 	"errors"
-	"github.com/darccio/cocoon/cocoontest"
-	"github.com/darccio/cocoon/rt"
 	"math"
 	"testing"
 )

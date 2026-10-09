@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/gen"
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/gen"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 func TestWriteGeneratedProtectsAuthoredFiles(t *testing.T) {

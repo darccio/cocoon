@@ -3,7 +3,7 @@ package unitfixture
 import (
 	"encoding/binary"
 
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/rt"
 )
 
 // This authored typed-export mock deliberately permits replies a verified guest

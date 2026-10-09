@@ -6,13 +6,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/build"
-	"github.com/darccio/cocoon/internal/gen/gogen"
-	"github.com/darccio/cocoon/internal/harden"
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/build"
+	"dario.cat/cocoon/internal/gen/gogen"
+	"dario.cat/cocoon/internal/harden"
+	"dario.cat/cocoon/internal/manifest"
 
-	"github.com/darccio/cocoon/rt"
-	"github.com/darccio/cocoon/testdata/compute/go/compute"
+	"dario.cat/cocoon/rt"
+	"dario.cat/cocoon/testdata/compute/go/compute"
 )
 
 // Importing the checked-in fixture makes ordinary root tests exercise the full

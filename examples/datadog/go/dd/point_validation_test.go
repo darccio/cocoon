@@ -7,8 +7,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/darccio/cocoon/cocoontest"
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/cocoontest"
+	"dario.cat/cocoon/rt"
 )
 
 const pointArgumentMessage = "sketch points must be finite and nonnegative"

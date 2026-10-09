@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/rt"
 )
 
 func fixtureLibrary(t *testing.T) *Library {

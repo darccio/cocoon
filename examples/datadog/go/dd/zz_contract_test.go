@@ -2,8 +2,8 @@
 package dd
 
 import (
+	"dario.cat/cocoon/rt"
 	"errors"
-	"github.com/darccio/cocoon/rt"
 	"reflect"
 	"runtime"
 	"testing"

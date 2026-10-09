@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/rt"
 )
 
 func TestResourceAliasesCloseOnce(t *testing.T) {

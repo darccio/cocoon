@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/gen/gogen"
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/gen/gogen"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 //go:embed testdata/unit/module.go
@@ -35,7 +35,7 @@ func TestGeneratedUnitReplyFixture(t *testing.T) {
 		t.Fatal(err)
 	}
 	directory := t.TempDir()
-	moduleFile := fmt.Sprintf("module example.com/unit-fixture\n\ngo 1.26.0\n\nrequire github.com/darccio/cocoon v0.0.0\n\nreplace github.com/darccio/cocoon => %q\n", root)
+	moduleFile := fmt.Sprintf("module example.com/unit-fixture\n\ngo 1.26.0\n\nrequire dario.cat/cocoon v0.0.0\n\nreplace dario.cat/cocoon => %q\n", root)
 	for name, data := range map[string][]byte{
 		"go.mod":         []byte(moduleFile),
 		"cocoon_gen.go":  facade,

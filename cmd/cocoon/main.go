@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/darccio/cocoon/internal/cli"
+	"dario.cat/cocoon/internal/cli"
 )
 
 func main() {

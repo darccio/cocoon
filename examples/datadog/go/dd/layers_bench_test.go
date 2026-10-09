@@ -3,7 +3,7 @@ package dd
 import (
 	"testing"
 
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/rt"
 )
 
 func benchmarkSketch(b *testing.B) (sketch *Sketch, handle int64) {

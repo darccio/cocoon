@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/rt"
 )
 
 func newCallResource(t *testing.T, instance *rt.Instance, handle uint64) *rt.Resource[int] {

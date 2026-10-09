@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 func replaceSection(t *testing.T, module []byte, wanted byte, transform func([]byte) []byte) []byte {

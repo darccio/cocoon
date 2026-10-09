@@ -14,7 +14,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/darccio/cocoon/internal/manifest"
+	"dario.cat/cocoon/internal/manifest"
 )
 
 // Runner is injectable so toolchain checks can be tested without launching tools.

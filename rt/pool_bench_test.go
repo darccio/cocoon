@@ -3,7 +3,7 @@ package rt_test
 import (
 	"testing"
 
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/rt"
 )
 
 // BenchmarkPoolAvailable measures admission and reuse with a ready slot.

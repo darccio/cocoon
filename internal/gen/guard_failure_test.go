@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/darccio/cocoon/internal/gen"
+	"dario.cat/cocoon/internal/gen"
 )
 
 func TestGuardRejectsNonDirectoryBuildPath(t *testing.T) {

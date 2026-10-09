@@ -7,7 +7,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/rt"
 )
 
 type module struct {

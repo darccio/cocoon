@@ -6,7 +6,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/darccio/cocoon/rt"
+	"dario.cat/cocoon/rt"
 )
 
 func TestResultUnitValidation(t *testing.T) {
