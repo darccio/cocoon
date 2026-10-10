@@ -4,12 +4,153 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Checked resource bridge qualification (2026-10-11)
+
+The [approved contract](checked-sessions.md) is being implemented after Phase 0.
+Qualification compares frozen binaries against the original standalone API;
+the throughput feature must preserve its latency. These exploratory runtime
+ceilings do not accept M1 performance.
+
+Two checked-core shapes were rejected before retaining implementation. R1
+factored `Instance.Call` into an inline wrapper and a shared boundary taking an
+optional-lock flag, and factored `ResultView` into a wrapper over a reply helper.
+Seven alternating baseline/candidate pairs show scalar 88.69 → 90.25 ns
+(+1.76%, p=0.006), SQL 2167 → 2212 ns (+2.08%, p=0.017), negative bins
+89.29 → 91.02 ns (+1.94%, p=0.012), varied scalar 89.33 → 91.71 ns
+(+2.66%, p=0.001), and varied SQL 2802 → 2832 ns (+1.07%, p=0.017).
+Batch and trace have no detected difference. No allocation count changed.
+The [complete R1 samples](measurements/checked-sessions-r1-rejected.txt) include
+its bridge throughput measurements and frozen binary hashes.
+
+R2 restored the original successful `ResultView` path, tracking only validated
+non-OK wire bytes in reset call state. It still regressed scalar 88.70 →
+90.26 ns (+1.76%, p=0.001), negative bins 88.81 → 90.41 ns (+1.80%, p=0.001),
+and varied scalar 89.40 → 90.62 ns (+1.36%, p=0.001). SQL, batch, traces,
+and varied SQL have no detected difference; allocation counts are unchanged.
+The [complete R2 samples](measurements/checked-sessions-r2-rejected.txt) preserve
+this negative result. R1/R2 are uncommitted candidate shapes against `bfc77f4`;
+neither is an accepted implementation or speedup.
+
+R3 removed the conditional locking branch by putting unconditional lock/unlock
+in standalone Call and invoking the shared full boundary in another frame.
+It regressed scalar 88.65 → 92.13 ns (+3.93%, p=0.001), negative bins
+89.16 → 93.22 ns (+4.55%, p=0.017), and varied scalar 89.47 → 92.39 ns
+(+3.26%, p=0.001), despite decreases in batch (-0.39%) and varied SQL (-1.35%).
+SQL and trace have no detected difference. This shape is also rejected; the
+[complete R3 samples](measurements/checked-sessions-r3-rejected.txt) retain all
+seven alternating pairs and binary provenance.
+
+R4 shared inlineable state/reset/memory/protocol helpers, with the recovery
+method directly deferred by the two small ordering adapters. It regressed
+scalar 88.72 → 90.74 ns (+2.28%, p=0.001), negative bins 88.96 → 91.44 ns
+(+2.79%, p=0.001), and varied scalar 89.56 → 91.56 ns (+2.23%, p=0.001).
+SQL (-0.92%), traces (-2.08%), and varied SQL (-2.39%) decreased; batch has no
+detected difference. This shape is rejected too. The
+[complete R4 samples](measurements/checked-sessions-r4-rejected.txt) retain the
+negative scalar outcome alongside those decreases.
+
+R5 restored the original direct recovery closure, sharing the cold fault path
+instead of calling a deferred method on success. No difference is detected for
+scalar (89.99 → 88.88 ns, p=0.274), SQL, batch, traces, or negative bins. Varied
+scalar has a small negative result (89.18 → 89.49 ns, +0.35%, p=0.023), while
+varied SQL decreases 1.14%. The [complete R5 samples](measurements/checked-sessions-r5.txt)
+include the baseline scalar's wider dispersion. This round was refined further
+before committing; it supports no standalone latency improvement claim.
+
+R6 made every reset field explicit and skipped state-error construction when
+open. Scalar 88.68 → 88.95 ns (+0.30%, p=0.041), negative bins 88.96 →
+89.80 ns (+0.94%, p=0.002), and varied scalar 89.42 → 90.04 ns
+(+0.69%, p=0.011) have small negative differences. SQL, traces, and varied SQL
+decreased; batch has no detected difference. The [complete R6 samples](measurements/checked-sessions-r6.txt)
+preserve these negatives; no standalone latency benefit is claimed.
+
+R7 changed the state predicate so healthy calls fall through and restored the
+original scalar-before-pointer reset order. Scalar (88.87 → 89.00 ns,
+p=0.302) and varied scalar have no detected difference, but negative bins
+89.29 → 90.62 ns (+1.49%, p=0.026) regress. SQL, batch, and varied SQL decrease;
+traces have no detected difference. The [complete R7 samples](measurements/checked-sessions-r7-rejected.txt)
+retain this rejected shape and its negative holdout.
+
+### Retained runtime foundation (R8)
+
+R8 preserves the original Call layout and reset. Batch-only validated error
+wire bytes live privately on Instance and reset before each command, without
+adding standalone successful-call stores. Shared inlineable helpers own state,
+reset, memory, and protocol policy; the small locked/unlocked ordering adapters
+recover directly in deferred closures and share the cold fault classifier.
+Every command retains its memory check, reset, reply validation, and immediate
+poisoning. This is a runtime bridge; typed facade commands, optional lazy homes,
+and the translated streaming fixture still require implementation/proof.
+
+Seven alternating baseline/R8 pairs detect no standalone scalar regression
+(88.64 → 88.86 ns, p=0.330), SQL (2180 → 2176 ns, p=0.689), batch
+(45.02 → 44.79 µs, p=0.383), traces (2.612 → 2.596 ms, p=0.053), negative
+bins (88.85 → 89.07 ns, p=0.165), or varied scalar (89.21 → 89.23 ns,
+p=0.929). Varied SQL decreases 0.99% (p=0.038), with a 22% baseline
+dispersion. Allocation counts are unchanged. These are standalone guardrails,
+not a scalar latency improvement claim or equivalence proof. All comparisons
+are exploratory, unadjusted for multiple candidate rounds; final end-to-end
+qualification needs independent paired samples.
+
+Runtime medians in Mcalls/s, with plans reused and full bridge checks:
+
+| GOMAXPROCS | Chunk | One home, standalone | One home, Batch32 | Worker-private, standalone | Worker-private, Batch32 |
+|---|---:|---:|---:|---:|---:|
+| 1 | 64 B | 7.217 | 7.971 | 7.167 | 7.952 |
+| 4 | 64 B | 5.694 | 7.817 | 14.202 | 21.760 |
+| 16 | 64 B | 4.858 | 7.404 | 5.704 | 34.813 |
+| 1 | 4 KiB | 1.527 | 1.484 | 1.533 | 1.510 |
+| 4 | 4 KiB | 0.960 | 0.957 | 1.391 | 1.259 |
+| 16 | 4 KiB | 0.746 | 0.926 | 1.605 | 1.682 |
+| 1 | 16 KiB | 0.426 | 0.399 | 0.427 | 0.395 |
+| 4 | 16 KiB | 0.322 | 0.299 | 0.451 | 0.522 |
+| 16 | 16 KiB | 0.271 | 0.324 | 0.452 | 0.561 |
+
+At 16 processors, the shared-home 64-byte bridge gains 52% throughput, while
+private instances with batching reach 7.17 times that standalone shared ceiling.
+The private-instance path remains a diagnostic placement hypothesis, not the
+bounded lazy-home implementation. At 4 KiB the respective rates are 0.746,
+0.926, and 1.682 Mcalls/s, with far less admission-amortization headroom.
+Negative results matter: P1 4/16 KiB batching and P4 shared 16 KiB batching are
+slower than standalone; P4 private 4 KiB batching also loses throughput.
+Retaining one buffer of results changes live allocation/GC behavior versus
+the prototype. Generated typed plans and complete stream lifetimes must be
+measured before recommending either option.
+
+The [complete R8 sample log](measurements/checked-sessions-runtime.txt) records
+binary/source hashes, every sample, exact commands, and limitations. It includes
+zero-byte controls and the checked prototype comparators. Actual command
+limits, contexts, byte budgets, owned staging, prefix accounting, and per-call
+checks are included; typed command construction and New/End/Close are excluded.
+Integer allocation metrics can show 0/call or 31/32-command buffer because the
+first holdback replies are empty; these paths are not allocation-free.
+No measurements overlap checks. R8 passed strict check/race and both proof
+rebuilds retain the existing artifacts/locks. M1 performance remains unaccepted.
+
+Both rounds use Go 1.26.8, CGO disabled, PGO off, GOAMD64=v1, the Phase 0
+Ryzen machine without affinity, GOMAXPROCS=16, seven 500 ms samples per workload,
+alternating pair order. All builds, checks, and reviewers completed before
+timing. Raw files include every sample. Short windows, frequency variation,
+GC, and shared-machine conditions still limit inference.
+
+R1's actual runtime bridge, including context and byte budgets, reaches
+7.37 Mcalls/s at GOMAXPROCS 16 for 64-byte writes on one home versus 5.25 for
+standalone calls; worker-private instances reach 35.15. For 4 KiB these are
+0.940, 0.775, and 1.804 Mcalls/s. However, the reusable plans exclude generated
+typed-plan construction and complete stream lifetimes. The bridge also retains
+one buffer of owned outputs per worker (up to 512 KiB per worker at 16 KiB
+chunks), whereas the Phase 0 loop discards copies immediately. P1 4 KiB bridge
+is slower than standalone (663 versus 651 ns), and P4 16 KiB shared bridge is
+slower (3350 versus 3128 ns). Gains do not justify the standalone regressions;
+these measurements explain the rejected candidate, not a retained feature.
+
 ## Bounded checked sessions: Phase 0 (2026-10-10)
 
 Measurement precedes the proposed contract in [the review spec](checked-sessions.md).
-Only test/benchmark code is added; runtime, generators, standalone APIs, Wasm,
-translated modules, and proof locks remain unchanged. No throughput feature is
-implemented or accepted. M1 performance acceptance remains open.
+This phase added only test/benchmark code; runtime, generators, standalone APIs,
+Wasm, translated modules, and proof locks remained unchanged for its samples.
+Phase 0 implemented or accepted no throughput feature. M1 performance
+acceptance remains open.
 
 ### Conditions and provenance
 

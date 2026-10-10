@@ -3,7 +3,10 @@
 Status: explicitly approved by the operator, 2026-10-10 ("Approved and
 unlocked"). Phase 0 is complete. Approval covers the public Go and manifest
 contracts and the complete approval boundary below; Phase 2 may proceed after
-the signed review commits. Implementation and qualification remain pending.
+the signed review commits. The runtime bridge is implemented and reviewed;
+lazy homes, typed facade commands, streaming proof, and final qualification
+remain pending. Runtime evidence and rejected shapes are recorded in the
+performance notes.
 
 The evidence, raw samples, provenance, and negative results are in
 [performance notes](performance.md#bounded-checked-sessions-phase-0-2026-10-10)

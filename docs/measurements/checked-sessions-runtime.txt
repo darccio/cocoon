@@ -1,0 +1,1021 @@
+# Benchmark output preserved except trailing whitespace normalization.
+# Checked resource bridge R8 foundation, 2026-10-11
+# Parent bfc77f4; candidate source is committed with this evidence.
+# Call keeps original layout; batch-only validated errorBytes stored on Instance.
+# Shared state/reset/recovery/memory/protocol helpers; direct recover in adapters.
+# Batch enters lifecycle once and holds ownership/execution for finite commands.
+# Go 1.26.8 linux/amd64 GOAMD64=v1 CGO_ENABLED=0 -pgo=off.
+# Ryzen 7 5800HS 8physical/16logical boost enabled, CPUs0-15, no affinity.
+# No compilation, checks, fuzz, or reviewer work during measurements.
+# Datadog: 7 original-baseline/candidate alternating pairs, 500ms, GOMAXPROCS16.
+# Runtime: 7 sets, 250ms, GOMAXPROCS1/4/16 rotating, fixed leaf order.
+# Plans reused; typed command construction and stream lifetime excluded.
+# Bridge retains a buffer of owned results/worker (512KiB at 16KiB chunks),
+# prototype discard-copies results. Budget counts wire bytes, not RSS.
+# Allocations/op truncate; first empty holdback replies can make ~1/call print0,
+# ~32/buffer print31. ns/op and B/op are per sequence; ns/call explicit.
+# Build before timing: CGO_ENABLED=0 GOTOOLCHAIN=local GOCACHE=$PWD/.cache/go
+# /usr/lib64/go/1.26/bin/go test -pgo=off -c -o <binary> <package>
+# Packages: ./rt and ./examples/datadog/go/dd.
+# Source SHA256 rt/instance.go: ee857deaa51677f614395a0a5a8b7420eada80b5ed6184c654fda7db49c41365
+# Source SHA256 rt/batch.go: ce681339042e3283f7407b36928c7fb79ff4c9129f26c387b5862679133c2d9b
+# Source SHA256 rt/session_bench_test.go: c13d3ea3bdd013f2c6123117fb10101ef28690f736da349036900a0e9838d0c2
+dd-baseline.test aec965fbf86f67ceaf5a916a0df83dd306b4d27e580d8dd3d5b484f43bbb1c32
+dd-core8.test e135621b8a35d3f682c48a514165b0c456c3cb7bad6c0f80ab45f90ca308ac8b
+core8-dd-baseline-1.txt complete
+core8-dd-core8-1.txt complete
+core8-dd-core8-2.txt complete
+core8-dd-baseline-2.txt complete
+core8-dd-baseline-3.txt complete
+core8-dd-core8-3.txt complete
+core8-dd-core8-4.txt complete
+core8-dd-baseline-4.txt complete
+core8-dd-baseline-5.txt complete
+core8-dd-core8-5.txt complete
+core8-dd-core8-6.txt complete
+core8-dd-baseline-6.txt complete
+core8-dd-baseline-7.txt complete
+core8-dd-core8-7.txt complete
+Elapsed 58.5s
+rt-core8.test cd8f2ceb689ed3b2b6ee49999b4bae6d72e2ea68701ff162b2f27cf1644dc831
+core8-throughput-p1-1.txt complete
+core8-throughput-p4-1.txt complete
+core8-throughput-p16-1.txt complete
+core8-throughput-p4-2.txt complete
+core8-throughput-p16-2.txt complete
+core8-throughput-p1-2.txt complete
+core8-throughput-p16-3.txt complete
+core8-throughput-p1-3.txt complete
+core8-throughput-p4-3.txt complete
+core8-throughput-p1-4.txt complete
+core8-throughput-p4-4.txt complete
+core8-throughput-p16-4.txt complete
+core8-throughput-p4-5.txt complete
+core8-throughput-p16-5.txt complete
+core8-throughput-p1-5.txt complete
+core8-throughput-p16-6.txt complete
+core8-throughput-p1-6.txt complete
+core8-throughput-p4-6.txt complete
+core8-throughput-p1-7.txt complete
+core8-throughput-p4-7.txt complete
+core8-throughput-p16-7.txt complete
+Elapsed 193.3s
+
+# FILE core8-dd-baseline-1.txt (original SHA256 227b5abd9feee038707e9733172129579649b55572be8feb942169a4b432c849)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  246508	      2318 ns/op	      58 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6734653	        88.89 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13426	     44722 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2589783 ns/op	  253440 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6566932	        91.19 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6731283	        88.95 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  200902	      2808 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-core8-1.txt (original SHA256 4f27def62a83bf2993f7ef25aab6e6a75d9262ab48b8cfdf05913596f8e40904)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core8.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  261675	      2196 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6786334	        89.25 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13400	     44701 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2597161 ns/op	  253263 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6758767	        88.93 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6740403	        89.11 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  210708	      2832 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-core8-2.txt (original SHA256 8abe4e5745526f9ff270e51fed5d3c7a21c23f3e304ee96e9464b9f454869e39)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core8.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  268174	      2169 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6750148	        88.66 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13291	     44953 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2601247 ns/op	  253262 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6667573	        89.29 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6681721	        89.75 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213997	      2781 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-baseline-2.txt (original SHA256 c08af28ee6fb1a2cc6b78f4526fa1e6f2378302448d10e078e58866011d969f3)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  274646	      2221 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6735751	        88.54 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13321	     45050 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2603491 ns/op	  253440 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6682918	        88.85 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6722781	        90.51 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213051	      2823 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-baseline-3.txt (original SHA256 171f390106c79a8d0965157c4b2d28fbac77a060b01ecbbeb7a49474432abab6)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  275544	      2161 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6793378	        88.64 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13430	     44629 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     225	   2618511 ns/op	  253978 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6710834	        88.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6742233	        89.21 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  212838	      2790 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-core8-3.txt (original SHA256 98e699c99980b85443dbadcdf04309185d7bad66646717bab9b228825088bd7f)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core8.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  274286	      2173 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6773488	        88.86 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13537	     44342 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2589832 ns/op	  253263 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6624510	        90.18 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6727941	        89.15 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  217041	      2793 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-core8-4.txt (original SHA256 c543e1026ae1a37cd54e6df7f5e62f445da27321e096ad51a93a785a4c984952)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core8.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  272733	      2176 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6778369	        88.64 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13318	     44993 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2606731 ns/op	  253798 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6734893	        89.26 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6726859	        89.13 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213921	      2807 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-baseline-4.txt (original SHA256 034de065c811eefb17d1dc4fd4fb781a90b2bb193f337ea3baa80a6a9a067d6e)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  274822	      2180 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6769664	        89.15 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13308	     45072 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     225	   2600279 ns/op	  253978 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6752298	        88.65 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6706448	        89.13 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213336	      2816 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-baseline-5.txt (original SHA256 09cd2f3dc1d2f66423d42caef0d7d2089cbaeb52fdabc7c3460540f03e306fa1)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  274567	      2185 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6779095	        88.54 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13308	     45111 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2614630 ns/op	  253797 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6760899	        88.54 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6707097	        91.16 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  152682	      3444 ns/op	      88 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-core8-5.txt (original SHA256 64fcbdf2ab4cdbc86ec13c7c332e0a5f61df7eb2356e8c48433643a6c17b1f66)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core8.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  257388	      2303 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6747656	        88.54 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13426	     44794 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2594039 ns/op	  253439 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6750414	        89.07 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6743232	        89.23 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  212593	      2772 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-core8-6.txt (original SHA256 f6c16004fbae59d0da11a7f74b7e5810f3749de0866ebaec0223b762b13b2c1d)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core8.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  266588	      2173 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6552825	        89.29 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13389	     44779 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     230	   2576848 ns/op	  253087 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6706777	        88.90 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6705352	        89.65 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  214264	      2764 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-baseline-6.txt (original SHA256 3fd636f113e704e5fece9a15d2eb0835077eb0e31d2564621358d469723c33f2)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  275128	      2168 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6763308	        88.33 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13447	     44570 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2619544 ns/op	  253439 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6742333	        88.99 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6747087	        89.12 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  210112	      2800 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-baseline-7.txt (original SHA256 2a1191b97f53edee24d82ae35927c60ffb13d85145e4060252f4476043424154)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  272997	      2161 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6748384	        89.45 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13292	     45020 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2611893 ns/op	  253263 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6729676	        88.96 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6759380	        89.40 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  195418	      2855 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core8-dd-core8-7.txt (original SHA256 5ffbf40fb60ea811a3210fb229de370f908ad3f004e368cfd95468fe85c1b19e)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core8.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  265759	      2206 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6616442	        90.28 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13358	     44845 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2595889 ns/op	  253262 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6735966	        88.94 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6651614	        89.60 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213807	      2788 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core8-throughput-p1-1.txt (original SHA256 1f876a86697a61defb89afc0900c603949147718b6aca8084b81aa6e1a27d196)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home    	 3824548	        78.66 ns/op	  12712972 calls/s	        78.66 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  187320	      1603 ns/op	  19961810 calls/s	        50.10 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3760663	        78.59 ns/op	  12724355 calls/s	        78.59 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  187065	      1607 ns/op	  19910435 calls/s	        50.22 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32         	  136510	      2202 ns/op	  14534667 calls/s	        68.80 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32  	  136202	      2198 ns/op	  14561309 calls/s	        68.68 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2187511	       138.4 ns/op	       441.0 MiB/s	   7224877 calls/s	       138.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   86919	      3298 ns/op	       592.3 MiB/s	   9703909 calls/s	       103.1 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2129096	       139.5 ns/op	       437.5 MiB/s	   7168715 calls/s	       139.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   84025	      3387 ns/op	       576.6 MiB/s	   9446667 calls/s	       105.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32        	   72102	      4041 ns/op	       483.3 MiB/s	   7918723 calls/s	       126.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32 	   70752	      4038 ns/op	       483.7 MiB/s	   7924446 calls/s	       126.2 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  450085	       662.1 ns/op	      5900 MiB/s	   1510414 calls/s	       662.1 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15345	     19747 ns/op	      6330 MiB/s	   1620488 calls/s	       617.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  461068	       670.5 ns/op	      5826 MiB/s	   1491356 calls/s	       670.5 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15454	     19684 ns/op	      6350 MiB/s	   1625693 calls/s	       615.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32      	   13810	     21561 ns/op	      5797 MiB/s	   1484141 calls/s	       673.8 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32         	   13978	     21423 ns/op	      5835 MiB/s	   1493745 calls/s	       669.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home                   	  122046	      2435 ns/op	      6417 MiB/s	    410719 calls/s	      2435 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32               	    3694	     74624 ns/op	      6700 MiB/s	    428815 calls/s	      2332 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private                	  119780	      2384 ns/op	      6554 MiB/s	    419463 calls/s	      2384 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32              	    4064	     73952 ns/op	      6761 MiB/s	    432711 calls/s	      2311 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32               	    3656	     82335 ns/op	      6073 MiB/s	    388658 calls/s	      2573 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32        	    3403	     83771 ns/op	      5969 MiB/s	    381994 calls/s	      2618 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p4-1.txt (original SHA256 5351bf603ef5a8152bec188281acf6933af40b1184bd06bbf1589b12b3dbeb6a)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2274133	       131.7 ns/op	   7595060 calls/s	       131.7 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  179071	      1702 ns/op	  18805353 calls/s	        53.18 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 4172586	        60.02 ns/op	  16662382 calls/s	        60.02 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  392226	       809.8 ns/op	  39517817 calls/s	        25.31 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-4         	  126415	      2375 ns/op	  13473687 calls/s	        74.22 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-4  	  273966	      1089 ns/op	  29386506 calls/s	        34.03 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1676660	       176.0 ns/op	       346.8 MiB/s	   5682714 calls/s	       176.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   84915	      3421 ns/op	       570.9 MiB/s	   9353255 calls/s	       106.9 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 4223061	        70.41 ns/op	       866.8 MiB/s	  14202233 calls/s	        70.41 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  250666	      1081 ns/op	      1808 MiB/s	  29614684 calls/s	        33.77 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-4        	   71292	      4097 ns/op	       476.7 MiB/s	   7810641 calls/s	       128.0 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-4 	  186223	      1389 ns/op	      1406 MiB/s	  23039125 calls/s	        43.40 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  287310	      1041 ns/op	      3751 MiB/s	    960218 calls/s	      1041 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10333	     28959 ns/op	      4316 MiB/s	   1105008 calls/s	       905.0 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  410224	       701.2 ns/op	      5571 MiB/s	   1426118 calls/s	       701.2 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13600	     22288 ns/op	      5609 MiB/s	   1435781 calls/s	       696.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-4      	    8967	     33000 ns/op	      3788 MiB/s	    969688 calls/s	      1031 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-4         	   10000	     25535 ns/op	      4895 MiB/s	   1253159 calls/s	       798.0 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4                   	   95895	      3072 ns/op	      5086 MiB/s	    325501 calls/s	      3072 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4               	    2985	     84522 ns/op	      5916 MiB/s	    378601 calls/s	      2641 ns/call	  524289 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4                	  131346	      2215 ns/op	      7055 MiB/s	    451500 calls/s	      2215 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4              	    4323	     71763 ns/op	      6967 MiB/s	    445911 calls/s	      2243 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-4               	    2440	    106334 ns/op	      4702 MiB/s	    300939 calls/s	      3323 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-4        	    4238	     59500 ns/op	      8403 MiB/s	    537813 calls/s	      1859 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p16-1.txt (original SHA256 6200de06e769f9911430b3c031b6e84cb8324183c96e0413b5ba795239b82109)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1459371	       204.7 ns/op	   4885575 calls/s	       204.7 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  175020	      1710 ns/op	  18710284 calls/s	        53.45 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1506500	       190.5 ns/op	   5249577 calls/s	       190.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1000000	       270.4 ns/op	 118337084 calls/s	         8.450 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-16         	  125788	      2400 ns/op	  13334475 calls/s	        74.99 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-16  	  779727	       398.9 ns/op	  80217501 calls/s	        12.47 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1438954	       203.9 ns/op	       299.3 MiB/s	   4903876 calls/s	       203.9 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   82755	      3629 ns/op	       538.1 MiB/s	   8817020 calls/s	       113.4 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1655770	       178.7 ns/op	       341.5 MiB/s	   5595139 calls/s	       178.7 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  347575	       839.9 ns/op	      2325 MiB/s	  38100783 calls/s	        26.25 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-16        	   66297	      4347 ns/op	       449.3 MiB/s	   7361885 calls/s	       135.8 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-16 	  303634	       928.1 ns/op	      2105 MiB/s	  34480495 calls/s	        29.00 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  219592	      1348 ns/op	      2897 MiB/s	    741582 calls/s	      1348 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    8803	     33829 ns/op	      3695 MiB/s	    945937 calls/s	      1057 ns/call	  131083 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  482212	       623.2 ns/op	      6268 MiB/s	   1604594 calls/s	       623.2 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   14964	     19481 ns/op	      6416 MiB/s	   1642607 calls/s	       608.8 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-16      	    8570	     34807 ns/op	      3591 MiB/s	    919353 calls/s	      1088 ns/call	  131080 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-16         	   15679	     19263 ns/op	      6489 MiB/s	   1661205 calls/s	       602.0 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16                   	   74437	      3685 ns/op	      4240 MiB/s	    271369 calls/s	      3685 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16               	    2653	     95565 ns/op	      5232 MiB/s	    334849 calls/s	      2986 ns/call	  524312 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16                	  127173	      2235 ns/op	      6991 MiB/s	    447404 calls/s	      2235 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16              	    3932	     69411 ns/op	      7203 MiB/s	    461020 calls/s	      2169 ns/call	  524298 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-16               	    3024	     97133 ns/op	      5148 MiB/s	    329446 calls/s	      3035 ns/call	  524317 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-16        	    5217	     57066 ns/op	      8762 MiB/s	    560750 calls/s	      1783 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p4-2.txt (original SHA256 ae3cec1bcf4dba07fc6513d186b7f9a9af7696f611ac3e5da6e10a7f4debb04f)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2310598	       129.6 ns/op	   7715473 calls/s	       129.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  173443	      1717 ns/op	  18639140 calls/s	        53.65 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 6469501	        55.73 ns/op	  17943231 calls/s	        55.73 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  418965	       684.8 ns/op	  46727179 calls/s	        21.40 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-4         	  127767	      2396 ns/op	  13353981 calls/s	        74.88 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-4  	  299467	      1182 ns/op	  27078912 calls/s	        36.93 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1724217	       175.4 ns/op	       348.1 MiB/s	   5702870 calls/s	       175.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   80728	      3392 ns/op	       575.7 MiB/s	   9432819 calls/s	       106.0 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 3687274	        81.10 ns/op	       752.6 MiB/s	  12330917 calls/s	        81.10 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  226652	      1153 ns/op	      1695 MiB/s	  27764326 calls/s	        36.02 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-4        	   72930	      4054 ns/op	       481.8 MiB/s	   7894108 calls/s	       126.7 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-4 	  187546	      1471 ns/op	      1328 MiB/s	  21759716 calls/s	        45.96 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  252146	      1017 ns/op	      3840 MiB/s	    983111 calls/s	      1017 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10166	     28858 ns/op	      4332 MiB/s	   1108875 calls/s	       901.8 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  442578	       717.9 ns/op	      5441 MiB/s	   1392872 calls/s	       717.9 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13608	     22172 ns/op	      5638 MiB/s	   1443291 calls/s	       692.9 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-4      	    8934	     32554 ns/op	      3840 MiB/s	    982983 calls/s	      1017 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-4         	   10000	     25244 ns/op	      4952 MiB/s	   1267646 calls/s	       788.9 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4                   	   92664	      3094 ns/op	      5050 MiB/s	    323228 calls/s	      3094 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4               	    3024	     83460 ns/op	      5991 MiB/s	    383415 calls/s	      2608 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4                	  136420	      2226 ns/op	      7020 MiB/s	    449254 calls/s	      2226 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4              	    4318	     70028 ns/op	      7140 MiB/s	    456962 calls/s	      2188 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-4               	    2614	    106627 ns/op	      4689 MiB/s	    300113 calls/s	      3332 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-4        	    4323	     60203 ns/op	      8305 MiB/s	    531536 calls/s	      1881 ns/call	  524291 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p16-2.txt (original SHA256 06fcd57a422b8eb854d9b0c396fa4bf72eb95bd60f03adfc93886577793f4c44)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1496326	       198.3 ns/op	   5042279 calls/s	       198.3 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  177390	      1713 ns/op	  18681228 calls/s	        53.53 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1718214	       186.6 ns/op	   5357842 calls/s	       186.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	  910053	       274.9 ns/op	 116416241 calls/s	         8.590 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-16         	  126639	      2381 ns/op	  13440782 calls/s	        74.40 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-16  	  701058	       402.2 ns/op	  79564483 calls/s	        12.57 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1458031	       204.8 ns/op	       298.0 MiB/s	   4883041 calls/s	       204.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   80205	      3598 ns/op	       542.8 MiB/s	   8892610 calls/s	       112.5 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1622594	       170.5 ns/op	       357.9 MiB/s	   5863447 calls/s	       170.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  320301	       875.4 ns/op	      2231 MiB/s	  36554572 calls/s	        27.36 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-16        	   66944	      4322 ns/op	       451.9 MiB/s	   7404320 calls/s	       135.1 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-16 	  321021	       914.8 ns/op	      2135 MiB/s	  34979305 calls/s	        28.59 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  205672	      1317 ns/op	      2967 MiB/s	    759449 calls/s	      1317 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    9141	     33311 ns/op	      3753 MiB/s	    960653 calls/s	      1041 ns/call	  131078 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  486652	       634.6 ns/op	      6156 MiB/s	   1575868 calls/s	       634.6 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15000	     19428 ns/op	      6434 MiB/s	   1647146 calls/s	       607.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-16      	    8529	     34682 ns/op	      3604 MiB/s	    922664 calls/s	      1084 ns/call	  131079 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-16         	   14298	     19082 ns/op	      6551 MiB/s	   1676963 calls/s	       596.3 ns/call	  131070 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16                   	   76052	      3680 ns/op	      4246 MiB/s	    271750 calls/s	      3680 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16               	    2734	     96296 ns/op	      5192 MiB/s	    332309 calls/s	      3009 ns/call	  524309 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16                	  132331	      2173 ns/op	      7189 MiB/s	    460111 calls/s	      2173 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16              	    4586	     72178 ns/op	      6927 MiB/s	    443349 calls/s	      2256 ns/call	  524298 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-16               	    3040	     98671 ns/op	      5067 MiB/s	    324311 calls/s	      3083 ns/call	  524311 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-16        	    5334	     54423 ns/op	      9187 MiB/s	    587985 calls/s	      1701 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p1-2.txt (original SHA256 08ac5e7b9b7f235fa243645d5d7f92a858a14f45b6fbdef3514fea37044c7054)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home    	 3811999	        78.55 ns/op	  12731346 calls/s	        78.55 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  187364	      1615 ns/op	  19812924 calls/s	        50.47 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3645397	        78.54 ns/op	  12731632 calls/s	        78.54 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  187579	      1604 ns/op	  19945821 calls/s	        50.14 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32         	  136322	      2201 ns/op	  14540805 calls/s	        68.77 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32  	  136377	      2198 ns/op	  14556304 calls/s	        68.70 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2161746	       140.4 ns/op	       434.6 MiB/s	   7120661 calls/s	       140.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   86772	      3404 ns/op	       573.7 MiB/s	   9399631 calls/s	       106.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2126029	       139.2 ns/op	       438.6 MiB/s	   7185617 calls/s	       139.2 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   86080	      3422 ns/op	       570.7 MiB/s	   9350584 calls/s	       106.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32        	   71617	      4003 ns/op	       487.9 MiB/s	   7994375 calls/s	       125.1 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32 	   71635	      3982 ns/op	       490.5 MiB/s	   8036384 calls/s	       124.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  403351	       633.7 ns/op	      6165 MiB/s	   1578154 calls/s	       633.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15652	     19539 ns/op	      6397 MiB/s	   1637714 calls/s	       610.6 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  468571	       639.3 ns/op	      6110 MiB/s	   1564106 calls/s	       639.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15602	     19057 ns/op	      6559 MiB/s	   1679211 calls/s	       595.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32      	   14223	     21182 ns/op	      5901 MiB/s	   1510723 calls/s	       661.9 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32         	   13962	     21196 ns/op	      5897 MiB/s	   1509701 calls/s	       662.4 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home                   	  123381	      2322 ns/op	      6730 MiB/s	    430699 calls/s	      2322 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32               	    4074	     72793 ns/op	      6869 MiB/s	    439602 calls/s	      2275 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private                	  123661	      2331 ns/op	      6702 MiB/s	    428929 calls/s	      2331 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32              	    3598	     72984 ns/op	      6851 MiB/s	    438453 calls/s	      2281 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32               	    3188	     80231 ns/op	      6232 MiB/s	    398850 calls/s	      2507 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32        	    3740	     80994 ns/op	      6173 MiB/s	    395091 calls/s	      2531 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p16-3.txt (original SHA256 32968b5be5f32e054e23b53f9eed6010688e1b966ba123eab962a17420828413)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1375272	       201.3 ns/op	   4968323 calls/s	       201.3 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  168096	      1708 ns/op	  18738776 calls/s	        53.37 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1561935	       196.4 ns/op	   5092356 calls/s	       196.4 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1174006	       284.4 ns/op	 112523076 calls/s	         8.887 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-16         	  126218	      2391 ns/op	  13384097 calls/s	        74.72 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-16  	  657886	       417.2 ns/op	  76705107 calls/s	        13.04 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1437832	       207.4 ns/op	       294.3 MiB/s	   4822297 calls/s	       207.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   82054	      3600 ns/op	       542.5 MiB/s	   8887998 calls/s	       112.5 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1742968	       177.4 ns/op	       344.0 MiB/s	   5635489 calls/s	       177.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  358804	       827.6 ns/op	      2360 MiB/s	  38664548 calls/s	        25.86 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-16        	   66451	      4386 ns/op	       445.3 MiB/s	   7296562 calls/s	       137.1 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-16 	  315334	       964.4 ns/op	      2025 MiB/s	  33180641 calls/s	        30.14 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  207264	      1339 ns/op	      2918 MiB/s	    747070 calls/s	      1339 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    8824	     33306 ns/op	      3753 MiB/s	    960785 calls/s	      1041 ns/call	  131078 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  431438	       632.0 ns/op	      6181 MiB/s	   1582311 calls/s	       632.0 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   14743	     20192 ns/op	      6191 MiB/s	   1584775 calls/s	       631.0 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-16      	    7423	     35193 ns/op	      3552 MiB/s	    909281 calls/s	      1100 ns/call	  131080 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-16         	   15804	     18808 ns/op	      6646 MiB/s	   1701433 calls/s	       587.7 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16                   	   78676	      3727 ns/op	      4193 MiB/s	    268330 calls/s	      3727 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16               	    2980	     95138 ns/op	      5256 MiB/s	    336353 calls/s	      2973 ns/call	  524313 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16                	  135668	      2152 ns/op	      7259 MiB/s	    464591 calls/s	      2152 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16              	    4221	     68459 ns/op	      7304 MiB/s	    467433 calls/s	      2139 ns/call	  524299 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-16               	    2947	    100106 ns/op	      4995 MiB/s	    319660 calls/s	      3128 ns/call	  524306 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-16        	    5224	     54903 ns/op	      9107 MiB/s	    582851 calls/s	      1716 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p1-3.txt (original SHA256 1a67541c6442bc3d9f05e274036b268eeed9f1987a6f41e691ad732fe2a1bd6a)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home    	 3805741	        79.58 ns/op	  12565227 calls/s	        79.58 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  187476	      1607 ns/op	  19910722 calls/s	        50.22 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3820584	        79.55 ns/op	  12570300 calls/s	        79.55 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  187441	      1602 ns/op	  19972543 calls/s	        50.07 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32         	  136430	      2218 ns/op	  14424789 calls/s	        69.33 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32  	  135578	      2239 ns/op	  14291537 calls/s	        69.97 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2160090	       141.5 ns/op	       431.4 MiB/s	   7067987 calls/s	       141.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   82593	      3375 ns/op	       578.7 MiB/s	   9481786 calls/s	       105.5 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2079343	       140.8 ns/op	       433.5 MiB/s	   7101918 calls/s	       140.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   85953	      3307 ns/op	       590.6 MiB/s	   9675870 calls/s	       103.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32        	   72278	      4035 ns/op	       484.1 MiB/s	   7930925 calls/s	       126.1 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32 	   72816	      4054 ns/op	       481.8 MiB/s	   7893187 calls/s	       126.7 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  461888	       654.7 ns/op	      5967 MiB/s	   1527448 calls/s	       654.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15234	     19846 ns/op	      6299 MiB/s	   1612435 calls/s	       620.2 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  417231	       656.9 ns/op	      5946 MiB/s	   1522279 calls/s	       656.9 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15272	     20046 ns/op	      6236 MiB/s	   1596365 calls/s	       626.4 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32      	   13849	     21588 ns/op	      5790 MiB/s	   1482323 calls/s	       674.6 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32         	   14132	     21751 ns/op	      5747 MiB/s	   1471184 calls/s	       679.7 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home                   	  122412	      2439 ns/op	      6405 MiB/s	    409925 calls/s	      2439 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32               	    3807	     74638 ns/op	      6699 MiB/s	    428734 calls/s	      2332 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private                	  126187	      2341 ns/op	      6675 MiB/s	    427192 calls/s	      2341 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32              	    3990	     74131 ns/op	      6745 MiB/s	    431668 calls/s	      2317 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32               	    3740	     81102 ns/op	      6165 MiB/s	    394566 calls/s	      2534 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32        	    3262	     79079 ns/op	      6323 MiB/s	    404657 calls/s	      2471 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p4-3.txt (original SHA256 5057afb80df93b12b0da23c1f97ee4a8d7d113e86ad4eec1bbdd0203936b945e)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2160210	       131.2 ns/op	   7620713 calls/s	       131.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  169531	      1721 ns/op	  18594565 calls/s	        53.78 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 5103745	        61.16 ns/op	  16349365 calls/s	        61.16 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  423862	       771.2 ns/op	  41495611 calls/s	        24.10 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-4         	  123978	      2374 ns/op	  13480933 calls/s	        74.18 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-4  	  272308	      1162 ns/op	  27536552 calls/s	        36.32 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1719638	       174.9 ns/op	       349.0 MiB/s	   5717869 calls/s	       174.9 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   82885	      3476 ns/op	       561.9 MiB/s	   9206858 calls/s	       108.6 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 4320046	        69.68 ns/op	       876.0 MiB/s	  14352330 calls/s	        69.68 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  230458	      1264 ns/op	      1545 MiB/s	  25310916 calls/s	        39.51 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-4        	   70009	      4094 ns/op	       477.1 MiB/s	   7817218 calls/s	       127.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-4 	  177476	      1509 ns/op	      1294 MiB/s	  21205751 calls/s	        47.16 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  242101	      1044 ns/op	      3743 MiB/s	    958181 calls/s	      1044 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10378	     29186 ns/op	      4283 MiB/s	   1096417 calls/s	       912.1 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  419450	       718.8 ns/op	      5435 MiB/s	   1391256 calls/s	       718.8 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13638	     23105 ns/op	      5410 MiB/s	   1384983 calls/s	       722.0 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-4      	    8761	     33061 ns/op	      3781 MiB/s	    967907 calls/s	      1033 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-4         	   10000	     25836 ns/op	      4838 MiB/s	   1238580 calls/s	       807.4 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4                   	   90910	      3166 ns/op	      4935 MiB/s	    315849 calls/s	      3166 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4               	    3036	     85627 ns/op	      5839 MiB/s	    373712 calls/s	      2676 ns/call	  524292 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4                	  128354	      2184 ns/op	      7155 MiB/s	    457924 calls/s	      2184 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4              	    3997	     69269 ns/op	      7218 MiB/s	    461969 calls/s	      2165 ns/call	  524289 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-4               	    2461	    112333 ns/op	      4451 MiB/s	    284868 calls/s	      3510 ns/call	  524291 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-4        	    4573	     63859 ns/op	      7830 MiB/s	    501108 calls/s	      1996 ns/call	  524289 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p1-4.txt (original SHA256 9a2b100c2f2114b62d339a706426798cd9620464d759b526545c780d0f4a44c5)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home    	 3811796	        79.00 ns/op	  12657819 calls/s	        79.00 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  182274	      1632 ns/op	  19612382 calls/s	        50.99 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3823465	        78.74 ns/op	  12700162 calls/s	        78.74 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  184808	      1628 ns/op	  19654205 calls/s	        50.88 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32         	  133342	      2214 ns/op	  14452999 calls/s	        69.19 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32  	  136549	      2212 ns/op	  14467318 calls/s	        69.12 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2166804	       138.6 ns/op	       440.5 MiB/s	   7216709 calls/s	       138.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   83062	      3364 ns/op	       580.7 MiB/s	   9513504 calls/s	       105.1 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2150492	       139.7 ns/op	       437.1 MiB/s	   7160682 calls/s	       139.7 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   80744	      3315 ns/op	       589.3 MiB/s	   9654485 calls/s	       103.6 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32        	   70068	      3984 ns/op	       490.2 MiB/s	   8031855 calls/s	       124.5 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32 	   72278	      4024 ns/op	       485.3 MiB/s	   7951591 calls/s	       125.8 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  463778	       641.7 ns/op	      6087 MiB/s	   1558352 calls/s	       641.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15158	     19388 ns/op	      6447 MiB/s	   1650543 calls/s	       605.9 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  459200	       652.8 ns/op	      5984 MiB/s	   1531839 calls/s	       652.8 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15445	     19702 ns/op	      6345 MiB/s	   1624232 calls/s	       615.7 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32      	   14235	     20773 ns/op	      6017 MiB/s	   1540454 calls/s	       649.2 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32         	   14336	     20796 ns/op	      6011 MiB/s	   1538756 calls/s	       649.9 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home                   	  121665	      2356 ns/op	      6633 MiB/s	    424496 calls/s	      2356 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32               	    4159	     72132 ns/op	      6932 MiB/s	    443629 calls/s	      2254 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private                	  123975	      2330 ns/op	      6705 MiB/s	    429102 calls/s	      2330 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32              	    4056	     71827 ns/op	      6961 MiB/s	    445512 calls/s	      2245 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32               	    3487	     79940 ns/op	      6255 MiB/s	    400299 calls/s	      2498 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32        	    3542	     81290 ns/op	      6151 MiB/s	    393651 calls/s	      2540 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p4-4.txt (original SHA256 1a5be9c6344b7b25d919f5863c239cde2819f5be319000d9aa2b3ae0ef83927c)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2329834	       130.1 ns/op	   7685485 calls/s	       130.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  172878	      1726 ns/op	  18541082 calls/s	        53.93 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 5236263	        66.48 ns/op	  15041492 calls/s	        66.48 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  382773	       705.3 ns/op	  45372351 calls/s	        22.04 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-4         	  124833	      2358 ns/op	  13570342 calls/s	        73.69 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-4  	  319944	      1009 ns/op	  31718741 calls/s	        31.53 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1691995	       178.6 ns/op	       341.8 MiB/s	   5600656 calls/s	       178.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   86409	      3436 ns/op	       568.4 MiB/s	   9312448 calls/s	       107.4 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 4502492	        69.95 ns/op	       872.6 MiB/s	  14296352 calls/s	        69.95 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  246906	      1061 ns/op	      1841 MiB/s	  30160785 calls/s	        33.16 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-4        	   65998	      3996 ns/op	       488.8 MiB/s	   8007967 calls/s	       124.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-4 	  188059	      1339 ns/op	      1458 MiB/s	  23892380 calls/s	        41.85 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  247318	      1027 ns/op	      3802 MiB/s	    973308 calls/s	      1027 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	    9212	     29455 ns/op	      4244 MiB/s	   1086416 calls/s	       920.5 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  430713	       710.0 ns/op	      5502 MiB/s	   1408441 calls/s	       710.0 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13474	     22669 ns/op	      5514 MiB/s	   1411615 calls/s	       708.4 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-4      	    8916	     33541 ns/op	      3727 MiB/s	    954056 calls/s	      1048 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-4         	   10000	     25504 ns/op	      4901 MiB/s	   1254687 calls/s	       797.0 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4                   	   96526	      3096 ns/op	      5047 MiB/s	    322986 calls/s	      3096 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4               	    3628	     83698 ns/op	      5974 MiB/s	    382327 calls/s	      2616 ns/call	  524291 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4                	  134265	      2238 ns/op	      6982 MiB/s	    446862 calls/s	      2238 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4              	    4160	     69408 ns/op	      7204 MiB/s	    461040 calls/s	      2169 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-4               	    2479	    107117 ns/op	      4668 MiB/s	    298739 calls/s	      3347 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-4        	    4789	     61013 ns/op	      8195 MiB/s	    524483 calls/s	      1907 ns/call	  524289 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p16-4.txt (original SHA256 c17dd41227c3f4e5178c8511f24feeb284d77f8f5d40ee6ba1e9217ba79131dd)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1489070	       202.3 ns/op	   4944059 calls/s	       202.3 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  176077	      1732 ns/op	  18476798 calls/s	        54.12 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1522578	       192.7 ns/op	   5189381 calls/s	       192.7 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1000000	       282.2 ns/op	 113411309 calls/s	         8.817 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-16         	  125485	      2433 ns/op	  13154459 calls/s	        76.02 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-16  	  740821	       349.2 ns/op	  91636836 calls/s	        10.91 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1455399	       204.0 ns/op	       299.2 MiB/s	   4901764 calls/s	       204.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   80215	      3729 ns/op	       523.7 MiB/s	   8580962 calls/s	       116.5 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1746679	       175.3 ns/op	       348.2 MiB/s	   5704472 calls/s	       175.3 ns/call	      64 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  324008	       859.4 ns/op	      2273 MiB/s	  37235413 calls/s	        26.86 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-16        	   69205	      4277 ns/op	       456.6 MiB/s	   7481564 calls/s	       133.7 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-16 	  342300	       959.4 ns/op	      2036 MiB/s	  33353465 calls/s	        29.98 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  202371	      1341 ns/op	      2912 MiB/s	    745596 calls/s	      1341 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    8767	     34675 ns/op	      3605 MiB/s	    922860 calls/s	      1084 ns/call	  131082 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  413528	       621.0 ns/op	      6290 MiB/s	   1610227 calls/s	       621.0 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15529	     20404 ns/op	      6126 MiB/s	   1568354 calls/s	       637.6 ns/call	  131073 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-16      	    8666	     34292 ns/op	      3645 MiB/s	    933171 calls/s	      1072 ns/call	  131078 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-16         	   15650	     18659 ns/op	      6699 MiB/s	   1714987 calls/s	       583.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16                   	   77650	      3685 ns/op	      4240 MiB/s	    271380 calls/s	      3685 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16               	    2658	     96538 ns/op	      5179 MiB/s	    331475 calls/s	      3017 ns/call	  524311 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16                	  138704	      2228 ns/op	      7012 MiB/s	    448773 calls/s	      2228 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16              	    4132	     72948 ns/op	      6854 MiB/s	    438667 calls/s	      2280 ns/call	  524297 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-16               	    3052	    100059 ns/op	      4997 MiB/s	    319813 calls/s	      3127 ns/call	  524311 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-16        	    5137	     61433 ns/op	      8139 MiB/s	    520892 calls/s	      1920 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p4-5.txt (original SHA256 c2289cd4619113afe6138785384eb71006d4e9779b781f99d252e9393b4f787b)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2289873	       130.0 ns/op	   7693010 calls/s	       130.0 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  173544	      1717 ns/op	  18634419 calls/s	        53.66 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 7013754	        67.74 ns/op	  14761353 calls/s	        67.74 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  489338	       658.2 ns/op	  48615687 calls/s	        20.57 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-4         	  126306	      2411 ns/op	  13273457 calls/s	        75.34 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-4  	  321176	      1065 ns/op	  30036160 calls/s	        33.29 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1690082	       175.6 ns/op	       347.6 MiB/s	   5694401 calls/s	       175.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   81753	      3393 ns/op	       575.6 MiB/s	   9429826 calls/s	       106.0 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 4307646	        78.65 ns/op	       776.0 MiB/s	  12714184 calls/s	        78.65 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  267141	      1300 ns/op	      1502 MiB/s	  24606604 calls/s	        40.64 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-4        	   67578	      4063 ns/op	       480.7 MiB/s	   7875393 calls/s	       127.0 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-4 	  220764	      1485 ns/op	      1315 MiB/s	  21549867 calls/s	        46.40 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  263667	      1038 ns/op	      3763 MiB/s	    963253 calls/s	      1038 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10212	     29751 ns/op	      4202 MiB/s	   1075608 calls/s	       929.7 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  413934	       720.4 ns/op	      5422 MiB/s	   1388066 calls/s	       720.4 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13357	     22718 ns/op	      5502 MiB/s	   1408548 calls/s	       710.0 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-4      	    8894	     33501 ns/op	      3731 MiB/s	    955200 calls/s	      1047 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-4         	   10000	     25228 ns/op	      4955 MiB/s	   1268437 calls/s	       788.4 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4                   	   89448	      3101 ns/op	      5039 MiB/s	    322499 calls/s	      3101 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4               	    3135	     85275 ns/op	      5863 MiB/s	    375257 calls/s	      2665 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4                	  137530	      2235 ns/op	      6992 MiB/s	    447467 calls/s	      2235 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4              	    4340	     70711 ns/op	      7071 MiB/s	    452547 calls/s	      2210 ns/call	  524291 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-4               	    2418	    107376 ns/op	      4657 MiB/s	    298018 calls/s	      3356 ns/call	  524291 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-4        	    4095	     62609 ns/op	      7986 MiB/s	    511106 calls/s	      1957 ns/call	  524289 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p16-5.txt (original SHA256 6af672f9000a305befe12558091e9aba2b088ed612e6b9e922e14df4c637bf24)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1482444	       203.5 ns/op	   4915023 calls/s	       203.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  170444	      1698 ns/op	  18845229 calls/s	        53.06 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1545307	       197.1 ns/op	   5073651 calls/s	       197.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	  998798	       272.5 ns/op	 117423856 calls/s	         8.516 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-16         	  129687	      2385 ns/op	  13415778 calls/s	        74.54 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-16  	  858603	       328.3 ns/op	  97470129 calls/s	        10.26 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1397940	       205.9 ns/op	       296.5 MiB/s	   4857647 calls/s	       205.9 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   79546	      3643 ns/op	       536.1 MiB/s	   8783222 calls/s	       113.9 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1771101	       171.1 ns/op	       356.8 MiB/s	   5845744 calls/s	       171.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  347792	       841.8 ns/op	      2320 MiB/s	  38013256 calls/s	        26.31 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-16        	   66631	      4282 ns/op	       456.1 MiB/s	   7472541 calls/s	       133.8 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-16 	  320554	       887.1 ns/op	      2202 MiB/s	  36070855 calls/s	        27.72 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  192457	      1347 ns/op	      2901 MiB/s	    742648 calls/s	      1347 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    8805	     33621 ns/op	      3718 MiB/s	    951787 calls/s	      1051 ns/call	  131080 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  463978	       625.2 ns/op	      6248 MiB/s	   1599454 calls/s	       625.2 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15252	     19632 ns/op	      6367 MiB/s	   1629998 calls/s	       613.5 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-16      	    8853	     32866 ns/op	      3803 MiB/s	    973647 calls/s	      1027 ns/call	  131076 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-16         	   15777	     19224 ns/op	      6502 MiB/s	   1664544 calls/s	       600.8 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16                   	   79646	      3690 ns/op	      4234 MiB/s	    270968 calls/s	      3690 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16               	    2984	     94517 ns/op	      5290 MiB/s	    338562 calls/s	      2954 ns/call	  524309 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16                	  133479	      2074 ns/op	      7534 MiB/s	    482175 calls/s	      2074 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16              	    4044	     68879 ns/op	      7259 MiB/s	    464580 calls/s	      2152 ns/call	  524294 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-16               	    3003	     97150 ns/op	      5147 MiB/s	    329388 calls/s	      3036 ns/call	  524314 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-16        	    5139	     57798 ns/op	      8651 MiB/s	    553654 calls/s	      1806 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p1-5.txt (original SHA256 a7817bba069476275716903c321d55a5f250c391ecdab4a359bb8fee3a33e8cc)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home    	 3749566	        79.26 ns/op	  12616051 calls/s	        79.26 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  179563	      1642 ns/op	  19490760 calls/s	        51.31 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3823359	        78.50 ns/op	  12738043 calls/s	        78.50 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  187250	      1607 ns/op	  19917925 calls/s	        50.21 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32         	  134434	      2228 ns/op	  14363627 calls/s	        69.62 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32  	  133948	      2206 ns/op	  14504732 calls/s	        68.94 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2163529	       137.1 ns/op	       445.1 MiB/s	   7292911 calls/s	       137.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   82489	      3402 ns/op	       574.1 MiB/s	   9406413 calls/s	       106.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2115789	       139.5 ns/op	       437.4 MiB/s	   7167099 calls/s	       139.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   83538	      3405 ns/op	       573.6 MiB/s	   9397796 calls/s	       106.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32        	   70215	      4064 ns/op	       480.6 MiB/s	   7873511 calls/s	       127.0 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32 	   70923	      4073 ns/op	       479.5 MiB/s	   7856371 calls/s	       127.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  449949	       658.4 ns/op	      5933 MiB/s	   1518789 calls/s	       658.4 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15327	     20463 ns/op	      6109 MiB/s	   1563785 calls/s	       639.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  462121	       652.4 ns/op	      5987 MiB/s	   1532796 calls/s	       652.4 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15200	     20194 ns/op	      6190 MiB/s	   1584655 calls/s	       631.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32      	   13861	     21382 ns/op	      5846 MiB/s	   1496594 calls/s	       668.2 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32         	   14019	     21289 ns/op	      5872 MiB/s	   1503144 calls/s	       665.3 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home                   	  121495	      2346 ns/op	      6659 MiB/s	    426200 calls/s	      2346 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32               	    4014	     74203 ns/op	      6738 MiB/s	    431251 calls/s	      2319 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private                	  123096	      2359 ns/op	      6624 MiB/s	    423914 calls/s	      2359 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32              	    3606	     73657 ns/op	      6788 MiB/s	    434446 calls/s	      2302 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32               	    3349	     80685 ns/op	      6197 MiB/s	    396603 calls/s	      2521 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32        	    3477	     80155 ns/op	      6238 MiB/s	    399227 calls/s	      2505 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p16-6.txt (original SHA256 bc0cebbed4216bbe3ab1ef0bb270ecc428c6b23c0b4b9065928ed9dde106dc7f)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1497398	       211.1 ns/op	   4738129 calls/s	       211.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  176012	      1716 ns/op	  18647424 calls/s	        53.63 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1536350	       196.6 ns/op	   5087647 calls/s	       196.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1000000	       250.5 ns/op	 127747771 calls/s	         7.828 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-16         	  122595	      2477 ns/op	  12921166 calls/s	        77.39 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-16  	  788451	       342.4 ns/op	  93459404 calls/s	        10.70 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1438789	       206.2 ns/op	       296.1 MiB/s	   4850653 calls/s	       206.2 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   77916	      3646 ns/op	       535.7 MiB/s	   8776436 calls/s	       113.9 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1790414	       174.9 ns/op	       349.0 MiB/s	   5718188 calls/s	       174.9 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  372165	       840.4 ns/op	      2324 MiB/s	  38079140 calls/s	        26.26 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-16        	   68595	      4264 ns/op	       458.1 MiB/s	   7505279 calls/s	       133.2 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-16 	  319192	       909.6 ns/op	      2147 MiB/s	  35180566 calls/s	        28.42 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  191180	      1357 ns/op	      2878 MiB/s	    736685 calls/s	      1357 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    8803	     34387 ns/op	      3635 MiB/s	    930574 calls/s	      1075 ns/call	  131082 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  474402	       610.0 ns/op	      6403 MiB/s	   1639271 calls/s	       610.0 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15426	     19473 ns/op	      6419 MiB/s	   1643301 calls/s	       608.5 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-16      	    8652	     34558 ns/op	      3617 MiB/s	    925972 calls/s	      1080 ns/call	  131079 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-16         	   15627	     18880 ns/op	      6621 MiB/s	   1694886 calls/s	       590.0 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16                   	   80661	      3645 ns/op	      4287 MiB/s	    274354 calls/s	      3645 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16               	    2826	     96097 ns/op	      5203 MiB/s	    332997 calls/s	      3003 ns/call	  524306 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16                	  131631	      2212 ns/op	      7064 MiB/s	    452114 calls/s	      2212 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16              	    3943	     73297 ns/op	      6822 MiB/s	    436580 calls/s	      2291 ns/call	  524300 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-16               	    2994	     98850 ns/op	      5058 MiB/s	    323722 calls/s	      3089 ns/call	  524309 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-16        	    5440	     57705 ns/op	      8665 MiB/s	    554543 calls/s	      1803 ns/call	  524289 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p1-6.txt (original SHA256 a611ffd9c92fa013393eaf7d44dd82d45cc8e0aa052fa77916a02fd39aeb7ab1)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home    	 3811784	        79.36 ns/op	  12601428 calls/s	        79.36 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  180956	      1604 ns/op	  19951945 calls/s	        50.12 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3816938	        78.91 ns/op	  12672523 calls/s	        78.91 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  183754	      1609 ns/op	  19894305 calls/s	        50.27 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32         	  136368	      2204 ns/op	  14519411 calls/s	        68.87 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32  	  136114	      2204 ns/op	  14519702 calls/s	        68.87 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2136285	       138.4 ns/op	       440.9 MiB/s	   7222933 calls/s	       138.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   85749	      3395 ns/op	       575.2 MiB/s	   9424530 calls/s	       106.1 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2078070	       140.8 ns/op	       433.5 MiB/s	   7103027 calls/s	       140.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   82096	      3403 ns/op	       573.9 MiB/s	   9403589 calls/s	       106.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32        	   70803	      4015 ns/op	       486.5 MiB/s	   7970864 calls/s	       125.5 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32 	   71694	      4023 ns/op	       485.5 MiB/s	   7954688 calls/s	       125.7 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  461540	       688.3 ns/op	      5675 MiB/s	   1452915 calls/s	       688.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15493	     19312 ns/op	      6473 MiB/s	   1656996 calls/s	       603.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  471277	       642.1 ns/op	      6084 MiB/s	   1557508 calls/s	       642.1 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15348	     19413 ns/op	      6439 MiB/s	   1648417 calls/s	       606.6 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32      	   14150	     24083 ns/op	      5190 MiB/s	   1328735 calls/s	       752.6 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32         	   14383	     21035 ns/op	      5942 MiB/s	   1521278 calls/s	       657.3 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home                   	  126271	      2350 ns/op	      6648 MiB/s	    425472 calls/s	      2350 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32               	    3444	     73316 ns/op	      6820 MiB/s	    436464 calls/s	      2291 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private                	  125922	      2364 ns/op	      6609 MiB/s	    423008 calls/s	      2364 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32              	    3865	     74858 ns/op	      6679 MiB/s	    427476 calls/s	      2339 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32               	    3642	     79582 ns/op	      6283 MiB/s	    402102 calls/s	      2487 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32        	    3367	     80239 ns/op	      6231 MiB/s	    398808 calls/s	      2507 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p4-6.txt (original SHA256 95aba44ed5965174b38a170532c3bbd09cb4120e0a8c90febd658578477e127e)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2305549	       129.9 ns/op	   7696525 calls/s	       129.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  171454	      1761 ns/op	  18167932 calls/s	        55.04 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 4914476	        51.94 ns/op	  19254683 calls/s	        51.94 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  372928	       819.5 ns/op	  39049219 calls/s	        25.61 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-4         	  129435	      2412 ns/op	  13265251 calls/s	        75.38 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-4  	  271652	       978.5 ns/op	  32703250 calls/s	        30.58 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1643084	       174.8 ns/op	       349.1 MiB/s	   5720398 calls/s	       174.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   80587	      3406 ns/op	       573.4 MiB/s	   9394789 calls/s	       106.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 5257736	        70.47 ns/op	       866.1 MiB/s	  14189927 calls/s	        70.47 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  239947	      1213 ns/op	      1610 MiB/s	  26378463 calls/s	        37.91 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-4        	   66607	      4116 ns/op	       474.6 MiB/s	   7775113 calls/s	       128.6 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-4 	  202501	      1389 ns/op	      1407 MiB/s	  23044340 calls/s	        43.39 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  239083	      1048 ns/op	      3728 MiB/s	    954291 calls/s	      1048 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	    9907	     29244 ns/op	      4274 MiB/s	   1094243 calls/s	       913.9 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  441135	       739.0 ns/op	      5286 MiB/s	   1353101 calls/s	       739.0 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13113	     22482 ns/op	      5560 MiB/s	   1423355 calls/s	       702.6 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-4      	    7335	     34093 ns/op	      3666 MiB/s	    938613 calls/s	      1065 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-4         	   10000	     25339 ns/op	      4933 MiB/s	   1262880 calls/s	       791.8 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4                   	   93937	      3147 ns/op	      4965 MiB/s	    317763 calls/s	      3147 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4               	    3250	     84904 ns/op	      5889 MiB/s	    376895 calls/s	      2653 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4                	  138710	      2211 ns/op	      7066 MiB/s	    452255 calls/s	      2211 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4              	    3990	     72370 ns/op	      6909 MiB/s	    442169 calls/s	      2262 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-4               	    2845	    104128 ns/op	      4802 MiB/s	    307313 calls/s	      3254 ns/call	  524289 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-4        	    4825	     61289 ns/op	      8158 MiB/s	    522112 calls/s	      1915 ns/call	  524290 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p1-7.txt (original SHA256 56180d2ac2790b5df15ccd22612faa09ebfc1e68daa5424e0cf1d01c7c020932)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home    	 3805069	        79.27 ns/op	  12614471 calls/s	        79.27 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  186675	      1624 ns/op	  19699949 calls/s	        50.76 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3678619	        80.07 ns/op	  12489437 calls/s	        80.07 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  180199	      1616 ns/op	  19801521 calls/s	        50.50 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32         	  136442	      2200 ns/op	  14543067 calls/s	        68.76 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32  	  134036	      2204 ns/op	  14518864 calls/s	        68.88 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2156408	       141.9 ns/op	       430.1 MiB/s	   7046965 calls/s	       141.9 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   85963	      3358 ns/op	       581.6 MiB/s	   9529054 calls/s	       104.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2076042	       137.0 ns/op	       445.4 MiB/s	   7297450 calls/s	       137.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   86322	      3295 ns/op	       592.8 MiB/s	   9711996 calls/s	       103.0 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32        	   72302	      4007 ns/op	       487.4 MiB/s	   7985321 calls/s	       125.2 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32 	   70652	      3999 ns/op	       488.3 MiB/s	   8001026 calls/s	       125.0 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  468262	       640.8 ns/op	      6096 MiB/s	   1560547 calls/s	       640.8 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   14860	     19478 ns/op	      6418 MiB/s	   1642886 calls/s	       608.7 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  470527	       639.8 ns/op	      6106 MiB/s	   1563064 calls/s	       639.8 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15588	     19359 ns/op	      6457 MiB/s	   1652951 calls/s	       605.0 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32      	   14181	     21586 ns/op	      5791 MiB/s	   1482415 calls/s	       674.6 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32         	   14373	     21012 ns/op	      5949 MiB/s	   1522927 calls/s	       656.6 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home                   	  122206	      2338 ns/op	      6682 MiB/s	    427651 calls/s	      2338 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32               	    3834	     72904 ns/op	      6858 MiB/s	    438936 calls/s	      2278 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private                	  125959	      2338 ns/op	      6684 MiB/s	    427746 calls/s	      2338 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32              	    3756	     72694 ns/op	      6878 MiB/s	    440202 calls/s	      2272 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32               	    3133	     80249 ns/op	      6231 MiB/s	    398758 calls/s	      2508 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32        	    3720	     81339 ns/op	      6147 MiB/s	    393416 calls/s	      2542 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p4-7.txt (original SHA256 046e185650fda2d198d753a4c0467a0d9f0d31426a6eadda8a36d22c873cd8a6)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2321907	       128.5 ns/op	   7784189 calls/s	       128.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  178656	      1711 ns/op	  18700622 calls/s	        53.47 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 5440954	        67.19 ns/op	  14882286 calls/s	        67.19 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  472837	       785.7 ns/op	  40727945 calls/s	        24.55 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-4         	  130906	      2357 ns/op	  13576727 calls/s	        73.66 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-4  	  272062	      1168 ns/op	  27399691 calls/s	        36.50 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1705432	       178.5 ns/op	       341.9 MiB/s	   5601754 calls/s	       178.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   82561	      3463 ns/op	       564.0 MiB/s	   9240350 calls/s	       108.2 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 3683830	        69.45 ns/op	       878.8 MiB/s	  14398083 calls/s	        69.45 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  252224	      1227 ns/op	      1592 MiB/s	  26084350 calls/s	        38.34 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-4        	   68066	      4116 ns/op	       474.5 MiB/s	   7773966 calls/s	       128.6 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-4 	  174901	      1502 ns/op	      1301 MiB/s	  21309888 calls/s	        46.93 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  239438	      1048 ns/op	      3729 MiB/s	    954534 calls/s	      1048 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10233	     29446 ns/op	      4245 MiB/s	   1086735 calls/s	       920.2 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  366178	       722.1 ns/op	      5410 MiB/s	   1384875 calls/s	       722.1 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13153	     22415 ns/op	      5577 MiB/s	   1427619 calls/s	       700.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-4      	    8844	     33425 ns/op	      3740 MiB/s	    957381 calls/s	      1045 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-4         	   10000	     25411 ns/op	      4919 MiB/s	   1259295 calls/s	       794.1 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4                   	   90382	      3150 ns/op	      4961 MiB/s	    317478 calls/s	      3150 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4               	    2948	     89485 ns/op	      5588 MiB/s	    357602 calls/s	      2796 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4                	  135740	      2202 ns/op	      7095 MiB/s	    454062 calls/s	      2202 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4              	    3933	     69676 ns/op	      7176 MiB/s	    459269 calls/s	      2177 ns/call	  524289 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-4               	    2529	    114991 ns/op	      4348 MiB/s	    278283 calls/s	      3593 ns/call	  524291 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-4        	    4084	     62464 ns/op	      8005 MiB/s	    512297 calls/s	      1952 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# FILE core8-throughput-p16-7.txt (original SHA256 925f175a5cacd50893d38d5965b89454723b11fea89d4a4ca535fc5efc41a1a3)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt-core8.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$/^Bytes(0|64|4096|16384)$/^(Home|Locked32|Private|Private32|Bridge32|PrivateBridge32)$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1499794	       211.2 ns/op	   4733790 calls/s	       211.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  178971	      1730 ns/op	  18492817 calls/s	        54.08 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1558165	       198.4 ns/op	   5041408 calls/s	       198.4 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1111189	       291.5 ns/op	 109776307 calls/s	         9.109 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Bridge32-16         	  126043	      2405 ns/op	  13304859 calls/s	        75.16 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PrivateBridge32-16  	  810436	       453.0 ns/op	  70642696 calls/s	        14.16 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1390038	       208.3 ns/op	       293.0 MiB/s	   4801206 calls/s	       208.3 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   77784	      3602 ns/op	       542.2 MiB/s	   8884180 calls/s	       112.6 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1798366	       177.7 ns/op	       343.4 MiB/s	   5626602 calls/s	       177.7 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  345945	       828.4 ns/op	      2358 MiB/s	  38628247 calls/s	        25.89 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Bridge32-16        	   69442	      4470 ns/op	       436.9 MiB/s	   7158870 calls/s	       139.7 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/PrivateBridge32-16 	  322798	       919.2 ns/op	      2125 MiB/s	  34812844 calls/s	        28.73 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  234187	      1291 ns/op	      3025 MiB/s	    774525 calls/s	      1291 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    9236	     32667 ns/op	      3827 MiB/s	    979584 calls/s	      1021 ns/call	  131078 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  489279	       617.4 ns/op	      6327 MiB/s	   1619616 calls/s	       617.4 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15116	     19329 ns/op	      6467 MiB/s	   1655513 calls/s	       604.0 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Bridge32-16      	    8497	     33836 ns/op	      3694 MiB/s	    945744 calls/s	      1057 ns/call	  131077 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PrivateBridge32-16         	   15782	     19023 ns/op	      6571 MiB/s	   1682158 calls/s	       594.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16                   	   82173	      3712 ns/op	      4209 MiB/s	    269398 calls/s	      3712 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16               	    2935	     95847 ns/op	      5217 MiB/s	    333866 calls/s	      2995 ns/call	  524307 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16                	  124406	      2230 ns/op	      7006 MiB/s	    448402 calls/s	      2230 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16              	    4282	     69414 ns/op	      7203 MiB/s	    461004 calls/s	      2169 ns/call	  524301 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Bridge32-16               	    3066	     97361 ns/op	      5136 MiB/s	    328672 calls/s	      3043 ns/call	  524311 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PrivateBridge32-16        	    5342	     55362 ns/op	      9032 MiB/s	    578017 calls/s	      1730 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+# benchstat all 7 original-baseline/R8 paired files
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+                         │ .cache/sessions-phase0/core8-dd-baseline-combined.txt │ .cache/sessions-phase0/core8-dd-core8-combined.txt │
+                         │                        sec/op                         │            sec/op             vs base              │
+ObfuscateSQL-16                                                     2.180µ ±  6%                    2.176µ ± 6%       ~ (p=0.689 n=7)
+SketchAdd-16                                                        88.64n ±  1%                    88.86n ± 2%       ~ (p=0.330 n=7)
+SketchAddMany1k-16                                                  45.02µ ±  1%                    44.79µ ± 1%       ~ (p=0.383 n=7)
+ObfuscateTraces1k-16                                                2.612m ±  1%                    2.596m ± 1%       ~ (p=0.053 n=7)
+SketchAddNegativeBins-16                                            88.85n ±  3%                    89.07n ± 1%       ~ (p=0.165 n=7)
+SketchAddVaried-16                                                  89.21n ±  2%                    89.23n ± 1%       ~ (p=0.929 n=7)
+ObfuscateSQLVaried-16                                               2.816µ ± 22%                    2.788µ ± 2%  -0.99% (p=0.038 n=7)
+geomean                                                             2.435µ                          2.429µ       -0.25%
+
+                         │ .cache/sessions-phase0/core8-dd-baseline-combined.txt │ .cache/sessions-phase0/core8-dd-core8-combined.txt │
+                         │                         B/op                          │            B/op             vs base                │
+ObfuscateSQL-16                                                     57.00 ± 2%                     57.00 ± 0%       ~ (p=1.000 n=7)
+SketchAdd-16                                                        0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddMany1k-16                                                8.000Ki ± 0%                   8.000Ki ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateTraces1k-16                                              247.5Ki ± 0%                   247.3Ki ± 0%  -0.07% (p=0.032 n=7)
+SketchAddNegativeBins-16                                            0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddVaried-16                                                  0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateSQLVaried-16                                               83.00 ± 6%                     83.00 ± 0%       ~ (p=0.192 n=7)
+geomean                                                                        ²                               -0.01%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                         │ .cache/sessions-phase0/core8-dd-baseline-combined.txt │ .cache/sessions-phase0/core8-dd-core8-combined.txt │
+                         │                       allocs/op                       │         allocs/op           vs base                │
+ObfuscateSQL-16                                                     1.000 ± 0%                     1.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAdd-16                                                        0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddMany1k-16                                                  1.000 ± 0%                     1.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateTraces1k-16                                                1.000 ± 0%                     1.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddNegativeBins-16                                            0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddVaried-16                                                  0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateSQLVaried-16                                               1.000 ± 0%                     1.000 ± 0%       ~ (p=1.000 n=7) ¹
+geomean                                                                        ²                               +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean

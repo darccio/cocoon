@@ -314,9 +314,14 @@ The operator approved the [Phase 1 specification](checked-sessions.md) on
 buffers, a bounded runtime adapter bridge, and optional lazy resource homes.
 It preserves per-command checks and exact instance/epoch ownership. It adds
 public Go and manifest contracts, with the explicit approval boundary recorded
-in the spec. No production API, sharding, or streaming fixture is implemented
-yet. M1 performance acceptance remains unmet. Resume with the signed review
-commits, then follow the reviewed implementation/qualification plan.
+in the spec. The runtime bridge now preserves the standalone guardrails and
+executes bounded commands with one admission and shared ownership/execution.
+Its checked 64-byte ceiling at 16 processors is 7.40 Mcalls/s on one home
+versus 4.86 standalone; worker-private diagnostic batches reach 34.81.
+Rejected core shapes and all negative/retained samples are in the performance
+notes. Resume with optional lazy homes, typed facade generation, and the
+translated streaming fixture, then complete the independent qualification plan.
+M1 performance acceptance remains unmet.
 
 - First measure the admission/ownership/execution-lock share and a prototype's
   attainable ceiling. A bounded session could admit once and execute several

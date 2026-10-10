@@ -228,7 +228,7 @@ func BenchmarkSessionLayers(b *testing.B) {
 func BenchmarkSessionThroughput(b *testing.B) {
 	for _, size := range []int{0, 64, 4096, 16384} {
 		b.Run(fmt.Sprintf("Bytes%d", size), func(b *testing.B) {
-			paths := []string{"Pool1", "PoolP", "Home", "Admit32", "Locked32", "Private", "Private32"}
+			paths := []string{"Pool1", "PoolP", "Home", "Admit32", "Locked32", "Private", "Private32", "Bridge32", "PrivateBridge32"}
 			if size == 64 {
 				paths = append(paths, "Locked4", "Locked16", "Locked64")
 			}
@@ -249,7 +249,8 @@ func benchmarkSessionThroughput(b *testing.B, size int, path string) {
 	var m *sessionBenchModule
 	resources := make([]*Resource[sessionBenchStream], workers)
 	var modules []*sessionBenchModule
-	private := path == "Private" || path == "Private32"
+	private := path == "Private" || path == "Private32" || path == "PrivateBridge32"
+	bridge := path == "Bridge32" || path == "PrivateBridge32"
 	if private {
 		for n := range workers {
 			instance, module := sessionBenchInstance(b, 1)
@@ -267,7 +268,7 @@ func benchmarkSessionThroughput(b *testing.B, size int, path string) {
 	count := 1
 	locked := path == "Locked32" || path == "Private32" || path == "Locked4" || path == "Locked16" || path == "Locked64"
 	switch path {
-	case "Locked32", "Private32", "Admit32":
+	case "Locked32", "Private32", "Admit32", "Bridge32", "PrivateBridge32":
 		count = 32
 	case "Locked4":
 		count = 4
@@ -305,6 +306,19 @@ func benchmarkSessionThroughput(b *testing.B, size int, path string) {
 			}
 		}
 	}
+	// Bridge plans are reused to isolate the actual runtime boundary. Generated
+	// typed-plan construction and full streaming lifecycle are qualified separately.
+	var plans [][]BatchCommand
+	if bridge {
+		plans = make([][]BatchCommand, workers)
+		for worker := range workers {
+			module := m
+			if private {
+				module = modules[worker]
+			}
+			plans[worker] = sessionBenchPlan(module, data, count)
+		}
+	}
 	var next atomic.Uint64
 	ctx := b.Context()
 	b.ReportAllocs()
@@ -317,9 +331,16 @@ func benchmarkSessionThroughput(b *testing.B, size int, path string) {
 		}
 		for pb.Next() {
 			var err error
-			if pool != nil {
+			switch {
+			case pool != nil:
 				err = sessionBenchPoolCall(ctx, &life, pool, data)
-			} else {
+			case bridge:
+				var completed uint32
+				completed, err = resources[worker].Batch(ctx, &life, BatchLimits{}, plans[worker])
+				if err == nil && int64(completed) != int64(count) {
+					err = ErrProtocol
+				}
+			default:
 				err = sessionBenchSequence(&life, resources[worker], module, data, count, locked)
 			}
 			if err != nil {
@@ -349,6 +370,24 @@ func benchmarkSessionThroughput(b *testing.B, size int, path string) {
 	if size != 0 {
 		b.ReportMetric(float64(writes)*float64(size)/seconds/(1<<20), "MiB/s")
 	}
+}
+
+func sessionBenchPlan(m *sessionBenchModule, data []byte, count int) []BatchCommand {
+	commands := make([]BatchCommand, count)
+	results := make([][]byte, count)
+	for index := range commands {
+		commands[index] = BatchCommand{Op: "write", InputBytes: uint64(len(data)), Prepare: func(c *Call) error {
+			if err := c.PrepareInput(uint64(len(data))); err != nil {
+				return err
+			}
+			_, err := c.PutBytes(data)
+			return err
+		}, Invoke: func(handle uint64) Status { return m.write(handle, len(data)) }, Decode: func(view []byte) error {
+			results[index] = append([]byte(nil), view...)
+			return nil
+		}}
+	}
+	return commands
 }
 
 func sessionBenchPoolCall(ctx context.Context, life *Lifecycle, pool *Pool[Instance], data []byte) error {
