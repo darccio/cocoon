@@ -42,6 +42,12 @@ func Facade(m *manifest.Manifest) ([]byte, error) {
 	b.WriteString("func (l *Library) getHome(slot *homeSlot) (*guest,error) { slot.mu.Lock(); defer slot.mu.Unlock(); if slot.guest!=nil && !slot.guest.instance.Healthy() { slot.guest.close(); slot.guest=nil }; if slot.guest==nil { home,err:=l.newGuest(); if err!=nil { return nil,err }; slot.guest=home }; return slot.guest,nil }\n")
 	b.WriteString("func (l *Library) Close() error { if l==nil { return nil }; return l.life.Close(func() error { err:=l.pool.Close(); for index:=range l.homes { slot:=&l.homes[index]; slot.mu.Lock(); if slot.guest!=nil { slot.guest.close(); slot.guest=nil }; slot.mu.Unlock() }; return err }) }\n")
 	codec(&b)
+	for _, resource := range m.Resources {
+		if resource.CheckedBatches {
+			batchSupport(&b)
+			break
+		}
+	}
 	for _, record := range m.Records {
 		recordCodec(&b, record)
 	}
@@ -52,6 +58,9 @@ func Facade(m *manifest.Manifest) ([]byte, error) {
 		fmt.Fprintf(&b, "type %s struct { _ rt.NoCopy; library *Library; guest *guest; owner *rt.Resource[%s] }\n", resource.Name, resource.Name)
 		for _, method := range resource.Methods {
 			operation(&b, m, method, resource.Name)
+		}
+		if resource.CheckedBatches {
+			resourceBatch(&b, m, resource)
 		}
 	}
 	formatted, err := format.Source([]byte(b.String()))

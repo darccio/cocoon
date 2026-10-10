@@ -93,9 +93,10 @@ type Function struct {
 
 // Resource declares shared ownership, a constructor, destructor, and methods.
 type Resource struct {
-	Name    string     `toml:"name" json:"name"`
-	Copy    string     `toml:"copy" json:"copy"`
-	Methods []Function `toml:"method" json:"methods"`
+	Name           string     `toml:"name" json:"name"`
+	Copy           string     `toml:"copy" json:"copy"`
+	Methods        []Function `toml:"method" json:"methods"`
+	CheckedBatches bool       `toml:"checked_batches" json:"-"`
 }
 
 // Record declares an ordered set of required typed fields.
@@ -311,6 +312,29 @@ func (m *Manifest) Validate() error {
 		}
 		if !methods["New"] || !methods["Close"] {
 			return fmt.Errorf("resource %s requires new and close", resource.Name)
+		}
+	}
+	for _, resource := range m.Resources {
+		if !resource.CheckedBatches {
+			continue
+		}
+		for _, suffix := range []string{"Command", "Result"} {
+			if err := claim(resource.Name + suffix); err != nil {
+				return err
+			}
+		}
+		for _, method := range resource.Methods {
+			if method.Name == "new" || method.Name == "close" {
+				continue
+			}
+			if GoName(method.Name) == "Batch" {
+				return fmt.Errorf("resource %s reserves Batch when checked_batches is enabled", resource.Name)
+			}
+			for _, suffix := range []string{"Command", "Result"} {
+				if err := claim(resource.Name + GoName(method.Name) + suffix); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return m.validateRecordCycles()

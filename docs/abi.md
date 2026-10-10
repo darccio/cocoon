@@ -101,6 +101,17 @@ cannot be preempted; Close has no forced-abort deadline. Pool factory/callback/
 recycler panics cannot lose capacity; callback panics discard the guest and
 are re-raised for the caller.
 
+The manifest's `checked_batches` resource flag is host policy and does not change
+ABI v3 or its schema hash. Opted-in facades execute finite typed command buffers
+on the resource's exact home with one library admission and shared ownership
+and execution locks. Every command resets call state and checks memory, reply
+shape, and typed output; a protocol fault immediately poisons the home and stops
+the buffer. Results expose only the fully checked successful prefix. Library
+Close drains admitted buffers; cancellation is checked between commands and
+cannot interrupt synchronous execution or mutex waits. Explicit resource Close
+releases an abandoned stream without implicitly ending it. The complete host
+contract is in [bounded checked resource commands](checked-sessions.md).
+
 ## Capabilities and future async work
 
 Only declared `cocoon.log(i32,i32,i32)`, `cocoon.random_get(i32,i32)->i32`, and

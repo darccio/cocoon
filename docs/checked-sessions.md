@@ -4,8 +4,9 @@ Status: explicitly approved by the operator, 2026-10-10 ("Approved and
 unlocked"). Phase 0 is complete. Approval covers the public Go and manifest
 contracts and the complete approval boundary below; Phase 2 may proceed after
 the signed review commits. The runtime bridge and lazy homes are implemented
-and reviewed; typed facade commands, streaming proof, and final qualification
-remain pending. Runtime evidence and rejected shapes are recorded in the
+and reviewed, with opt-in typed facade commands and compiled consumer proofs.
+The translated streaming proof and final qualification remain pending.
+Runtime evidence and rejected shapes are recorded in the
 performance notes.
 
 The evidence, raw samples, provenance, and negative results are in
