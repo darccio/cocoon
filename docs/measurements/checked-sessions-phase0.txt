@@ -1,0 +1,1123 @@
+Checked sessions Phase 0, 2026-10-10
+Source baseline: 9623228; rt/session_bench_test.go test-only addition
+Go 1.26.8; CGO_ENABLED=0; GOAMD64=v1; -pgo=off; linux/amd64
+AMD Ryzen 7 5800HS; 16 logical CPUs; no affinity; frequency boost enabled
+Throughput: seven 250ms sets, rotating GOMAXPROCS order 1/4/16, 4/16/1, 16/1/4
+Layers: five 300ms sets, GOMAXPROCS=1
+Datadog: seven 500ms sets, GOMAXPROCS=16; five 300ms layers, GOMAXPROCS=1
+Fixed subbenchmark order within each process; no sample exclusions
+No concurrent compilation, linting, tests, fuzzing, or reviewer work
+Trailing whitespace normalized; all samples and values retained
+These are synthetic runtime ceilings and fresh baseline samples, not a feature acceptance run.
+
+=== dd-1.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  272110	      2186 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6812476	        88.69 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13458	     44612 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     230	   2608015 ns/op	  253089 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6675620	        88.95 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6756334	        88.79 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213361	      2786 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== dd-2.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  274857	      2156 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6807310	        88.14 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13377	     44865 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2597670 ns/op	  253464 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6536100	        90.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6672416	        90.06 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213523	      2770 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== dd-3.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  275931	      2146 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6793098	        88.13 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13455	     44547 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     230	   2571825 ns/op	  253087 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6758881	        88.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6634520	        89.65 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  211774	      2782 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== dd-4.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  275241	      2173 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6805730	        88.12 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13417	     44746 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     230	   2601919 ns/op	  253090 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6777510	        88.37 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6747242	        88.89 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213151	      2771 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== dd-5.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  273214	      2145 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6666933	        89.35 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13477	     44573 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     231	   2564812 ns/op	  252919 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6784957	        88.57 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6718708	        88.96 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213205	      2773 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== dd-6.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  276584	      2152 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6769063	        88.36 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13510	     44343 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2634479 ns/op	  253801 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6780559	        88.46 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6764998	        88.87 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  212726	      2785 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== dd-7.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  275895	      2157 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6757663	        88.47 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13390	     44799 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2598198 ns/op	  253441 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6780188	        88.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6543470	        90.59 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213114	      2779 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== dd-layers-1.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(SketchAddLayers|SketchEmptyLayers)$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSketchAddLayers/Guest         	 6713758	        53.55 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Instance      	 4950433	        72.59 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Resource      	 4340756	        83.34 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Facade        	 4037748	        90.65 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Instance    	22919092	        15.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Resource    	14202307	        24.73 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Lifecycle   	50906899	         7.496 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== dd-layers-2.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(SketchAddLayers|SketchEmptyLayers)$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSketchAddLayers/Guest         	 6676575	        53.74 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Instance      	 4937572	        72.72 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Resource      	 4341525	        82.86 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Facade        	 4031940	        89.31 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Instance    	22463883	        16.16 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Resource    	14302680	        24.63 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Lifecycle   	51050396	         7.057 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== dd-layers-3.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(SketchAddLayers|SketchEmptyLayers)$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSketchAddLayers/Guest         	 6721422	        53.54 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Instance      	 4958313	        72.59 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Resource      	 4344242	        82.79 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Facade        	 4036858	        89.24 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Instance    	22302462	        15.83 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Resource    	14329362	        25.17 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Lifecycle   	51157676	         7.043 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== dd-layers-4.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(SketchAddLayers|SketchEmptyLayers)$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSketchAddLayers/Guest         	 6720691	        53.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Instance      	 4945818	        72.66 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Resource      	 4348476	        82.77 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Facade        	 3907723	        89.94 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Instance    	22760209	        15.76 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Resource    	14215617	        25.10 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Lifecycle   	51024514	         7.040 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== dd-layers-5.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(SketchAddLayers|SketchEmptyLayers)$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSketchAddLayers/Guest         	 6720564	        53.24 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Instance      	 4956981	        72.64 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Resource      	 4343840	        82.79 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddLayers/Facade        	 4035848	        89.18 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Instance    	22753364	        16.04 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Resource    	14440078	        24.84 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchEmptyLayers/Lifecycle   	51325092	         7.054 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== layers-1.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionLayers$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionLayers/Admission         	53809744	         6.708 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Ownership         	31925036	        11.45 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/GuestHandle       	134986004	         2.633 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Mutex             	66440522	         5.398 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/CheckedEmpty      	21831562	        15.93 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/ReplyUnit         	35538934	         9.822 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Guest             	22270326	        16.16 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== layers-2.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionLayers$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionLayers/Admission         	54148219	         6.669 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Ownership         	32223308	        11.23 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/GuestHandle       	142142773	         2.533 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Mutex             	66906439	         5.390 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/CheckedEmpty      	23213764	        15.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/ReplyUnit         	39209352	         9.208 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Guest             	22291243	        16.18 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== layers-3.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionLayers$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionLayers/Admission         	53218704	         6.668 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Ownership         	32012727	        11.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/GuestHandle       	126024895	         2.789 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Mutex             	66455264	         5.391 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/CheckedEmpty      	21868687	        16.46 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/ReplyUnit         	39210078	         9.181 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Guest             	22267164	        16.21 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== layers-4.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionLayers$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionLayers/Admission         	53647460	         6.664 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Ownership         	31360490	        11.39 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/GuestHandle       	142119998	         2.533 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Mutex             	66851659	         5.387 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/CheckedEmpty      	23145891	        15.52 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/ReplyUnit         	39223261	         9.180 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Guest             	22228993	        16.15 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== layers-5.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionLayers$ -test.benchtime=300ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionLayers/Admission         	53158633	         6.664 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Ownership         	32106066	        11.15 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/GuestHandle       	142171620	         2.532 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Mutex             	66703476	         5.391 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/CheckedEmpty      	23200814	        15.51 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/ReplyUnit         	39210889	         9.181 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSessionLayers/Guest             	22296222	        16.16 ns/op	       0 B/op	       0 allocs/op
+PASS
+
+=== throughput-p1-1.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1   	 1740949	       173.2 ns/op	   5773875 calls/s	       173.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP   	 1736779	       172.3 ns/op	   5803931 calls/s	       172.3 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home    	 3925239	        76.46 ns/op	  13078349 calls/s	        76.46 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32 	  177734	      1710 ns/op	  18710973 calls/s	        53.44 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  187575	      1620 ns/op	  19758910 calls/s	        50.61 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3924416	        76.75 ns/op	  13028624 calls/s	        76.75 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  186585	      1601 ns/op	  19988632 calls/s	        50.03 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1           	 1000000	       270.1 ns/op	       226.0 MiB/s	   3702938 calls/s	       270.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP           	 1000000	       281.0 ns/op	       217.2 MiB/s	   3558514 calls/s	       281.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2167904	       135.1 ns/op	       451.7 MiB/s	   7400498 calls/s	       135.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32         	   84463	      3509 ns/op	       556.6 MiB/s	   9119792 calls/s	       109.7 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   83380	      3496 ns/op	       558.7 MiB/s	   9154105 calls/s	       109.2 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2165728	       137.9 ns/op	       442.7 MiB/s	   7253218 calls/s	       137.9 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   84808	      3458 ns/op	       564.8 MiB/s	   9254333 calls/s	       108.1 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4         	  533307	       473.7 ns/op	       515.4 MiB/s	   8444950 calls/s	       118.4 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16        	  153050	      1756 ns/op	       556.1 MiB/s	   9110678 calls/s	       109.8 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64        	   42823	      6889 ns/op	       567.0 MiB/s	   9289550 calls/s	       107.6 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1         	  381567	       786.0 ns/op	      4970 MiB/s	   1272321 calls/s	       786.0 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP         	  369577	       781.2 ns/op	      5000 MiB/s	   1280045 calls/s	       781.2 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  478845	       629.2 ns/op	      6208 MiB/s	   1589220 calls/s	       629.2 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32       	   15813	     19033 ns/op	      6568 MiB/s	   1681286 calls/s	       594.8 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15820	     19008 ns/op	      6576 MiB/s	   1683488 calls/s	       594.0 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  402489	       632.7 ns/op	      6174 MiB/s	   1580545 calls/s	       632.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15783	     19204 ns/op	      6509 MiB/s	   1666283 calls/s	       600.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1        	  117800	      2493 ns/op	      6268 MiB/s	    401124 calls/s	      2493 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP        	  119683	      2479 ns/op	      6302 MiB/s	    403322 calls/s	      2479 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home         	  128571	      2344 ns/op	      6665 MiB/s	    426576 calls/s	      2344 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32      	    3787	     72374 ns/op	      6909 MiB/s	    442150 calls/s	      2262 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32     	    3907	     71981 ns/op	      6946 MiB/s	    444563 calls/s	      2249 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private      	  128616	      2307 ns/op	      6773 MiB/s	    433479 calls/s	      2307 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32    	    3746	     71868 ns/op	      6957 MiB/s	    445263 calls/s	      2246 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p1-2.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1   	 1749588	       173.3 ns/op	   5769719 calls/s	       173.3 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP   	 1730647	       172.8 ns/op	   5785873 calls/s	       172.8 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home    	 3922779	        76.42 ns/op	  13084963 calls/s	        76.42 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32 	  177757	      1691 ns/op	  18922576 calls/s	        52.85 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  187482	      1613 ns/op	  19839088 calls/s	        50.41 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3918151	        76.87 ns/op	  13009586 calls/s	        76.87 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  187639	      1600 ns/op	  20003644 calls/s	        49.99 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1           	 1000000	       265.0 ns/op	       230.3 MiB/s	   3773333 calls/s	       265.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP           	 1000000	       281.1 ns/op	       217.1 MiB/s	   3556885 calls/s	       281.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2171720	       136.0 ns/op	       448.9 MiB/s	   7354607 calls/s	       136.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32         	   84140	      3494 ns/op	       558.9 MiB/s	   9157469 calls/s	       109.2 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   82371	      3465 ns/op	       563.7 MiB/s	   9235616 calls/s	       108.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2154460	       137.8 ns/op	       443.0 MiB/s	   7257648 calls/s	       137.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   81276	      3469 ns/op	       563.1 MiB/s	   9225393 calls/s	       108.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4         	  595234	       473.4 ns/op	       515.7 MiB/s	   8449284 calls/s	       118.4 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16        	  161515	      1760 ns/op	       554.9 MiB/s	   9091759 calls/s	       110.0 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64        	   42624	      6876 ns/op	       568.1 MiB/s	   9307345 calls/s	       107.4 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1         	  379813	       782.0 ns/op	      4995 MiB/s	   1278814 calls/s	       782.0 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP         	  332917	       784.1 ns/op	      4982 MiB/s	   1275393 calls/s	       784.1 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  412273	       621.2 ns/op	      6288 MiB/s	   1609732 calls/s	       621.2 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32       	   15798	     19032 ns/op	      6568 MiB/s	   1681376 calls/s	       594.8 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15806	     19208 ns/op	      6508 MiB/s	   1665951 calls/s	       600.3 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  476006	       630.5 ns/op	      6196 MiB/s	   1586085 calls/s	       630.5 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15732	     19152 ns/op	      6527 MiB/s	   1670862 calls/s	       598.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1        	  114488	      2527 ns/op	      6184 MiB/s	    395803 calls/s	      2527 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP        	  115375	      2506 ns/op	      6235 MiB/s	    399044 calls/s	      2506 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home         	  125246	      2296 ns/op	      6806 MiB/s	    435601 calls/s	      2296 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32      	    3805	     72296 ns/op	      6916 MiB/s	    442622 calls/s	      2259 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32     	    3891	     71595 ns/op	      6984 MiB/s	    446960 calls/s	      2237 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private      	  131086	      2299 ns/op	      6798 MiB/s	    435047 calls/s	      2299 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32    	    3927	     71348 ns/op	      7008 MiB/s	    448507 calls/s	      2230 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p1-3.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1   	 1735994	       171.9 ns/op	   5817868 calls/s	       171.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP   	 1738674	       176.0 ns/op	   5681524 calls/s	       176.0 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home    	 3796759	        76.66 ns/op	  13044828 calls/s	        76.66 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32 	  177543	      1690 ns/op	  18936254 calls/s	        52.81 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  185959	      1600 ns/op	  20000099 calls/s	        50.00 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3929676	        76.41 ns/op	  13087715 calls/s	        76.41 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  187614	      1600 ns/op	  19998599 calls/s	        50.00 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1           	 1000000	       266.4 ns/op	       229.1 MiB/s	   3753914 calls/s	       266.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP           	 1000000	       281.3 ns/op	       217.0 MiB/s	   3555440 calls/s	       281.3 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2202583	       135.8 ns/op	       449.6 MiB/s	   7366078 calls/s	       135.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32         	   82317	      3513 ns/op	       555.9 MiB/s	   9108517 calls/s	       109.8 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   85360	      3391 ns/op	       575.9 MiB/s	   9435622 calls/s	       106.0 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2188488	       135.7 ns/op	       449.9 MiB/s	   7370457 calls/s	       135.7 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   85416	      3442 ns/op	       567.5 MiB/s	   9297560 calls/s	       107.6 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4         	  541670	       477.2 ns/op	       511.6 MiB/s	   8382655 calls/s	       119.3 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16        	  153468	      1748 ns/op	       558.6 MiB/s	   9152035 calls/s	       109.3 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64        	   43000	      6889 ns/op	       567.1 MiB/s	   9290573 calls/s	       107.6 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1         	  328042	       785.5 ns/op	      4973 MiB/s	   1273037 calls/s	       785.5 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP         	  382555	       786.8 ns/op	      4965 MiB/s	   1271007 calls/s	       786.8 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  405831	       623.9 ns/op	      6261 MiB/s	   1602726 calls/s	       623.9 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32       	   15696	     19160 ns/op	      6524 MiB/s	   1670190 calls/s	       598.7 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15729	     19034 ns/op	      6567 MiB/s	   1681222 calls/s	       594.8 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  421747	       625.7 ns/op	      6243 MiB/s	   1598126 calls/s	       625.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15748	     19049 ns/op	      6562 MiB/s	   1679858 calls/s	       595.3 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1        	  117285	      2507 ns/op	      6232 MiB/s	    398876 calls/s	      2507 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP        	  119931	      2498 ns/op	      6256 MiB/s	    400364 calls/s	      2498 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home         	  120963	      2310 ns/op	      6764 MiB/s	    432921 calls/s	      2310 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32      	    3660	     71849 ns/op	      6959 MiB/s	    445380 calls/s	      2245 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32     	    4018	     71716 ns/op	      6972 MiB/s	    446202 calls/s	      2241 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private      	  127935	      2290 ns/op	      6823 MiB/s	    436682 calls/s	      2290 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32    	    3799	     71859 ns/op	      6958 MiB/s	    445315 calls/s	      2246 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p1-4.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1   	 1745078	       171.9 ns/op	   5817012 calls/s	       171.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP   	 1733120	       172.6 ns/op	   5795199 calls/s	       172.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home    	 3924782	        76.51 ns/op	  13070357 calls/s	        76.51 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32 	  177694	      1692 ns/op	  18908883 calls/s	        52.89 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  187605	      1604 ns/op	  19952643 calls/s	        50.12 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3928621	        83.07 ns/op	  12038290 calls/s	        83.07 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  156177	      1798 ns/op	  17800886 calls/s	        56.18 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1           	 1000000	       302.0 ns/op	       202.1 MiB/s	   3310861 calls/s	       302.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP           	 1000000	       278.2 ns/op	       219.4 MiB/s	   3594774 calls/s	       278.2 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2192876	       135.6 ns/op	       450.1 MiB/s	   7374474 calls/s	       135.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32         	   82173	      3470 ns/op	       562.9 MiB/s	   9221849 calls/s	       108.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   85082	      3499 ns/op	       558.2 MiB/s	   9145765 calls/s	       109.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2187454	       136.0 ns/op	       448.8 MiB/s	   7352525 calls/s	       136.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   82150	      3472 ns/op	       562.6 MiB/s	   9217068 calls/s	       108.5 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4         	  683416	       459.4 ns/op	       531.5 MiB/s	   8707762 calls/s	       114.8 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16        	  164191	      1748 ns/op	       558.7 MiB/s	   9154365 calls/s	       109.2 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64        	   43288	      6879 ns/op	       567.8 MiB/s	   9303273 calls/s	       107.5 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1         	  343532	       786.2 ns/op	      4968 MiB/s	   1271930 calls/s	       786.2 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP         	  341161	       784.5 ns/op	      4979 MiB/s	   1274624 calls/s	       784.5 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  410385	       631.6 ns/op	      6184 MiB/s	   1583156 calls/s	       631.6 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32       	   15692	     19013 ns/op	      6575 MiB/s	   1683093 calls/s	       594.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15781	     18997 ns/op	      6580 MiB/s	   1684501 calls/s	       593.6 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  417216	       627.3 ns/op	      6227 MiB/s	   1594051 calls/s	       627.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15927	     18993 ns/op	      6581 MiB/s	   1684810 calls/s	       593.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1        	  111614	      2549 ns/op	      6131 MiB/s	    392378 calls/s	      2549 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP        	  111769	      2519 ns/op	      6202 MiB/s	    396922 calls/s	      2519 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home         	  124545	      2304 ns/op	      6783 MiB/s	    434094 calls/s	      2304 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32      	    4041	     72687 ns/op	      6879 MiB/s	    440245 calls/s	      2271 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32     	    3544	     72347 ns/op	      6911 MiB/s	    442315 calls/s	      2261 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private      	  123667	      2309 ns/op	      6766 MiB/s	    433015 calls/s	      2309 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32    	    4185	     71999 ns/op	      6945 MiB/s	    444448 calls/s	      2250 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p1-5.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1   	 1722622	       173.0 ns/op	   5781186 calls/s	       173.0 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP   	 1715000	       174.2 ns/op	   5740532 calls/s	       174.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home    	 3919071	        76.74 ns/op	  13031508 calls/s	        76.74 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32 	  177064	      1704 ns/op	  18775940 calls/s	        53.26 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  185025	      1847 ns/op	  17320704 calls/s	        57.73 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3431828	        88.10 ns/op	  11350672 calls/s	        88.10 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  179566	      1842 ns/op	  17374263 calls/s	        57.56 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1           	 1000000	       269.4 ns/op	       226.5 MiB/s	   3711739 calls/s	       269.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP           	 1000000	       283.4 ns/op	       215.4 MiB/s	   3528782 calls/s	       283.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2127249	       138.3 ns/op	       441.4 MiB/s	   7231921 calls/s	       138.3 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32         	   81963	      3584 ns/op	       545.0 MiB/s	   8929076 calls/s	       112.0 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   81078	      3471 ns/op	       562.7 MiB/s	   9219565 calls/s	       108.5 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2126961	       138.0 ns/op	       442.3 MiB/s	   7246692 calls/s	       138.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   80382	      3471 ns/op	       562.8 MiB/s	   9220523 calls/s	       108.5 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4         	  543364	       476.5 ns/op	       512.4 MiB/s	   8394660 calls/s	       119.1 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16        	  160894	      1759 ns/op	       555.2 MiB/s	   9097016 calls/s	       109.9 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64        	   42110	      6889 ns/op	       567.0 MiB/s	   9289735 calls/s	       107.6 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1         	  320539	       796.4 ns/op	      4905 MiB/s	   1255603 calls/s	       796.4 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP         	  378393	       784.6 ns/op	      4979 MiB/s	   1274549 calls/s	       784.6 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  405774	       632.6 ns/op	      6175 MiB/s	   1580682 calls/s	       632.6 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32       	   15543	     19275 ns/op	      6485 MiB/s	   1660140 calls/s	       602.4 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15530	     19180 ns/op	      6517 MiB/s	   1668426 calls/s	       599.4 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  406306	       637.7 ns/op	      6125 MiB/s	   1568022 calls/s	       637.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15464	     19154 ns/op	      6526 MiB/s	   1670705 calls/s	       598.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1        	  113224	      2523 ns/op	      6194 MiB/s	    396415 calls/s	      2523 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP        	  115100	      2534 ns/op	      6167 MiB/s	    394673 calls/s	      2534 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home         	  128425	      2303 ns/op	      6786 MiB/s	    434293 calls/s	      2303 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32      	    3978	     72165 ns/op	      6929 MiB/s	    443426 calls/s	      2255 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32     	    3963	     71953 ns/op	      6949 MiB/s	    444733 calls/s	      2249 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private      	  129042	      2299 ns/op	      6796 MiB/s	    434936 calls/s	      2299 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32    	    4003	     71944 ns/op	      6950 MiB/s	    444788 calls/s	      2248 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p1-6.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1   	 1730986	       172.6 ns/op	   5793181 calls/s	       172.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP   	 1734418	       172.6 ns/op	   5792760 calls/s	       172.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home    	 3924375	        76.47 ns/op	  13076625 calls/s	        76.47 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32 	  177369	      1692 ns/op	  18917327 calls/s	        52.86 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  187150	      1603 ns/op	  19964527 calls/s	        50.09 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3927229	        76.36 ns/op	  13095342 calls/s	        76.36 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  183380	      1636 ns/op	  19560779 calls/s	        51.12 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1           	 1000000	       272.0 ns/op	       224.4 MiB/s	   3677089 calls/s	       272.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP           	 1000000	       282.4 ns/op	       216.1 MiB/s	   3540466 calls/s	       282.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2167447	       140.8 ns/op	       433.6 MiB/s	   7103938 calls/s	       140.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32         	   83342	      3517 ns/op	       555.3 MiB/s	   9098346 calls/s	       109.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   85034	      3483 ns/op	       560.8 MiB/s	   9188066 calls/s	       108.8 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2169346	       137.1 ns/op	       445.2 MiB/s	   7293628 calls/s	       137.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   81682	      3469 ns/op	       563.0 MiB/s	   9224455 calls/s	       108.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4         	  565737	       469.4 ns/op	       520.1 MiB/s	   8520917 calls/s	       117.4 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16        	  149311	      1746 ns/op	       559.2 MiB/s	   9162730 calls/s	       109.1 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64        	   42429	      6936 ns/op	       563.2 MiB/s	   9227337 calls/s	       108.4 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1         	  374560	       805.3 ns/op	      4851 MiB/s	   1241850 calls/s	       805.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP         	  328069	       798.1 ns/op	      4895 MiB/s	   1253039 calls/s	       798.1 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  470028	       634.4 ns/op	      6158 MiB/s	   1576341 calls/s	       634.4 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32       	   15534	     19520 ns/op	      6404 MiB/s	   1639346 calls/s	       610.0 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15613	     19694 ns/op	      6347 MiB/s	   1624827 calls/s	       615.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  467030	       641.0 ns/op	      6094 MiB/s	   1560168 calls/s	       641.0 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15622	     19203 ns/op	      6510 MiB/s	   1666443 calls/s	       600.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1        	  109470	      2714 ns/op	      5756 MiB/s	    368412 calls/s	      2714 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP        	  109904	      2572 ns/op	      6074 MiB/s	    388760 calls/s	      2572 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home         	  124318	      2371 ns/op	      6589 MiB/s	    421676 calls/s	      2371 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32      	    4014	     75763 ns/op	      6600 MiB/s	    422370 calls/s	      2368 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32     	    3680	     74678 ns/op	      6695 MiB/s	    428507 calls/s	      2334 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private      	  121440	      2396 ns/op	      6522 MiB/s	    417404 calls/s	      2396 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32    	    3657	     74944 ns/op	      6672 MiB/s	    426986 calls/s	      2342 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p1-7.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=1
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1   	 1727818	       175.1 ns/op	   5710020 calls/s	       175.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP   	 1731594	       172.5 ns/op	   5798004 calls/s	       172.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home    	 3925489	        76.40 ns/op	  13089792 calls/s	        76.40 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32 	  177288	      1692 ns/op	  18912419 calls/s	        52.88 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32         	  187531	      1600 ns/op	  20001501 calls/s	        50.00 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private          	 3927913	        76.37 ns/op	  13094804 calls/s	        76.37 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32        	  187280	      1599 ns/op	  20012583 calls/s	        49.97 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1           	 1000000	       266.3 ns/op	       229.2 MiB/s	   3755349 calls/s	       266.3 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP           	 1000000	       281.7 ns/op	       216.7 MiB/s	   3549875 calls/s	       281.7 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home            	 2063833	       140.1 ns/op	       435.7 MiB/s	   7139063 calls/s	       140.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32         	   82083	      3502 ns/op	       557.7 MiB/s	   9136577 calls/s	       109.5 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32        	   83882	      3425 ns/op	       570.2 MiB/s	   9342632 calls/s	       107.0 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private         	 2171002	       138.2 ns/op	       441.7 MiB/s	   7237481 calls/s	       138.2 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32       	   83542	      3468 ns/op	       563.2 MiB/s	   9228064 calls/s	       108.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4         	  533188	       478.1 ns/op	       510.7 MiB/s	   8366565 calls/s	       119.5 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16        	  161493	      1753 ns/op	       557.0 MiB/s	   9125535 calls/s	       109.6 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64        	   42169	      6913 ns/op	       565.1 MiB/s	   9258062 calls/s	       108.0 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1         	  314718	       822.3 ns/op	      4751 MiB/s	   1216164 calls/s	       822.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP         	  339009	       798.9 ns/op	      4890 MiB/s	   1251796 calls/s	       798.9 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home          	  467754	       635.4 ns/op	      6148 MiB/s	   1573829 calls/s	       635.4 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32       	   15528	     19568 ns/op	      6388 MiB/s	   1635296 calls/s	       611.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32      	   15596	     19598 ns/op	      6378 MiB/s	   1632816 calls/s	       612.4 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private       	  470425	       637.3 ns/op	      6129 MiB/s	   1569066 calls/s	       637.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32     	   15552	     19472 ns/op	      6419 MiB/s	   1643365 calls/s	       608.5 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1        	  115682	      2519 ns/op	      6204 MiB/s	    397027 calls/s	      2519 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP        	  117810	      2517 ns/op	      6209 MiB/s	    397368 calls/s	      2517 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home         	  127963	      2332 ns/op	      6701 MiB/s	    428854 calls/s	      2332 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32      	    3765	     72409 ns/op	      6905 MiB/s	    441931 calls/s	      2263 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32     	    3793	     72934 ns/op	      6856 MiB/s	    438754 calls/s	      2279 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private      	  124384	      2332 ns/op	      6700 MiB/s	    428779 calls/s	      2332 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32    	    3843	     73348 ns/op	      6817 MiB/s	    436277 calls/s	      2292 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p16-1.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-16   	  609439	       492.0 ns/op	   2032726 calls/s	       492.0 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-16   	  935944	       305.0 ns/op	   3278557 calls/s	       305.0 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1601265	       193.5 ns/op	   5167002 calls/s	       193.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-16 	   78564	      3893 ns/op	   8219583 calls/s	       121.7 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  171594	      1685 ns/op	  18991132 calls/s	        52.66 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1420984	       208.2 ns/op	   4804035 calls/s	       208.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1000000	       275.8 ns/op	 116035399 calls/s	         8.618 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-16           	  500379	       580.8 ns/op	       105.1 MiB/s	   1721698 calls/s	       580.8 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-16           	  842696	       367.4 ns/op	       166.1 MiB/s	   2721582 calls/s	       367.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1558006	       194.5 ns/op	       313.7 MiB/s	   5140286 calls/s	       194.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-16         	   65823	      4454 ns/op	       438.6 MiB/s	   7185308 calls/s	       139.2 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   79935	      3564 ns/op	       548.0 MiB/s	   8978846 calls/s	       111.4 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1648101	       180.6 ns/op	       338.0 MiB/s	   5538569 calls/s	       180.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  366861	       817.7 ns/op	      2389 MiB/s	  39133351 calls/s	        25.55 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-16         	  509554	       507.1 ns/op	       481.5 MiB/s	   7888639 calls/s	       126.8 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-16        	  150948	      1802 ns/op	       542.0 MiB/s	   8880340 calls/s	       112.6 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-16        	   41048	      7167 ns/op	       545.1 MiB/s	   8930151 calls/s	       112.0 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-16         	  181387	      1433 ns/op	      2727 MiB/s	    698047 calls/s	      1433 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-16         	  311258	       865.7 ns/op	      4512 MiB/s	   1155189 calls/s	       865.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  230194	      1320 ns/op	      2960 MiB/s	    757704 calls/s	      1320 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-16       	    7629	     41324 ns/op	      3025 MiB/s	    774369 calls/s	      1291 ns/call	  131073 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    8929	     33483 ns/op	      3733 MiB/s	    955706 calls/s	      1046 ns/call	  131078 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  462010	       593.6 ns/op	      6580 MiB/s	   1684602 calls/s	       593.6 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15726	     19108 ns/op	      6542 MiB/s	   1674701 calls/s	       597.1 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-16        	   77635	      3993 ns/op	      3913 MiB/s	    250460 calls/s	      3993 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-16        	  139266	      2097 ns/op	      7451 MiB/s	    476875 calls/s	      2097 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16         	   81289	      3531 ns/op	      4426 MiB/s	    283243 calls/s	      3531 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-16      	    2667	    110535 ns/op	      4523 MiB/s	    289500 calls/s	      3454 ns/call	  524311 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16     	    3064	     93943 ns/op	      5322 MiB/s	    340633 calls/s	      2936 ns/call	  524309 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16      	  139294	      2136 ns/op	      7315 MiB/s	    468142 calls/s	      2136 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16    	    3986	     69562 ns/op	      7188 MiB/s	    460020 calls/s	      2174 ns/call	  524297 B/op	      32 allocs/op
+PASS
+
+=== throughput-p16-2.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-16   	  603660	       503.2 ns/op	   1987132 calls/s	       503.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-16   	  959848	       305.1 ns/op	   3278027 calls/s	       305.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1588365	       195.9 ns/op	   5104241 calls/s	       195.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-16 	   81146	      3835 ns/op	   8345001 calls/s	       119.8 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  180708	      1680 ns/op	  19051597 calls/s	        52.49 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1498486	       209.1 ns/op	   4781563 calls/s	       209.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1202334	       273.3 ns/op	 117093835 calls/s	         8.540 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-16           	  517557	       580.8 ns/op	       105.1 MiB/s	   1721782 calls/s	       580.8 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-16           	  854872	       361.9 ns/op	       168.6 MiB/s	   2763102 calls/s	       361.9 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1545344	       191.7 ns/op	       318.3 MiB/s	   5215490 calls/s	       191.7 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-16         	   67339	      4476 ns/op	       436.4 MiB/s	   7149769 calls/s	       139.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   80725	      3561 ns/op	       548.5 MiB/s	   8986349 calls/s	       111.3 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1666027	       161.4 ns/op	       378.1 MiB/s	   6194504 calls/s	       161.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  353894	       824.1 ns/op	      2370 MiB/s	  38832056 calls/s	        25.75 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-16         	  505353	       503.3 ns/op	       485.0 MiB/s	   7946796 calls/s	       125.8 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-16        	  153057	      1809 ns/op	       539.8 MiB/s	   8843432 calls/s	       113.1 ns/call	    1024 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-16        	   42544	      7146 ns/op	       546.6 MiB/s	   8955545 calls/s	       111.7 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-16         	  174566	      1468 ns/op	      2661 MiB/s	    681295 calls/s	      1468 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-16         	  338653	       870.8 ns/op	      4486 MiB/s	   1148335 calls/s	       870.8 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  222595	      1298 ns/op	      3009 MiB/s	    770374 calls/s	      1298 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-16       	    7467	     38537 ns/op	      3244 MiB/s	    830361 calls/s	      1204 ns/call	  131073 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    9626	     33067 ns/op	      3780 MiB/s	    967724 calls/s	      1033 ns/call	  131079 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  477830	       598.6 ns/op	      6525 MiB/s	   1670521 calls/s	       598.6 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15825	     19198 ns/op	      6511 MiB/s	   1666818 calls/s	       599.9 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-16        	   77439	      3737 ns/op	      4181 MiB/s	    267568 calls/s	      3737 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-16        	  129007	      2048 ns/op	      7629 MiB/s	    488281 calls/s	      2048 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16         	   81421	      3569 ns/op	      4378 MiB/s	    280206 calls/s	      3569 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-16      	    2277	    112039 ns/op	      4463 MiB/s	    285614 calls/s	      3501 ns/call	  524303 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16     	    2962	     92930 ns/op	      5380 MiB/s	    344346 calls/s	      2904 ns/call	  524310 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16      	  143784	      2058 ns/op	      7592 MiB/s	    485868 calls/s	      2058 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16    	    4045	     68546 ns/op	      7294 MiB/s	    466840 calls/s	      2142 ns/call	  524295 B/op	      32 allocs/op
+PASS
+
+=== throughput-p16-3.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-16   	  601428	       508.9 ns/op	   1964899 calls/s	       508.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-16   	  947184	       303.9 ns/op	   3290752 calls/s	       303.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1467855	       202.5 ns/op	   4938165 calls/s	       202.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-16 	   79675	      3729 ns/op	   8581155 calls/s	       116.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  173317	      1689 ns/op	  18949965 calls/s	        52.77 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1442463	       209.9 ns/op	   4763137 calls/s	       209.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	  996962	       264.5 ns/op	 120977473 calls/s	         8.266 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-16           	  516186	       582.4 ns/op	       104.8 MiB/s	   1717074 calls/s	       582.4 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-16           	  801693	       356.1 ns/op	       171.4 MiB/s	   2808401 calls/s	       356.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1561543	       190.7 ns/op	       320.0 MiB/s	   5242766 calls/s	       190.7 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-16         	   66411	      4535 ns/op	       430.7 MiB/s	   7056793 calls/s	       141.7 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   80191	      3587 ns/op	       544.5 MiB/s	   8921061 calls/s	       112.1 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1649780	       183.5 ns/op	       332.6 MiB/s	   5449280 calls/s	       183.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  364126	       813.5 ns/op	      2401 MiB/s	  39334351 calls/s	        25.42 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-16         	  595168	       494.5 ns/op	       493.7 MiB/s	   8088594 calls/s	       123.6 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-16        	  149344	      1823 ns/op	       535.7 MiB/s	   8776108 calls/s	       113.9 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-16        	   40887	      7272 ns/op	       537.2 MiB/s	   8801054 calls/s	       113.6 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-16         	  196066	      1443 ns/op	      2708 MiB/s	    693196 calls/s	      1443 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-16         	  313203	       861.4 ns/op	      4535 MiB/s	   1160891 calls/s	       861.4 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  222063	      1354 ns/op	      2884 MiB/s	    738354 calls/s	      1354 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-16       	    5937	     44319 ns/op	      2820 MiB/s	    722036 calls/s	      1385 ns/call	  131073 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    8810	     35181 ns/op	      3553 MiB/s	    909584 calls/s	      1099 ns/call	  131079 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  498064	       603.4 ns/op	      6474 MiB/s	   1657279 calls/s	       603.4 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15244	     19386 ns/op	      6448 MiB/s	   1650660 calls/s	       605.8 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-16        	   78315	      3894 ns/op	      4012 MiB/s	    256797 calls/s	      3894 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-16        	  138398	      2002 ns/op	      7806 MiB/s	    499571 calls/s	      2002 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16         	   80336	      3600 ns/op	      4340 MiB/s	    277756 calls/s	      3600 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-16      	    2388	    112696 ns/op	      4437 MiB/s	    283950 calls/s	      3522 ns/call	  524305 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16     	    3104	     92140 ns/op	      5427 MiB/s	    347298 calls/s	      2879 ns/call	  524311 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16      	  139040	      2058 ns/op	      7591 MiB/s	    485792 calls/s	      2058 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16    	    4218	     67708 ns/op	      7385 MiB/s	    472615 calls/s	      2116 ns/call	  524299 B/op	      32 allocs/op
+PASS
+
+=== throughput-p16-4.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-16   	  610726	       489.3 ns/op	   2043819 calls/s	       489.3 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-16   	  939962	       304.1 ns/op	   3288877 calls/s	       304.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1474030	       189.0 ns/op	   5292052 calls/s	       189.0 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-16 	   75745	      3774 ns/op	   8479460 calls/s	       117.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  179590	      1676 ns/op	  19098680 calls/s	        52.36 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1500674	       210.6 ns/op	   4747881 calls/s	       210.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	  943308	       280.3 ns/op	 114176121 calls/s	         8.758 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-16           	  491967	       578.6 ns/op	       105.5 MiB/s	   1728250 calls/s	       578.6 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-16           	  819127	       364.5 ns/op	       167.5 MiB/s	   2743603 calls/s	       364.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1549688	       192.2 ns/op	       317.5 MiB/s	   5202357 calls/s	       192.2 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-16         	   67040	      4412 ns/op	       442.7 MiB/s	   7253181 calls/s	       137.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   80196	      3496 ns/op	       558.6 MiB/s	   9152886 calls/s	       109.3 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1613284	       187.1 ns/op	       326.2 MiB/s	   5344444 calls/s	       187.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  363565	       843.2 ns/op	      2316 MiB/s	  37949263 calls/s	        26.35 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-16         	  586545	       489.9 ns/op	       498.4 MiB/s	   8165742 calls/s	       122.5 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-16        	  157366	      1779 ns/op	       549.0 MiB/s	   8994296 calls/s	       111.2 ns/call	    1024 B/op	      16 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-16        	   41191	      7214 ns/op	       541.5 MiB/s	   8871504 calls/s	       112.7 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-16         	  188490	      1387 ns/op	      2817 MiB/s	    721052 calls/s	      1387 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-16         	  325324	       890.8 ns/op	      4385 MiB/s	   1122524 calls/s	       890.8 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  228273	      1237 ns/op	      3157 MiB/s	    808289 calls/s	      1237 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-16       	    7399	     38223 ns/op	      3270 MiB/s	    837192 calls/s	      1194 ns/call	  131073 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    9121	     32217 ns/op	      3880 MiB/s	    993250 calls/s	      1007 ns/call	  131079 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  432482	       614.7 ns/op	      6355 MiB/s	   1626810 calls/s	       614.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15608	     19235 ns/op	      6499 MiB/s	   1663623 calls/s	       601.1 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-16        	   72432	      3911 ns/op	      3995 MiB/s	    255682 calls/s	      3911 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-16        	  125623	      2142 ns/op	      7296 MiB/s	    466920 calls/s	      2142 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16         	   80967	      3614 ns/op	      4323 MiB/s	    276678 calls/s	      3614 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-16      	    2346	    113752 ns/op	      4396 MiB/s	    281314 calls/s	      3555 ns/call	  524309 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16     	    2826	     94190 ns/op	      5308 MiB/s	    339737 calls/s	      2943 ns/call	  524313 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16      	  142935	      2157 ns/op	      7245 MiB/s	    463681 calls/s	      2157 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16    	    4027	     69497 ns/op	      7195 MiB/s	    460451 calls/s	      2172 ns/call	  524294 B/op	      32 allocs/op
+PASS
+
+=== throughput-p16-5.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-16   	  610741	       491.1 ns/op	   2036266 calls/s	       491.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-16   	  963152	       304.5 ns/op	   3284015 calls/s	       304.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1576464	       188.6 ns/op	   5301461 calls/s	       188.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-16 	   78783	      3861 ns/op	   8288463 calls/s	       120.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  176482	      1768 ns/op	  18096630 calls/s	        55.26 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1456593	       208.9 ns/op	   4787902 calls/s	       208.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1000000	       286.5 ns/op	 111697437 calls/s	         8.953 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-16           	  482370	       584.1 ns/op	       104.5 MiB/s	   1712130 calls/s	       584.1 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-16           	  912260	       364.6 ns/op	       167.4 MiB/s	   2742792 calls/s	       364.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1569759	       190.1 ns/op	       321.1 MiB/s	   5260188 calls/s	       190.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-16         	   64921	      4393 ns/op	       444.6 MiB/s	   7285119 calls/s	       137.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   80287	      3688 ns/op	       529.6 MiB/s	   8676809 calls/s	       115.2 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1609446	       181.9 ns/op	       335.5 MiB/s	   5497510 calls/s	       181.9 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  351706	       812.7 ns/op	      2403 MiB/s	  39373004 calls/s	        25.40 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-16         	  604754	       491.0 ns/op	       497.3 MiB/s	   8147116 calls/s	       122.7 ns/call	     256 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-16        	  151953	      1801 ns/op	       542.2 MiB/s	   8884013 calls/s	       112.6 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-16        	   40395	      7085 ns/op	       551.4 MiB/s	   9033483 calls/s	       110.7 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-16         	  190687	      1440 ns/op	      2712 MiB/s	    694291 calls/s	      1440 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-16         	  317863	       863.7 ns/op	      4523 MiB/s	   1157762 calls/s	       863.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  223747	      1311 ns/op	      2980 MiB/s	    762847 calls/s	      1311 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-16       	    7510	     41571 ns/op	      3007 MiB/s	    769770 calls/s	      1299 ns/call	  131076 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    8983	     32447 ns/op	      3852 MiB/s	    986211 calls/s	      1014 ns/call	  131080 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  451748	       601.2 ns/op	      6498 MiB/s	   1663383 calls/s	       601.2 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15792	     19200 ns/op	      6510 MiB/s	   1666668 calls/s	       600.0 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-16        	   78716	      3722 ns/op	      4197 MiB/s	    268639 calls/s	      3722 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-16        	  141673	      2075 ns/op	      7528 MiB/s	    481812 calls/s	      2075 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16         	   80104	      3591 ns/op	      4351 MiB/s	    278478 calls/s	      3591 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-16      	    2311	    113872 ns/op	      4391 MiB/s	    281017 calls/s	      3559 ns/call	  524303 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16     	    3111	     92199 ns/op	      5423 MiB/s	    347077 calls/s	      2881 ns/call	  524309 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16      	  140169	      2160 ns/op	      7233 MiB/s	    462908 calls/s	      2160 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16    	    4070	     68574 ns/op	      7291 MiB/s	    466646 calls/s	      2143 ns/call	  524296 B/op	      32 allocs/op
+PASS
+
+=== throughput-p16-6.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-16   	  609909	       494.5 ns/op	   2022321 calls/s	       494.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-16   	  968790	       302.4 ns/op	   3307191 calls/s	       302.4 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1581541	       204.1 ns/op	   4899050 calls/s	       204.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-16 	   78981	      3750 ns/op	   8533073 calls/s	       117.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  180350	      1681 ns/op	  19037272 calls/s	        52.53 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1413742	       206.9 ns/op	   4834017 calls/s	       206.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1000000	       257.3 ns/op	 124383763 calls/s	         8.040 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-16           	  493633	       575.5 ns/op	       106.1 MiB/s	   1737750 calls/s	       575.5 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-16           	  840416	       365.4 ns/op	       167.0 MiB/s	   2736429 calls/s	       365.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1505107	       191.6 ns/op	       318.6 MiB/s	   5219596 calls/s	       191.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-16         	   69132	      4484 ns/op	       435.6 MiB/s	   7136134 calls/s	       140.1 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   78237	      3524 ns/op	       554.2 MiB/s	   9079499 calls/s	       110.1 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1605338	       186.6 ns/op	       327.1 MiB/s	   5359842 calls/s	       186.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  349662	       839.2 ns/op	      2327 MiB/s	  38131872 calls/s	        26.22 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-16         	  600392	       491.4 ns/op	       496.8 MiB/s	   8139633 calls/s	       122.9 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-16        	  151930	      1780 ns/op	       548.8 MiB/s	   8990831 calls/s	       111.2 ns/call	    1024 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-16        	   39906	      7072 ns/op	       552.4 MiB/s	   9049991 calls/s	       110.5 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-16         	  217908	      1382 ns/op	      2827 MiB/s	    723787 calls/s	      1382 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-16         	  340472	       868.1 ns/op	      4500 MiB/s	   1151960 calls/s	       868.1 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  238548	      1212 ns/op	      3224 MiB/s	    825346 calls/s	      1212 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-16       	    8144	     37131 ns/op	      3367 MiB/s	    861824 calls/s	      1160 ns/call	  131073 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    9418	     31623 ns/op	      3953 MiB/s	   1011908 calls/s	       988.2 ns/call	  131077 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  467402	       585.9 ns/op	      6667 MiB/s	   1706683 calls/s	       585.9 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15453	     18816 ns/op	      6643 MiB/s	   1700648 calls/s	       588.0 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-16        	   72610	      3990 ns/op	      3916 MiB/s	    250650 calls/s	      3990 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-16        	  135424	      2055 ns/op	      7603 MiB/s	    486621 calls/s	      2055 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16         	   84112	      3602 ns/op	      4338 MiB/s	    277605 calls/s	      3602 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-16      	    2442	    111994 ns/op	      4465 MiB/s	    285729 calls/s	      3500 ns/call	  524308 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16     	    2864	     92460 ns/op	      5408 MiB/s	    346097 calls/s	      2889 ns/call	  524314 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16      	  130459	      2121 ns/op	      7368 MiB/s	    471529 calls/s	      2121 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16    	    4520	     69234 ns/op	      7222 MiB/s	    462199 calls/s	      2164 ns/call	  524296 B/op	      32 allocs/op
+PASS
+
+=== throughput-p16-7.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-16   	  609903	       492.7 ns/op	   2029837 calls/s	       492.7 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-16   	  929896	       310.2 ns/op	   3224034 calls/s	       310.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-16    	 1505700	       192.5 ns/op	   5194965 calls/s	       192.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-16 	   82088	      3759 ns/op	   8512177 calls/s	       117.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-16         	  173977	      1700 ns/op	  18825834 calls/s	        53.12 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-16          	 1423790	       207.7 ns/op	   4814130 calls/s	       207.7 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-16        	 1310001	       251.6 ns/op	 127210304 calls/s	         7.861 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-16           	  514644	       595.3 ns/op	       102.5 MiB/s	   1679696 calls/s	       595.3 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-16           	  850268	       356.8 ns/op	       171.1 MiB/s	   2802659 calls/s	       356.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-16            	 1549705	       194.3 ns/op	       314.1 MiB/s	   5146324 calls/s	       194.3 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-16         	   67628	      4456 ns/op	       438.3 MiB/s	   7180644 calls/s	       139.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-16        	   80959	      3489 ns/op	       559.7 MiB/s	   9170816 calls/s	       109.0 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-16         	 1637364	       186.4 ns/op	       327.4 MiB/s	   5364416 calls/s	       186.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-16       	  352650	       829.2 ns/op	      2356 MiB/s	  38593460 calls/s	        25.91 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-16         	  610486	       483.2 ns/op	       505.3 MiB/s	   8278816 calls/s	       120.8 ns/call	     256 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-16        	  149775	      1791 ns/op	       545.3 MiB/s	   8933478 calls/s	       111.9 ns/call	    1024 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-16        	   42228	      7288 ns/op	       536.0 MiB/s	   8782094 calls/s	       113.9 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-16         	  200421	      1427 ns/op	      2737 MiB/s	    700599 calls/s	      1427 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-16         	  317156	       878.2 ns/op	      4448 MiB/s	   1138665 calls/s	       878.2 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-16          	  226806	      1261 ns/op	      3099 MiB/s	    793306 calls/s	      1261 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-16       	    6880	     38780 ns/op	      3223 MiB/s	    825166 calls/s	      1212 ns/call	  131075 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-16      	    9206	     32865 ns/op	      3803 MiB/s	    973683 calls/s	      1027 ns/call	  131079 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-16       	  444801	       613.9 ns/op	      6363 MiB/s	   1628974 calls/s	       613.9 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-16     	   15729	     18964 ns/op	      6591 MiB/s	   1687412 calls/s	       592.6 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-16        	   71148	      3888 ns/op	      4019 MiB/s	    257208 calls/s	      3888 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-16        	  130608	      2074 ns/op	      7533 MiB/s	    482140 calls/s	      2074 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-16         	   81177	      3584 ns/op	      4360 MiB/s	    279055 calls/s	      3584 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-16      	    2277	    110915 ns/op	      4508 MiB/s	    288509 calls/s	      3466 ns/call	  524302 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-16     	    2902	     92834 ns/op	      5386 MiB/s	    344701 calls/s	      2901 ns/call	  524306 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-16      	  146893	      2087 ns/op	      7486 MiB/s	    479117 calls/s	      2087 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-16    	    4117	     67556 ns/op	      7401 MiB/s	    473678 calls/s	      2111 ns/call	  524296 B/op	      32 allocs/op
+PASS
+
+=== throughput-p4-1.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-4   	  620658	       499.1 ns/op	   2003613 calls/s	       499.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-4   	 1000000	       265.2 ns/op	   3770816 calls/s	       265.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2520034	       120.2 ns/op	   8318637 calls/s	       120.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-4 	  126327	      2474 ns/op	  12936628 calls/s	        77.30 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  157506	      1693 ns/op	  18900110 calls/s	        52.91 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 4623625	        63.14 ns/op	  15837555 calls/s	        63.14 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  379765	       740.9 ns/op	  43191969 calls/s	        23.15 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-4           	  497163	       592.8 ns/op	       103.0 MiB/s	   1687025 calls/s	       592.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-4           	  974712	       318.8 ns/op	       191.5 MiB/s	   3137040 calls/s	       318.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1891356	       163.1 ns/op	       374.2 MiB/s	   6130971 calls/s	       163.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-4         	   72589	      4044 ns/op	       483.0 MiB/s	   7913856 calls/s	       126.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   84722	      3464 ns/op	       563.8 MiB/s	   9237316 calls/s	       108.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 3803797	        80.88 ns/op	       754.7 MiB/s	  12364235 calls/s	        80.88 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  259808	      1282 ns/op	      1523 MiB/s	  24958925 calls/s	        40.07 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-4         	  544334	       480.5 ns/op	       508.1 MiB/s	   8325426 calls/s	       120.1 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-4        	  157766	      1763 ns/op	       553.8 MiB/s	   9073607 calls/s	       110.2 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-4        	   42943	      6830 ns/op	       572.0 MiB/s	   9370947 calls/s	       106.7 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-4         	  211802	      1432 ns/op	      2728 MiB/s	    698270 calls/s	      1432 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-4         	  369818	       843.8 ns/op	      4630 MiB/s	   1185153 calls/s	       843.8 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  302740	       985.0 ns/op	      3966 MiB/s	   1015214 calls/s	       985.0 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-4       	    8678	     31286 ns/op	      3995 MiB/s	   1022835 calls/s	       977.7 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	    9247	     28209 ns/op	      4431 MiB/s	   1134403 calls/s	       881.5 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  431488	       706.4 ns/op	      5530 MiB/s	   1415661 calls/s	       706.4 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13346	     22538 ns/op	      5546 MiB/s	   1419820 calls/s	       704.3 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-4        	   82496	      3587 ns/op	      4356 MiB/s	    278772 calls/s	      3587 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-4        	  128889	      2282 ns/op	      6848 MiB/s	    438271 calls/s	      2282 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4         	   95199	      3086 ns/op	      5064 MiB/s	    324070 calls/s	      3086 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-4      	    2691	     96517 ns/op	      5180 MiB/s	    331546 calls/s	      3016 ns/call	  524295 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4     	    3091	     83668 ns/op	      5976 MiB/s	    382466 calls/s	      2615 ns/call	  524289 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4      	  138729	      2250 ns/op	      6944 MiB/s	    444422 calls/s	      2250 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4    	    4144	     70238 ns/op	      7119 MiB/s	    455596 calls/s	      2195 ns/call	  524289 B/op	      32 allocs/op
+PASS
+
+=== throughput-p4-2.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-4   	  606612	       500.8 ns/op	   1996834 calls/s	       500.8 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-4   	 1000000	       269.2 ns/op	   3715265 calls/s	       269.2 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2484291	       116.7 ns/op	   8567770 calls/s	       116.7 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-4 	  125454	      2369 ns/op	  13507848 calls/s	        74.03 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  180524	      1712 ns/op	  18687921 calls/s	        53.51 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 4691235	        64.62 ns/op	  15475207 calls/s	        64.62 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  406551	       637.4 ns/op	  50202801 calls/s	        19.92 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-4           	  494512	       591.8 ns/op	       103.1 MiB/s	   1689897 calls/s	       591.8 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-4           	  953776	       314.4 ns/op	       194.1 MiB/s	   3180258 calls/s	       314.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1854063	       159.7 ns/op	       382.3 MiB/s	   6263590 calls/s	       159.7 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-4         	   75008	      3917 ns/op	       498.6 MiB/s	   8168633 calls/s	       122.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   84679	      3598 ns/op	       542.9 MiB/s	   8894835 calls/s	       112.4 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 3704092	        71.74 ns/op	       850.8 MiB/s	  13939472 calls/s	        71.74 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  249723	      1286 ns/op	      1519 MiB/s	  24890271 calls/s	        40.18 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-4         	  543024	       480.1 ns/op	       508.5 MiB/s	   8331670 calls/s	       120.0 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-4        	  162298	      1739 ns/op	       561.7 MiB/s	   9202558 calls/s	       108.7 ns/call	    1024 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-4        	   43128	      6756 ns/op	       578.2 MiB/s	   9472938 calls/s	       105.6 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-4         	  190173	      1492 ns/op	      2618 MiB/s	    670175 calls/s	      1492 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-4         	  337332	       835.4 ns/op	      4676 MiB/s	   1197082 calls/s	       835.4 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  244284	      1062 ns/op	      3680 MiB/s	    941988 calls/s	      1062 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-4       	    9009	     32455 ns/op	      3851 MiB/s	    985965 calls/s	      1014 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10339	     28393 ns/op	      4402 MiB/s	   1127024 calls/s	       887.3 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  438292	       747.7 ns/op	      5225 MiB/s	   1337488 calls/s	       747.7 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13345	     22508 ns/op	      5554 MiB/s	   1421748 calls/s	       703.4 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-4        	   83290	      3521 ns/op	      4437 MiB/s	    283986 calls/s	      3521 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-4        	  133778	      2308 ns/op	      6769 MiB/s	    433223 calls/s	      2308 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4         	  100179	      3046 ns/op	      5130 MiB/s	    328311 calls/s	      3046 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-4      	    2660	     99583 ns/op	      5021 MiB/s	    321339 calls/s	      3112 ns/call	  524294 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4     	    3154	     84949 ns/op	      5886 MiB/s	    376698 calls/s	      2655 ns/call	  524290 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4      	  128958	      2261 ns/op	      6910 MiB/s	    442257 calls/s	      2261 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4    	    4066	     70447 ns/op	      7098 MiB/s	    454240 calls/s	      2201 ns/call	  524290 B/op	      32 allocs/op
+PASS
+
+=== throughput-p4-3.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-4   	  601706	       497.5 ns/op	   2010039 calls/s	       497.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-4   	 1000000	       265.5 ns/op	   3766155 calls/s	       265.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2448784	       121.5 ns/op	   8227304 calls/s	       121.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-4 	  126235	      2388 ns/op	  13401723 calls/s	        74.62 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  172105	      1719 ns/op	  18619835 calls/s	        53.71 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 4066450	        74.11 ns/op	  13494117 calls/s	        74.11 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  443719	       731.8 ns/op	  43729038 calls/s	        22.87 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-4           	  496636	       589.3 ns/op	       103.6 MiB/s	   1697052 calls/s	       589.3 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-4           	  963152	       304.1 ns/op	       200.7 MiB/s	   3288685 calls/s	       304.1 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1824660	       162.8 ns/op	       374.8 MiB/s	   6141480 calls/s	       162.8 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-4         	   71095	      3932 ns/op	       496.7 MiB/s	   8137984 calls/s	       122.9 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   84106	      3368 ns/op	       579.9 MiB/s	   9501100 calls/s	       105.3 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 4348591	        78.93 ns/op	       773.3 MiB/s	  12669904 calls/s	        78.93 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  247686	      1159 ns/op	      1686 MiB/s	  27617430 calls/s	        36.21 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-4         	  518270	       482.5 ns/op	       506.0 MiB/s	   8290826 calls/s	       120.6 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-4        	  158308	      1769 ns/op	       551.9 MiB/s	   9042584 calls/s	       110.6 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-4        	   41072	      6753 ns/op	       578.5 MiB/s	   9477571 calls/s	       105.5 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-4         	  183087	      1400 ns/op	      2789 MiB/s	    714044 calls/s	      1400 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-4         	  347527	       841.8 ns/op	      4640 MiB/s	   1187895 calls/s	       841.8 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  252303	      1004 ns/op	      3892 MiB/s	    996471 calls/s	      1004 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-4       	    8754	     31878 ns/op	      3921 MiB/s	   1003841 calls/s	       996.2 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10521	     28595 ns/op	      4371 MiB/s	   1119071 calls/s	       893.6 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  423565	       696.3 ns/op	      5610 MiB/s	   1436189 calls/s	       696.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13618	     23264 ns/op	      5373 MiB/s	   1375499 calls/s	       727.0 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-4        	   83270	      3503 ns/op	      4460 MiB/s	    285467 calls/s	      3503 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-4        	  133561	      2251 ns/op	      6941 MiB/s	    444223 calls/s	      2251 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4         	   94038	      3093 ns/op	      5051 MiB/s	    323289 calls/s	      3093 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-4      	    2770	     94082 ns/op	      5314 MiB/s	    340128 calls/s	      2940 ns/call	  524294 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4     	    3440	     80620 ns/op	      6202 MiB/s	    396922 calls/s	      2519 ns/call	  524291 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4      	  135724	      2249 ns/op	      6947 MiB/s	    444586 calls/s	      2249 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4    	    4214	     70871 ns/op	      7055 MiB/s	    451527 calls/s	      2215 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p4-4.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-4   	  605650	       498.9 ns/op	   2004591 calls/s	       498.9 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-4   	 1000000	       261.6 ns/op	   3822980 calls/s	       261.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2530698	       111.3 ns/op	   8988224 calls/s	       111.3 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-4 	  126625	      2397 ns/op	  13350612 calls/s	        74.90 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  182055	      1697 ns/op	  18860676 calls/s	        53.02 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 5588886	        64.41 ns/op	  15525924 calls/s	        64.41 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  408153	       763.6 ns/op	  41908327 calls/s	        23.86 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-4           	  510055	       587.0 ns/op	       104.0 MiB/s	   1703565 calls/s	       587.0 ns/call	      64 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-4           	 1000000	       316.0 ns/op	       193.1 MiB/s	   3164533 calls/s	       316.0 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1900696	       159.5 ns/op	       382.8 MiB/s	   6271138 calls/s	       159.5 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-4         	   72765	      4025 ns/op	       485.2 MiB/s	   7950004 calls/s	       125.8 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   84105	      3536 ns/op	       552.3 MiB/s	   9049154 calls/s	       110.5 ns/call	    2048 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 3782091	        68.64 ns/op	       889.1 MiB/s	  14567812 calls/s	        68.64 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  271764	      1244 ns/op	      1570 MiB/s	  25720897 calls/s	        38.88 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-4         	  534345	       476.1 ns/op	       512.8 MiB/s	   8401436 calls/s	       119.0 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-4        	  160644	      1719 ns/op	       568.2 MiB/s	   9310081 calls/s	       107.4 ns/call	    1024 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-4        	   44160	      6717 ns/op	       581.5 MiB/s	   9527720 calls/s	       105.0 ns/call	    4096 B/op	      64 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-4         	  185323	      1409 ns/op	      2772 MiB/s	    709626 calls/s	      1409 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-4         	  361032	       833.3 ns/op	      4688 MiB/s	   1200110 calls/s	       833.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  261098	      1020 ns/op	      3829 MiB/s	    980115 calls/s	      1020 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-4       	    9548	     31412 ns/op	      3979 MiB/s	   1018731 calls/s	       981.6 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10033	     28590 ns/op	      4372 MiB/s	   1119278 calls/s	       893.4 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  436669	       709.1 ns/op	      5509 MiB/s	   1410311 calls/s	       709.1 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13452	     22654 ns/op	      5518 MiB/s	   1412554 calls/s	       707.9 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-4        	   83730	      3540 ns/op	      4414 MiB/s	    282509 calls/s	      3540 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-4        	  121563	      2356 ns/op	      6631 MiB/s	    424386 calls/s	      2356 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4         	   95928	      3149 ns/op	      4962 MiB/s	    317574 calls/s	      3149 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-4      	    3062	     97692 ns/op	      5118 MiB/s	    327560 calls/s	      3053 ns/call	  524292 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4     	    3398	     85522 ns/op	      5846 MiB/s	    374171 calls/s	      2673 ns/call	  524288 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4      	  138303	      2255 ns/op	      6928 MiB/s	    443397 calls/s	      2255 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4    	    4263	     70976 ns/op	      7045 MiB/s	    450856 calls/s	      2218 ns/call	  524291 B/op	      32 allocs/op
+PASS
+
+=== throughput-p4-5.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-4   	  601286	       508.6 ns/op	   1966071 calls/s	       508.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-4   	 1000000	       265.7 ns/op	   3763921 calls/s	       265.7 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2721499	       121.6 ns/op	   8224001 calls/s	       121.6 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-4 	  126499	      2385 ns/op	  13416993 calls/s	        74.53 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  180172	      1697 ns/op	  18854477 calls/s	        53.04 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 4661077	        54.73 ns/op	  18272203 calls/s	        54.73 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  534356	       728.4 ns/op	  43930349 calls/s	        22.76 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-4           	  495246	       587.7 ns/op	       103.9 MiB/s	   1701636 calls/s	       587.7 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-4           	  945450	       299.6 ns/op	       203.7 MiB/s	   3337532 calls/s	       299.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1851384	       164.4 ns/op	       371.2 MiB/s	   6082268 calls/s	       164.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-4         	   73972	      3962 ns/op	       493.0 MiB/s	   8077052 calls/s	       123.8 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   78794	      3461 ns/op	       564.2 MiB/s	   9244661 calls/s	       108.2 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 4364509	        68.56 ns/op	       890.2 MiB/s	  14585038 calls/s	        68.56 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  270979	      1257 ns/op	      1553 MiB/s	  25448781 calls/s	        39.29 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-4         	  540927	       475.3 ns/op	       513.6 MiB/s	   8415310 calls/s	       118.8 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-4        	  157048	      1714 ns/op	       569.8 MiB/s	   9335904 calls/s	       107.1 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-4        	   43488	      6717 ns/op	       581.5 MiB/s	   9527789 calls/s	       105.0 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-4         	  187192	      1411 ns/op	      2769 MiB/s	    708740 calls/s	      1411 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-4         	  356167	       857.3 ns/op	      4557 MiB/s	   1166501 calls/s	       857.3 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  295132	      1052 ns/op	      3712 MiB/s	    950196 calls/s	      1052 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-4       	    9369	     31886 ns/op	      3920 MiB/s	   1003584 calls/s	       996.4 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	    8787	     28945 ns/op	      4319 MiB/s	   1105555 calls/s	       904.5 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  405252	       708.3 ns/op	      5515 MiB/s	   1411813 calls/s	       708.3 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13006	     22778 ns/op	      5488 MiB/s	   1404844 calls/s	       711.8 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-4        	   84612	      3506 ns/op	      4457 MiB/s	    285229 calls/s	      3506 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-4        	  132384	      2210 ns/op	      7071 MiB/s	    452566 calls/s	      2210 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4         	   94022	      3091 ns/op	      5055 MiB/s	    323549 calls/s	      3091 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-4      	    3000	     95493 ns/op	      5236 MiB/s	    335101 calls/s	      2984 ns/call	  524293 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4     	    3309	     83162 ns/op	      6012 MiB/s	    384789 calls/s	      2599 ns/call	  524291 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4      	  133274	      2137 ns/op	      7311 MiB/s	    467880 calls/s	      2137 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4    	    4164	     68712 ns/op	      7277 MiB/s	    465713 calls/s	      2147 ns/call	  524292 B/op	      32 allocs/op
+PASS
+
+=== throughput-p4-6.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-4   	  591271	       494.4 ns/op	   2022766 calls/s	       494.4 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-4   	 1000000	       264.0 ns/op	   3787366 calls/s	       264.0 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2401659	       110.3 ns/op	   9068644 calls/s	       110.3 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-4 	  128272	      2338 ns/op	  13685218 calls/s	        73.07 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  181144	      1694 ns/op	  18886608 calls/s	        52.95 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 4688967	        65.09 ns/op	  15363984 calls/s	        65.09 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  410576	       742.9 ns/op	  43076547 calls/s	        23.21 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-4           	  504932	       599.6 ns/op	       101.8 MiB/s	   1667770 calls/s	       599.6 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-4           	  981237	       308.3 ns/op	       198.0 MiB/s	   3243681 calls/s	       308.3 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1849578	       161.2 ns/op	       378.5 MiB/s	   6201814 calls/s	       161.2 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-4         	   72840	      4043 ns/op	       483.1 MiB/s	   7914294 calls/s	       126.4 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   74784	      3356 ns/op	       582.0 MiB/s	   9534702 calls/s	       104.9 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 5665048	        67.62 ns/op	       902.6 MiB/s	  14788496 calls/s	        67.62 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  266040	      1159 ns/op	      1686 MiB/s	  27618599 calls/s	        36.21 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-4         	  536307	       467.7 ns/op	       522.0 MiB/s	   8552597 calls/s	       116.9 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-4        	  161702	      1749 ns/op	       558.2 MiB/s	   9145643 calls/s	       109.3 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-4        	   43171	      6740 ns/op	       579.6 MiB/s	   9495628 calls/s	       105.3 ns/call	    4095 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-4         	  180264	      1389 ns/op	      2811 MiB/s	    719725 calls/s	      1389 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-4         	  354600	       831.3 ns/op	      4699 MiB/s	   1203001 calls/s	       831.3 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  263685	      1007 ns/op	      3881 MiB/s	    993425 calls/s	      1007 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-4       	    9542	     30968 ns/op	      4036 MiB/s	   1033321 calls/s	       967.8 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10804	     28092 ns/op	      4450 MiB/s	   1139130 calls/s	       877.9 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  405409	       703.1 ns/op	      5556 MiB/s	   1422233 calls/s	       703.1 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13550	     21828 ns/op	      5727 MiB/s	   1466018 calls/s	       682.1 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-4        	   81013	      3542 ns/op	      4412 MiB/s	    282358 calls/s	      3542 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-4        	  129730	      2222 ns/op	      7033 MiB/s	    450120 calls/s	      2222 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4         	   96310	      3049 ns/op	      5125 MiB/s	    327973 calls/s	      3049 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-4      	    3033	     93470 ns/op	      5349 MiB/s	    342355 calls/s	      2921 ns/call	  524294 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4     	    3592	     81857 ns/op	      6108 MiB/s	    390926 calls/s	      2558 ns/call	  524289 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4      	  131918	      2159 ns/op	      7236 MiB/s	    463086 calls/s	      2159 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4    	    4136	     68168 ns/op	      7335 MiB/s	    469429 calls/s	      2130 ns/call	  524288 B/op	      32 allocs/op
+PASS
+
+=== throughput-p4-7.txt ===
+# /home/dario/Code/cocoon/.cache/sessions-phase0/rt.test -test.run=^$ -test.bench=^BenchmarkSessionThroughput$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# GOMAXPROCS=4
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/rt
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkSessionThroughput/Bytes0/Pool1-4   	  569728	       499.5 ns/op	   2002016 calls/s	       499.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/PoolP-4   	 1000000	       266.5 ns/op	   3752650 calls/s	       266.5 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Home-4    	 2511997	       122.1 ns/op	   8188964 calls/s	       122.1 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Admit32-4 	  127076	      2352 ns/op	  13604377 calls/s	        73.51 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Locked32-4         	  175705	      1711 ns/op	  18705857 calls/s	        53.46 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private-4          	 4460275	        65.23 ns/op	  15330695 calls/s	        65.23 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes0/Private32-4        	  380914	       738.3 ns/op	  43345451 calls/s	        23.07 ns/call	       0 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Pool1-4           	  497194	       591.0 ns/op	       103.3 MiB/s	   1692179 calls/s	       591.0 ns/call	      64 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes64/PoolP-4           	  957892	       313.4 ns/op	       194.7 MiB/s	   3190398 calls/s	       313.4 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Home-4            	 1819377	       163.6 ns/op	       373.2 MiB/s	   6114207 calls/s	       163.6 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Admit32-4         	   72366	      3943 ns/op	       495.4 MiB/s	   8115842 calls/s	       123.2 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked32-4        	   86142	      3405 ns/op	       573.7 MiB/s	   9398886 calls/s	       106.4 ns/call	    2048 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private-4         	 4249869	        77.28 ns/op	       789.8 MiB/s	  12939785 calls/s	        77.28 ns/call	      63 B/op	       0 allocs/op
+BenchmarkSessionThroughput/Bytes64/Private32-4       	  244405	      1286 ns/op	      1519 MiB/s	  24885201 calls/s	        40.18 ns/call	    2047 B/op	      31 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked4-4         	  637867	       476.0 ns/op	       512.9 MiB/s	   8403989 calls/s	       119.0 ns/call	     255 B/op	       3 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked16-4        	  156262	      1721 ns/op	       567.5 MiB/s	   9297950 calls/s	       107.6 ns/call	    1023 B/op	      15 allocs/op
+BenchmarkSessionThroughput/Bytes64/Locked64-4        	   43448	      6808 ns/op	       573.8 MiB/s	   9400930 calls/s	       106.4 ns/call	    4096 B/op	      63 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Pool1-4         	  207928	      1413 ns/op	      2764 MiB/s	    707563 calls/s	      1413 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/PoolP-4         	  367922	       845.8 ns/op	      4618 MiB/s	   1182325 calls/s	       845.8 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Home-4          	  293364	      1010 ns/op	      3869 MiB/s	    990433 calls/s	      1010 ns/call	    4096 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Admit32-4       	    9471	     31691 ns/op	      3944 MiB/s	   1009738 calls/s	       990.4 ns/call	  131073 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Locked32-4      	   10622	     28794 ns/op	      4341 MiB/s	   1111341 calls/s	       899.8 ns/call	  131072 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private-4       	  400198	       708.7 ns/op	      5512 MiB/s	   1410963 calls/s	       708.7 ns/call	    4095 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes4096/Private32-4     	   13519	     22605 ns/op	      5530 MiB/s	   1415633 calls/s	       706.4 ns/call	  131071 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Pool1-4        	   85102	      3486 ns/op	      4482 MiB/s	    286846 calls/s	      3486 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/PoolP-4        	  132216	      2235 ns/op	      6991 MiB/s	    447418 calls/s	      2235 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Home-4         	   95234	      3025 ns/op	      5165 MiB/s	    330552 calls/s	      3025 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Admit32-4      	    2967	     96335 ns/op	      5190 MiB/s	    332175 calls/s	      3010 ns/call	  524299 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Locked32-4     	    3559	     82823 ns/op	      6037 MiB/s	    386366 calls/s	      2588 ns/call	  524289 B/op	      32 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private-4      	  132674	      2223 ns/op	      7028 MiB/s	    449796 calls/s	      2223 ns/call	   16384 B/op	       1 allocs/op
+BenchmarkSessionThroughput/Bytes16384/Private32-4    	    3954	     71107 ns/op	      7032 MiB/s	    450025 calls/s	      2222 ns/call	  524291 B/op	      32 allocs/op
+PASS

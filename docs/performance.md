@@ -4,6 +4,227 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Bounded checked sessions: Phase 0 (2026-10-10)
+
+These measurements precede the track 3 specification and implementation.
+Only test/benchmark code is added; runtime, generators, standalone APIs, Wasm,
+translated modules, and proof locks remain unchanged. No throughput feature is
+implemented or accepted. M1 performance acceptance remains open.
+
+### Conditions and provenance
+
+The clean starting checkout was `main` at `9623228`, equal to the local
+`origin/main` ref. This machine's checkout is `/home/dario/Code/cocoon`, not the
+supplied `/home/bits/cocoon`. Measurements use the already installed
+`/usr/lib64/go/1.26/bin/go` (Go 1.26.8), linux/amd64, `GOAMD64=v1`, CGO disabled,
+and explicit `-pgo=off`. The system Go 1.27.1 is used for quality checks.
+The CPU is an AMD Ryzen 7 5800HS with 8 physical/16 logical cores, frequency
+boost enabled, CPUs 0–15 allowed, and no affinity. The complete measurement
+runner took 288.0 seconds. Compilation, linting, tests, fuzzing, and reviewer
+work had finished before the recorded samples; none ran concurrently.
+
+Each of seven 250 ms throughput sets runs GOMAXPROCS 1, 4, and 16, rotating
+processor-setting order between sets. Subbenchmark order within a process is
+fixed. Primitive layers use five 300 ms samples at GOMAXPROCS 1. The seven
+existing Datadog workloads use seven 500 ms samples at GOMAXPROCS 16, followed
+by five 300 ms real-guest layer samples at GOMAXPROCS 1. No samples are removed.
+These are exploratory medians, without significance or production-speedup
+claims; short windows, fixed within-process ordering, GC, and shared-machine
+frequency effects limit interpretation.
+
+Build the frozen binaries before timing:
+
+```sh
+CGO_ENABLED=0 GOTOOLCHAIN=local GOCACHE=$PWD/.cache/go \
+  /usr/lib64/go/1.26/bin/go test -pgo=off -c \
+  -o .cache/sessions-phase0/rt.test ./rt
+CGO_ENABLED=0 GOTOOLCHAIN=local GOCACHE=$PWD/.cache/go \
+  /usr/lib64/go/1.26/bin/go test -pgo=off -c \
+  -o .cache/sessions-phase0/dd-baseline.test ./examples/datadog/go/dd
+GOMAXPROCS=16 CGO_ENABLED=0 .cache/sessions-phase0/rt.test \
+  -test.run '^$' -test.bench '^BenchmarkSessionThroughput$' \
+  -test.benchtime=250ms -test.count=1 -test.benchmem
+```
+
+With trailing whitespace normalized, full commands, iteration counts, ns/sequence, ns/call, calls/s, input MiB/s,
+bytes/sequence, and allocations/sequence are preserved in the committed
+[complete raw log](measurements/checked-sessions-phase0.txt). Its SHA-256 is
+`517833c82c0cab692a376e6f525aafd04c6dd0693e8ffc4c4dc32d963d32c774`. The ignored individual logs are under `.cache/sessions-phase0`;
+the committed log is the durable copy. Binary SHA-256 hashes are:
+
+- Runtime benchmark: `030f8cef86ad3d88ee1100f02763fe8091bf79ea823856dc58df06c4e80258b7`.
+- Unchanged Datadog baseline: `aec965fbf86f67ceaf5a916a0df83dd306b4d27e580d8dd3d5b484f43bbb1c32`.
+- Authored benchmark source: `9a79138a9e7048299bc223b12f940b0160b24e7df5836b42fd9dd87024e30996`.
+
+The packaged Go toolchain lacks `go tool buildid`; binary hashes provide the
+available provenance. Quality uses the official golangci-lint 2.13.1 binary
+(revision `6d2288e0`, built with Go 1.27.0), verified against its published
+archive checksum. The pre-existing cached linter reports `(devel)` and was
+not used to qualify this addition.
+
+### What is measured
+
+`rt/session_bench_test.go` supplies a native-Go synthetic ABI with a 1 KiB
+hold-back window per stream, fixed generation-one handles, preallocated memory,
+and bounded input/output copying. Empty writes still reserve and encode their
+zero-byte variable input. This is a host-runtime ceiling, not translated-Rust
+or injector throughput. It omits guest input ownership allocations, real Rust
+slab reuse, charset/partial-match parsing, construction, end, and disposal.
+Nonempty replies are copied into owned Go bytes in every checked path.
+
+Each parallel worker has its own resource ownership cell. `Home` is a
+count-one synthetic checked resource path sharing one instance, including
+library admission, ownership, execution lock, reset, host panic metadata,
+input checks, owned reply validation, post-call memory checks, and poisoning.
+`Admit32` shares one admission and ownership lock but uses 32 existing checked
+`Instance.Call`s. `Locked32` also shares the execution lock; its test-only
+checked boundary repeats every current per-operation check and stops on the
+first error. `Locked4/16/64` are sequence-length controls at 64-byte inputs.
+No prototype API is exported.
+
+`Private` and `Private32` give each worker a fixed independent instance while
+retaining shared library admission. They are hypothetical placement controls,
+not implemented resource APIs. They use 64 KiB linear memory plus a 1 KiB
+window per worker, versus one 64 KiB instance and one window per resource in
+`Home`. `Pool1` and `PoolP` warm every lazy slot before timing and include both
+admissions, context checks, a checked call, and a checked recycler. Synthetic
+trim has no guest work. Pool capacity is one or GOMAXPROCS respectively; these
+are stateless-envelope controls and cannot maintain a stream across arbitrary
+pool borrows.
+
+A benchmark operation is a whole sequence. `ns/call` and `calls/s` normalize
+by its command count; parallel ns/op is aggregate throughput, not caller
+latency. MiB/s counts input bytes, not output bytes; the initial 1 KiB holdback
+is not emitted. B/op and allocs/op remain per sequence. Go reports allocs/op
+as a truncated integer: the first holdback writes have no output, so a row
+showing zero can still allocate on almost every steady-state nonempty write.
+No allocation removal is claimed. Tests independently check mixed-size byte
+order, exact/empty window boundaries, tail preservation, owned-output stability,
+call-state reset, and actual sequence termination at command two for traps,
+excess memory, malformed replies, and reserved status.
+
+### Admission and serialization findings
+
+Primitive medians (and all raw ns/op samples) are:
+
+| Mechanism | Median ns | Raw samples in ns |
+| --- | ---: | --- |
+| Admission | 6.668 | 6.708, 6.669, 6.668, 6.664, 6.664 |
+| Ownership | 11.23 | 11.45, 11.23, 11.2, 11.39, 11.15 |
+| GuestHandle | 2.533 | 2.633, 2.533, 2.789, 2.533, 2.532 |
+| Mutex | 5.391 | 5.398, 5.39, 5.391, 5.387, 5.391 |
+| CheckedEmpty | 15.53 | 15.93, 15.53, 16.46, 15.52, 15.51 |
+| ReplyUnit | 9.181 | 9.822, 9.208, 9.181, 9.18, 9.181 |
+| Guest | 16.16 | 16.16, 16.18, 16.21, 16.15, 16.16 |
+
+Admission is 6.668 ns without contention; host ownership is 11.23 ns, the bare
+mutex is 5.391 ns, and canonical unit reply validation is 9.181 ns. Empty
+checked calls include state/reset, host panic metadata, recovery, and memory
+checks as well as locking (15.53 ns). Guest handle resolution and the synthetic
+kernel remain per command. These independently compiled mechanisms are
+not additive cost accounting. They do not justify skipping checks.
+
+Real translated sketch layer medians are 53.54 ns guest, 72.64 ns checked
+instance, 82.79 ns resource, and 89.31 ns facade. Guest work therefore remains
+material even for a scalar sketch. Layer differences provide rough ceilings,
+not exact component shares or a claim about standalone latency improvements.
+
+| Input per write | GOMAXPROCS | Home Mcalls/s | Locked32 Mcalls/s | Private32 Mcalls/s | Home / Locked32 ns per call |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 64 B | 1 | 7.355 | 9.220 | 9.225 | 136 / 108.5 |
+| 64 B | 4 | 6.141 | 9.245 | 25.449 | 162.8 / 108.2 |
+| 64 B | 16 | 5.215 | 8.986 | 38.832 | 191.7 / 111.3 |
+| 4096 B | 1 | 1.583 | 1.668 | 1.671 | 631.6 / 599.4 |
+| 4096 B | 4 | 0.990 | 1.119 | 1.416 | 1010 / 893.4 |
+| 4096 B | 16 | 0.770 | 0.974 | 1.667 | 1298 / 1027 |
+| 16384 B | 1 | 0.433 | 0.445 | 0.445 | 2310 / 2249 |
+| 16384 B | 4 | 0.324 | 0.385 | 0.454 | 3086 / 2599 |
+| 16384 B | 16 | 0.278 | 0.345 | 0.467 | 3591 / 2901 |
+
+At GOMAXPROCS 16, the 64-byte shared-home ceiling is 5.22 Mcalls/s, rising to
+8.99 Mcalls/s with 32 checked calls per sequence; independent worker instances
+with the same sequence reach 38.83 Mcalls/s. Shared-lock sequencing improves
+this synthetic path 1.72×, but leaves the shared-home ceiling intact. The
+independent-instance sequence is 4.32× the shared-home sequence, with more
+instance memory. This supports reviewing both amortization and placement.
+
+For 4 KiB writes at GOMAXPROCS 16, the corresponding ceilings are 0.770,
+0.974, and 1.667 Mcalls/s (about 3009, 3803, and 6511 input MiB/s). For 16 KiB,
+they are 0.278, 0.345, and 0.467 Mcalls/s. Copy/allocation and serialized guest
+work remain, so large-chunk gains are much smaller than the tiny-call ceiling.
+These rates are not expectations for translated streaming payloads.
+
+### Negative results and scope limits
+
+- Independent instances alone do not solve tiny-call contention here:
+  64-byte `Private` reaches only 5.45 Mcalls/s at GOMAXPROCS 16 versus Home's
+  5.22. This is consistent with shared per-call admission contention, but also
+  changes ownership/execution locking and loop overhead; the attribution is
+  not isolated. At GOMAXPROCS 4 it reaches
+  13.94 Mcalls/s. Scaling is not monotonic; more processors are not a guaranteed
+  gain for cheap work.
+- Sharing only admission/ownership is weaker than also sharing the execution
+  lock: 64-byte `Admit32` is 139.3 ns/call at GOMAXPROCS 16 versus Locked32's
+  111.3. For 4 KiB, Admit32 is 1212 versus Home's 1298 and Locked32's 1027.
+- On one processor, extending shared execution from Admit32 to Locked32 adds
+  little for large chunks: 4 KiB is 598.7 versus 599.4 ns/call, and 16 KiB is
+  2262 versus 2249. These medians do not establish an isolated benefit.
+- At GOMAXPROCS 16, 16 KiB Private32 is 2143 ns/call versus Private's 2121;
+  sequencing is slightly slower by the medians. No significance claim is made.
+- Longer sequences are not automatically better. At GOMAXPROCS 16, 64-byte
+  Locked4/16/32/64 medians are 122.9/112.6/111.3/112.0 ns/call; N=64 gives no
+  further measured benefit. Competing-stream tail latency and fairness were
+  not measured and must be qualified after approval.
+- A lock held while waiting for host network data would invalidate this
+  CPU-only ceiling and extend Close indefinitely. Success throughput and the
+  prototype fault checks do not establish a production session lifecycle.
+
+The supplied cross-ecosystem reference `/home/bits/inject-bench` is absent on
+this machine; an equivalent local directory was not found. Its reported
+~1–2 µs/call facade cost and ~11× per-byte translation overhead are operator
+context, not independently reproduced measurements. Uncontended admission
+here is only about 0.3–0.7 percent of that reported fixed cost. Removing tens
+of nanoseconds of host work cannot address an 11× guest translation cost;
+contention amortization and resource placement are the relevant hypotheses.
+The kernels, wrappers, inputs, and machines are not controlled equivalents.
+
+### Fresh real-workload baseline
+
+All seven existing workloads remain unchanged. These are fresh baseline
+samples for a future paired Phase 2 run, not a before/after acceptance result.
+Differences from historical sessions are not source improvements/regressions.
+
+| Workload | Median ns/op | Raw samples in ns/op |
+| --- | ---: | --- |
+| ObfuscateSQL | 2156 | 2186, 2156, 2146, 2173, 2145, 2152, 2157 |
+| SketchAdd | 88.36 | 88.69, 88.14, 88.13, 88.12, 89.35, 88.36, 88.47 |
+| SketchAddMany1k | 44612 | 44612, 44865, 44547, 44746, 44573, 44343, 44799 |
+| ObfuscateTraces1k | 2598198 | 2608015, 2597670, 2571825, 2601919, 2564812, 2634479, 2598198 |
+| SketchAddNegativeBins | 88.91 | 88.95, 90.91, 88.91, 88.37, 88.57, 88.46, 88.91 |
+| SketchAddVaried | 88.96 | 88.79, 90.06, 89.65, 88.89, 88.96, 88.87, 90.59 |
+| ObfuscateSQLVaried | 2779 | 2786, 2770, 2782, 2771, 2773, 2785, 2779 |
+
+SQL remains below its original 2215.4 ns limit in this run; scalar SketchAdd
+at 88.36 ns remains above 55.44 ns. No new same-machine reference is available,
+and M1 performance is not accepted. Phase 2 needs matched before/after scalar,
+SQL, batch, trace, varied, negative-bin, streaming, and independent holdout
+samples, including fairness and live-instance memory under contention.
+
+### Review and qualification status
+
+Guest-side, host-side, and adversarial reviewers inspected the harness before
+measurement and retention. Review fixes add current Host/reset work, empty
+input reservation, outer pool context checks, correct topology setup, byte
+oracles, and middle-of-sequence faults. The single-call-around-a-loop shortcut
+was rejected because it postpones memory checks/reset/poisoning. Synthetic
+ceilings are retained as diagnostics; no production optimization is retained.
+
+The Phase 0 addition passes `make check` with official golangci-lint 2.13.1,
+`make race`, Go 1.26.8 runtime tests, darna, and exact staged-snapshot tests.
+Phase 1 requires a specification and explicit operator approval. Phase 2 and its
+Rust, cross, integration/repeat proofs, smoke, and fuzz qualification remain
+pending; these notes do not claim a finished streaming feature.
+
 ## Current results
 
 The fifth performance pass on 2026-10-06 investigated exact guest math lowering
