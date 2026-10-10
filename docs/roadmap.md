@@ -1,7 +1,7 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-09. The synchronous M1 framework and Datadog proof were released privately
+2026-10-10. The synchronous M1 framework and Datadog proof were released privately
 as v0.1.0. The quality pass and five performance passes are complete, including
 the nine-round multi-agent loop, the PGO/resource-call follow-up, and exact
 numeric-lowering investigation.
@@ -300,6 +300,23 @@ decide whether larger compiler or runtime work is justified.
   collapse tests, with bounded cache memory and acceptable miss-path cost.
 
 #### 3. Bounded checked sessions or command buffers
+
+Phase 0 measurements are complete (2026-10-10), with checked runtime-only
+sequences and GOMAXPROCS contention. At 16 processors, synthetic 64-byte
+shared-home writes reach 5.22 Mcalls/s; 32-command shared-lock sequences reach
+8.99, and independent-instance sequences reach 38.83. At 4 KiB, those ceilings
+are 0.770, 0.974, and 1.667 Mcalls/s. They are runtime ceilings, not translated
+streaming gains. Raw samples, current scalar/SQL/batch/trace baselines, provenance,
+and negative results are in [performance notes](performance.md).
+
+The operator approved the [Phase 1 specification](checked-sessions.md) on
+2026-10-10: typed finite command
+buffers, a bounded runtime adapter bridge, and optional lazy resource homes.
+It preserves per-command checks and exact instance/epoch ownership. It adds
+public Go and manifest contracts, with the explicit approval boundary recorded
+in the spec. No production API, sharding, or streaming fixture is implemented
+yet. M1 performance acceptance remains unmet. Resume with the signed review
+commits, then follow the reviewed implementation/qualification plan.
 
 - First measure the admission/ownership/execution-lock share and a prototype's
   attainable ceiling. A bounded session could admit once and execute several

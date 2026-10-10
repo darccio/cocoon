@@ -6,7 +6,7 @@ Benchmarks are a gate to investigate, not a reason to remove those checks.
 
 ## Bounded checked sessions: Phase 0 (2026-10-10)
 
-These measurements precede the track 3 specification and implementation.
+Measurement precedes the proposed contract in [the review spec](checked-sessions.md).
 Only test/benchmark code is added; runtime, generators, standalone APIs, Wasm,
 translated modules, and proof locks remain unchanged. No throughput feature is
 implemented or accepted. M1 performance acceptance remains open.
@@ -221,7 +221,7 @@ ceilings are retained as diagnostics; no production optimization is retained.
 
 The Phase 0 addition passes `make check` with official golangci-lint 2.13.1,
 `make race`, Go 1.26.8 runtime tests, darna, and exact staged-snapshot tests.
-Phase 1 requires a specification and explicit operator approval. Phase 2 and its
+The operator explicitly approved the specification on 2026-10-10. Phase 2 and its
 Rust, cross, integration/repeat proofs, smoke, and fuzz qualification remain
 pending; these notes do not claim a finished streaming feature.
 
