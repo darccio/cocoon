@@ -157,7 +157,7 @@ func TestGeneratedLibraryCloseDrainsResourceCall(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if module.addCalls != 1 || module.lastAddHandle != handle || guest.instance.Healthy() || guest.module != nil || library.home != nil {
+	if module.addCalls != 1 || module.lastAddHandle != handle || guest.instance.Healthy() || guest.module != nil || library.homes[0].guest != nil {
 		t.Fatal("shutdown did not drain exactly one call and release its home")
 	}
 	epoch := guest.instance.Epoch()

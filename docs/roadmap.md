@@ -319,7 +319,9 @@ executes bounded commands with one admission and shared ownership/execution.
 Its checked 64-byte ceiling at 16 processors is 7.40 Mcalls/s on one home
 versus 4.86 standalone; worker-private diagnostic batches reach 34.81.
 Rejected core shapes and all negative/retained samples are in the performance
-notes. Resume with optional lazy homes, typed facade generation, and the
+notes. Optional lazy homes now preserve independent initialization/replacement
+and exact handle ownership, with compiled concurrency and race proofs. Resume
+with typed facade generation and the
 translated streaming fixture, then complete the independent qualification plan.
 M1 performance acceptance remains unmet.
 

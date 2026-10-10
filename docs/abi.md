@@ -84,9 +84,13 @@ at the last generation retires rather than wrapping. Separate slabs belong to
 each resource type. Host ownership additionally binds the handle to its exact
 instance and epoch, preventing cross-instance use.
 
-Stateless operations use a lazy bounded pool. Resources use one serialized home
-instance. A poisoned home is replaced for new resources; old handles never
-migrate. Wrapper aliases share the ownership cell and destructor token. Cleanup
+Stateless operations use a lazy bounded pool. Resources default to one serialized
+home instance. Generated `Options.ResourceInstances` selects 1–256 lazy homes
+(zero selects one), independently of the stateless pool. Each admitted constructor
+attempt advances round-robin placement, including failed input checks; initialization
+is serialized per slot. Every resource remains bound to its exact home and epoch.
+A poisoned slot is replaced for later constructors; old handles never migrate,
+and sibling homes remain healthy. Wrapper aliases share the ownership cell and destructor token. Cleanup
 is attached to that cell, not a copyable wrapper; explicit Close is preferred.
 Destruction runs once and outside the cell lock.
 

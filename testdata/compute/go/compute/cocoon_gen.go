@@ -16,9 +16,9 @@ const schemaHash uint64 = 4076813288107292652
 const maximumMemory uint64 = 16777216
 
 type Options struct {
-	Logger              *slog.Logger
-	MaxInput, MaxOutput uint64
-	Instances           int
+	Logger                       *slog.Logger
+	MaxInput, MaxOutput          uint64
+	Instances, ResourceInstances int
 }
 type guest struct {
 	module   *module
@@ -27,12 +27,17 @@ type guest struct {
 
 func (g *guest) close() { g.instance.Close(); g.module = nil }
 
+type homeSlot struct {
+	guest *guest
+	mu    sync.Mutex
+}
 type Library struct {
-	pool    *rt.Pool[guest]
-	home    *guest
-	options Options
-	homeMu  sync.Mutex
-	life    rt.Lifecycle
+	pool     *rt.Pool[guest]
+	homes    []homeSlot
+	options  Options
+	homeMu   sync.Mutex
+	nextHome int
+	life     rt.Lifecycle
 }
 
 func Open(options Options) (*Library, error) {
@@ -42,14 +47,17 @@ func Open(options Options) (*Library, error) {
 	if options.MaxOutput == 0 {
 		options.MaxOutput = 65536
 	}
-	if options.MaxInput > 65536 || options.MaxOutput > 65536 || options.Instances < 0 {
+	if options.MaxInput > 65536 || options.MaxOutput > 65536 || options.Instances < 0 || options.ResourceInstances < 0 || options.ResourceInstances > 256 {
 		return nil, rt.ErrTooLarge
+	}
+	if options.ResourceInstances == 0 {
+		options.ResourceInstances = 1
 	}
 	if options.Instances == 0 {
 		options.Instances = runtime.GOMAXPROCS(0)
 		options.Instances = 1
 	}
-	l := &Library{options: options}
+	l := &Library{options: options, homes: make([]homeSlot, options.ResourceInstances)}
 	pool, err := rt.NewPool(options.Instances, l.newGuest, func(g *guest) bool { return g.instance.Recycle(65536, maximumMemory) }, func(g *guest) { g.close() })
 	if err != nil {
 		return nil, err
@@ -79,21 +87,31 @@ func (l *Library) admission(ctx context.Context) error {
 	}
 	return l.life.Enter()
 }
-func (l *Library) getHome() (*guest, error) {
+func (l *Library) selectHome() *homeSlot {
 	l.homeMu.Lock()
 	defer l.homeMu.Unlock()
-	if l.home != nil && !l.home.instance.Healthy() {
-		l.home.close()
-		l.home = nil
+	slot := &l.homes[l.nextHome]
+	l.nextHome++
+	if l.nextHome == len(l.homes) {
+		l.nextHome = 0
 	}
-	if l.home == nil {
+	return slot
+}
+func (l *Library) getHome(slot *homeSlot) (*guest, error) {
+	slot.mu.Lock()
+	defer slot.mu.Unlock()
+	if slot.guest != nil && !slot.guest.instance.Healthy() {
+		slot.guest.close()
+		slot.guest = nil
+	}
+	if slot.guest == nil {
 		home, err := l.newGuest()
 		if err != nil {
 			return nil, err
 		}
-		l.home = home
+		slot.guest = home
 	}
-	return l.home, nil
+	return slot.guest, nil
 }
 func (l *Library) Close() error {
 	if l == nil {
@@ -101,11 +119,14 @@ func (l *Library) Close() error {
 	}
 	return l.life.Close(func() error {
 		err := l.pool.Close()
-		l.homeMu.Lock()
-		defer l.homeMu.Unlock()
-		if l.home != nil {
-			l.home.close()
-			l.home = nil
+		for index := range l.homes {
+			slot := &l.homes[index]
+			slot.mu.Lock()
+			if slot.guest != nil {
+				slot.guest.close()
+				slot.guest = nil
+			}
+			slot.mu.Unlock()
 		}
 		return err
 	})
@@ -939,9 +960,10 @@ func (l *Library) NewCounter(_arg0 uint64) (*Counter, error) {
 		return nil, _err
 	}
 	defer l.life.Leave()
+	_home := l.selectHome()
 	var _err error
 	var _output uint64
-	_guest, _err := l.getHome()
+	_guest, _err := l.getHome(_home)
 	if _err != nil {
 		return nil, _err
 	}
