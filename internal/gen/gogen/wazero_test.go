@@ -31,6 +31,14 @@ func TestDifferentialGeneration(t *testing.T) {
 			t.Fatalf("missing %s", expected)
 		}
 	}
+	// An expected application and argument error can have identical text; status
+	// equality must therefore be checked before converting or returning errors.
+	statusCheck := bytes.Index(first, []byte("if referenceErr == nil && status != referenceStatus"))
+	statusConversion := bytes.Index(first, []byte("referenceErr = rt.FromStatus"))
+	errorComparison := bytes.Index(first, []byte("if err.Error() != referenceErr.Error()"))
+	if statusCheck < 0 || statusConversion <= statusCheck || errorComparison <= statusConversion {
+		t.Fatal("expected-error differential status comparison is missing or too late")
+	}
 	m.Package.Name = "bad/name"
 	if _, err := gogen.WazeroTests(m); err == nil {
 		t.Fatal("invalid manifest accepted")

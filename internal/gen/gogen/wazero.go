@@ -121,10 +121,13 @@ func compareOperation(t testing.TB,g *guest,reference *cocoontest.Guest,name str
  limits:=g.instanceLimits();referenceStatus,referenceOutput,referenceErr:=reference.Operation(t.Context(),name,args,limits.MaxInput,limits.MaxOutput);
  var fault *rt.FaultError;
  if errors.As(err,&fault){if referenceErr==nil{t.Fatalf("translated trap without reference trap: %v",err)};return status,nil}
+ // A valid reference reply exposes its status even when the operation failed.
+ // Compare it before converting errors: equal messages can hide distinct codes.
+ if referenceErr==nil&&status!=referenceStatus{t.Fatalf("%s status mismatch: Go=%d reference=%d",name,status,referenceStatus)}
  if referenceErr==nil{referenceErr=rt.FromStatus(name,referenceStatus,referenceOutput)}
  if (err==nil)!=(referenceErr==nil){t.Fatalf("%s error mismatch: Go=%v reference=%v",name,err,referenceErr)}
  if err!=nil{if err.Error()!=referenceErr.Error(){t.Fatalf("%s errors differ: Go=%v reference=%v",name,err,referenceErr)};return status,nil}
- if status!=referenceStatus||!bytes.Equal(output,referenceOutput){t.Fatalf("%s differs: Go=(%d,%x) reference=(%d,%x)",name,status,output,referenceStatus,referenceOutput)}
+ if !bytes.Equal(output,referenceOutput){t.Fatalf("%s differs: Go=(%d,%x) reference=(%d,%x)",name,status,output,referenceStatus,referenceOutput)}
  return status,output
 }
 func(g *guest)instanceLimits()rt.Limits{return rt.Limits{MaxInput:generatedInputLimit,MaxOutput:generatedOutputLimit,MaxMemory:maximumMemory}}
