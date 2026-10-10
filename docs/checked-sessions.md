@@ -5,7 +5,8 @@ unlocked"). Phase 0 is complete. Approval covers the public Go and manifest
 contracts and the complete approval boundary below; Phase 2 may proceed after
 the signed review commits. The runtime bridge and lazy homes are implemented
 and reviewed, with opt-in typed facade commands and compiled consumer proofs.
-The translated streaming proof and final qualification remain pending.
+The translated streaming proof is implemented with native, contract, wazero,
+bulk-memory, and stateful fuzz coverage. Final performance qualification remains pending.
 Runtime evidence and rejected shapes are recorded in the
 performance notes.
 

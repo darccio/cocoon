@@ -323,8 +323,9 @@ notes. Optional lazy homes now preserve independent initialization/replacement
 and exact handle ownership, with compiled concurrency and race proofs. Opt-in
 typed facade buffers now preserve whole-plan preflight and checked-prefix
 publication, proven through generated consumers and external command-type
-adversaries. Resume with the translated streaming fixture, then complete the
-independent qualification plan.
+adversaries. The owned 1 KiB hold-back streaming fixture now has native,
+translated, contract, bulk-memory, and valid-handle stateful differential proofs.
+Resume with the independent paired throughput qualification plan.
 M1 performance acceptance remains unmet.
 
 - First measure the admission/ownership/execution-lock share and a prototype's

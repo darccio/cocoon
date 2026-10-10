@@ -5,7 +5,7 @@ export GOFLAGS := -buildvcs=false
 BINARYEN_BIN ?= $(CURDIR)/.cache/binaryen/binaryen-version_133/bin
 export PATH := $(BINARYEN_BIN):$(PATH)
 GOLANGCI_LINT ?= $(if $(wildcard $(CURDIR)/.cache/bin/golangci-lint),$(CURDIR)/.cache/bin/golangci-lint,golangci-lint)
-PACKAGES := ./... ./testdata/compute/go/compute/...
+PACKAGES := ./... ./testdata/compute/go/compute/... ./testdata/streaming/go/streaming/...
 
 .PHONY: check test lint fmt race coverage cross rust integration smoke fuzz bench licenses licenses-check
 check: test lint
@@ -43,15 +43,20 @@ integration:
 	go run ./cmd/cocoon doctor
 	go run ./cmd/cocoon build --manifest testdata/compute/cocoon.toml
 	go run ./cmd/cocoon build --manifest examples/datadog/cocoon.toml
+	go run ./cmd/cocoon build --manifest testdata/streaming/cocoon.toml
 	go run ./cmd/cocoon verify --manifest testdata/compute/cocoon.toml testdata/compute/go/compute/testdata/module.wasm
 	go run ./cmd/cocoon verify --manifest examples/datadog/cocoon.toml examples/datadog/go/dd/testdata/module.wasm
+	go run ./cmd/cocoon verify --manifest testdata/streaming/cocoon.toml testdata/streaming/go/streaming/testdata/module.wasm
 	$(MAKE) test rust
 	cargo fmt --manifest-path testdata/compute/shim/Cargo.toml --check
-	cargo clippy --manifest-path testdata/compute/shim/Cargo.toml --all-targets -- -D warnings
-	cargo test --manifest-path testdata/compute/shim/Cargo.toml --locked
+	cargo clippy --manifest-path testdata/compute/shim/Cargo.toml --all-features --all-targets --locked -- -D warnings
+	cargo test --manifest-path testdata/compute/shim/Cargo.toml --all-features --locked
 	cargo fmt --manifest-path examples/datadog/shim/Cargo.toml --check
-	cargo clippy --manifest-path examples/datadog/shim/Cargo.toml --all-targets -- -D warnings
-	cargo test --manifest-path examples/datadog/shim/Cargo.toml --locked
+	cargo clippy --manifest-path examples/datadog/shim/Cargo.toml --all-features --all-targets --locked -- -D warnings
+	cargo test --manifest-path examples/datadog/shim/Cargo.toml --all-features --locked
+	cargo fmt --manifest-path testdata/streaming/shim/Cargo.toml --check
+	cargo clippy --manifest-path testdata/streaming/shim/Cargo.toml --all-features --all-targets --locked -- -D warnings
+	cargo test --manifest-path testdata/streaming/shim/Cargo.toml --all-features --locked
 smoke:
 	COCOON_SMOKE=1 CGO_ENABLED=0 go test ./internal/smoke -run '^Test(ExternalWorkflow|OptimizerSemantics|NumericLoweringSemantics)$$' -count=1 -timeout=10m -v
 fuzz:
@@ -60,5 +65,7 @@ fuzz:
 	go test ./internal/harden -run '^$$' -fuzz FuzzRewrite -fuzztime=15s -parallel=2
 	go test ./testdata/compute/go/compute -run '^$$' -fuzz FuzzGeneratedDifferential -fuzztime=15s -parallel=2
 	go test ./examples/datadog/go/dd -run '^$$' -fuzz FuzzGeneratedDifferential -fuzztime=15s -parallel=2
+	go test ./testdata/streaming/go/streaming -run '^$$' -fuzz FuzzGeneratedDifferential -fuzztime=15s -parallel=2
+	go test ./testdata/streaming/go/streaming -run '^$$' -fuzz FuzzStreamingDifferential -fuzztime=15s -parallel=2
 bench:
 	CGO_ENABLED=0 go test ./examples/datadog/go/dd -run '^$$' -bench . -benchmem -count=5

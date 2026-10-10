@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"dario.cat/cocoon/internal/build"
@@ -13,6 +14,7 @@ import (
 
 	"dario.cat/cocoon/rt"
 	"dario.cat/cocoon/testdata/compute/go/compute"
+	"dario.cat/cocoon/testdata/streaming/go/streaming"
 )
 
 // Importing the checked-in fixture makes ordinary root tests exercise the full
@@ -48,7 +50,21 @@ func TestCheckedInComputeConsumer(t *testing.T) {
 
 func TestCheckedInGeneratorGoldens(t *testing.T) {
 	t.Parallel()
-	data, err := os.ReadFile("testdata/compute/cocoon.toml")
+	for _, proof := range []struct{ project, pkg string }{
+		{"testdata/compute", "compute"},
+		{"examples/datadog", "dd"},
+		{"testdata/streaming", "streaming"},
+	} {
+		t.Run(proof.pkg, func(t *testing.T) {
+			t.Parallel()
+			assertGeneratorGoldens(t, proof.project, proof.pkg)
+		})
+	}
+}
+
+func assertGeneratorGoldens(t *testing.T, project, pkg string) {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(project, "cocoon.toml")) // #nosec G304 -- Callers use only the three fixed checked-in proof paths.
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +72,8 @@ func TestCheckedInGeneratorGoldens(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wasm, err := os.ReadFile("testdata/compute/go/compute/testdata/module.wasm")
+	base := filepath.Join(project, "go", pkg)
+	wasm, err := os.ReadFile(filepath.Join(base, "testdata", "module.wasm")) // #nosec G304 -- Fixed proof paths above.
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +81,7 @@ func TestCheckedInGeneratorGoldens(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	translated, err := os.ReadFile("testdata/compute/go/compute/internal/wasm/module.go")
+	translated, err := os.ReadFile(filepath.Join(base, "internal", "wasm", "module.go")) // #nosec G304 -- Fixed proof paths above.
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,9 +97,41 @@ func TestCheckedInGeneratorGoldens(t *testing.T) {
 		"internal/wasm/zz_bulk_test.go": func() ([]byte, error) { return gogen.BulkTests(helpers) },
 	} {
 		want, generationErr := generate()
-		got, readErr := os.ReadFile("testdata/compute/go/compute/" + path) // #nosec G304 -- The map above contains only fixed golden fixture filenames.
+		got, readErr := os.ReadFile(filepath.Join(base, path)) // #nosec G304 -- The map and callers above contain only fixed proof filenames.
 		if generationErr != nil || readErr != nil || !bytes.Equal(want, got) {
 			t.Fatalf("stale golden %s: %v %v", path, generationErr, readErr)
 		}
+	}
+}
+
+func TestCheckedInStreamingConsumer(t *testing.T) {
+	t.Parallel()
+	library, err := streaming.Open(streaming.Options{ResourceInstances: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if closeErr := library.Close(); closeErr != nil {
+			t.Error(closeErr)
+		}
+	})
+	stream, err := library.NewStream()
+	if err != nil {
+		t.Fatal(err)
+	}
+	results, err := stream.Batch(t.Context(), []streaming.StreamCommand{
+		streaming.StreamWriteCommand([]byte("prefix</hea")),
+		streaming.StreamWriteCommand([]byte("d>suffix")),
+		streaming.StreamEndCommand(),
+	}, rt.BatchLimits{})
+	if err != nil || len(results) != 3 {
+		t.Fatal(results, err)
+	}
+	tail, ok := results[2].(streaming.StreamEndResult)
+	if !ok || !bytes.Equal(tail.Value, []byte("prefix<cocoon></head>suffix")) {
+		t.Fatal(results)
+	}
+	if err := stream.Close(); err != nil {
+		t.Fatal(err)
 	}
 }

@@ -1,0 +1,16 @@
+[package]
+name="cocoon-streaming-shim"
+version="0.1.0"
+edition="2024"
+license="Apache-2.0"
+[workspace]
+[lib]
+crate-type=["cdylib","rlib"]
+[dependencies]
+cocoon-guest={path="../../../rust/cocoon-guest",features=["log"]}
+[profile.release]
+opt-level=3
+lto=true
+codegen-units=1
+panic="abort"
+strip="symbols"
