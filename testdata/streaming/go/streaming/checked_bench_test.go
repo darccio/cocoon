@@ -89,6 +89,8 @@ func streamBenchBatch(ctx context.Context, library *Library, corpus streamBenchC
 
 func streamBenchCheckedCase(b *testing.B, corpora []streamBenchCorpus, procs, count int, path string, mixed bool) {
 	b.Helper()
+	previous := runtime.GOMAXPROCS(procs)
+	defer runtime.GOMAXPROCS(previous)
 	homes := procs
 	if path == "BatchHomes1" {
 		homes = 1
@@ -125,7 +127,7 @@ func streamBenchCheckedCase(b *testing.B, corpora []streamBenchCorpus, procs, co
 			b.Fatal(err)
 		}
 	}
-	totals := streamBenchParallel(b, corpora, func(corpus streamBenchCorpus) (streamBenchTotals, error) {
+	totals := streamBenchParallel(b, corpora, procs, func(corpus streamBenchCorpus) (streamBenchTotals, error) {
 		if standalone {
 			return streamBenchStandalone(library, corpus, count, false, afterGroup)
 		}
@@ -209,8 +211,6 @@ func BenchmarkStreamChecked(b *testing.B) {
 		b.Run(name, func(b *testing.B) {
 			for _, procs := range []int{1, 4, 16} {
 				b.Run(fmt.Sprintf("P%d", procs), func(b *testing.B) {
-					previous := runtime.GOMAXPROCS(procs)
-					defer runtime.GOMAXPROCS(previous)
 					for _, chunk := range []int{64, 4096, 16384} {
 						b.Run(fmt.Sprintf("Chunk%d", chunk), func(b *testing.B) {
 							corpora := streamBenchCorpora(chunk, holdout)
@@ -238,8 +238,6 @@ func BenchmarkStreamChecked(b *testing.B) {
 func BenchmarkStreamMixed(b *testing.B) {
 	for _, procs := range []int{1, 4, 16} {
 		b.Run(fmt.Sprintf("P%d", procs), func(b *testing.B) {
-			previous := runtime.GOMAXPROCS(procs)
-			defer runtime.GOMAXPROCS(previous)
 			for _, count := range []int{16, 32, 64, 256} {
 				b.Run(fmt.Sprintf("N%d", count), func(b *testing.B) {
 					corpora := streamBenchCorpora(4096, true)
@@ -311,8 +309,6 @@ func streamBenchProbe(stream *Stream, stop <-chan struct{}, ready chan<- struct{
 func BenchmarkStreamFairness(b *testing.B) {
 	for _, procs := range []int{1, 4, 16} {
 		b.Run(fmt.Sprintf("P%d", procs), func(b *testing.B) {
-			previous := runtime.GOMAXPROCS(procs)
-			defer runtime.GOMAXPROCS(previous)
 			homeCounts := []int{1}
 			if procs != 1 {
 				homeCounts = append(homeCounts, procs)
@@ -321,6 +317,8 @@ func BenchmarkStreamFairness(b *testing.B) {
 				b.Run(fmt.Sprintf("Homes%d", homes), func(b *testing.B) {
 					for _, count := range []int{16, 32, 64, 256} {
 						b.Run(fmt.Sprintf("N%d", count), func(b *testing.B) {
+							previous := runtime.GOMAXPROCS(procs)
+							defer runtime.GOMAXPROCS(previous)
 							library := streamBenchOpen(b, Options{Instances: 1, ResourceInstances: homes}, homes)
 							corpora := streamBenchCorpora(4096, true)
 							for index := range homes * len(corpora) {
@@ -341,7 +339,7 @@ func BenchmarkStreamFairness(b *testing.B) {
 							case result := <-done:
 								b.Fatal("fairness probe could not start", result.err)
 							}
-							streamBenchParallelWindow(b, corpora, func(corpus streamBenchCorpus) (streamBenchTotals, error) {
+							streamBenchParallelWindow(b, corpora, procs, func(corpus streamBenchCorpus) (streamBenchTotals, error) {
 								return streamBenchBatch(b.Context(), library, corpus, count, false, nil)
 							}, &active)
 							close(stop)
@@ -419,6 +417,7 @@ func BenchmarkStreamInitializedHeap(b *testing.B) {
 				b.ReportMetric(guestBytes/float64(b.N), "logical-guest-B")
 				b.ReportMetric(initialized/float64(b.N), "initialized-homes")
 				b.ReportMetric(float64(live), "live-resources")
+				b.ReportMetric(float64(runtime.GOMAXPROCS(0)), "actual-procs")
 			})
 		}
 	}

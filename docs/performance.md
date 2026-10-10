@@ -4,6 +4,32 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Streaming qualification harness correction (2026-10-11)
+
+The first end-to-end streaming run and the stopped private-layout candidate
+used parent-only GOMAXPROCS setters. Go 1.26's `testing.processBench` resets
+GOMAXPROCS to its CPU-list value before each measured leaf: these binaries
+started with 16 processors, so P1/P4 labels did not describe actual timing.
+All streaming qualification conclusions from these runs are excluded, without
+relabeling lower-P samples. Heap diagnostics have no P-labelled mismatch but
+are superseded too. The corrected harness sets/restores GOMAXPROCS inside each
+measured leaf, checks it before and after RunParallel, and reports actual-procs.
+The measurement runner must reject a missing or mismatched metric. Identical
+corrected standalone source will be used on both sides of the new comparison.
+
+The [historical raw archive](measurements/checked-sessions-streaming-before-layout.txt)
+preserves the original harness, hashes, samples, and stopped candidate (exit
+130). Its independent DD scalar/SQL/batch/trace pairs remain valid: they never
+used parent processor setters. The pre-layout negative-bin slowdown repeated
+at 0.64% (p=0.036) and 0.97% (p=0.017), so that shape failed standalone
+qualification. Phase 0 and R8 runtime measurements remain valid: they set
+GOMAXPROCS externally per process, without P-labelled parent setters.
+
+An earlier attempt also overlapped the final race check. It was stopped after
+about 26 seconds and all its samples were discarded before restarting in
+isolation. The same archive preserves that excluded attempt separately. No
+overlapping sample contributes to an accepted measurement.
+
 ## Checked resource bridge qualification (2026-10-11)
 
 The [approved contract](checked-sessions.md) is being implemented after Phase 0.

@@ -13,6 +13,7 @@ import (
 // 256 nominal chunks, including construction, owned outputs, End, and disposal.
 // Open, lazy-home warmup, immutable input/oracle creation, and one full byte
 // validation are outside timing. No PGO profile is supplied by this harness.
+// Each measured leaf sets GOMAXPROCS; testing resets it before timing leaves.
 // Retained outputs cover one finite group, matching a Batch's result lifetime.
 // Corpus and group retention are fixed independently of b.N: at Chunk16384 the
 // largest input is 4 MiB and a Retain256 group retains at most that plus 8 bytes.
@@ -191,14 +192,17 @@ func streamBenchStandalone(library *Library, corpus streamBenchCorpus, retain in
 
 type streamBenchRun func(streamBenchCorpus) (streamBenchTotals, error)
 
-func streamBenchParallel(b *testing.B, corpora []streamBenchCorpus, run streamBenchRun) streamBenchTotals {
+func streamBenchParallel(b *testing.B, corpora []streamBenchCorpus, procs int, run streamBenchRun) streamBenchTotals {
 	b.Helper()
-	return streamBenchParallelWindow(b, corpora, run, nil)
+	return streamBenchParallelWindow(b, corpora, procs, run, nil)
 }
 
-func streamBenchParallelWindow(b *testing.B, corpora []streamBenchCorpus, run streamBenchRun, active *atomic.Int64) streamBenchTotals {
+func streamBenchParallelWindow(b *testing.B, corpora []streamBenchCorpus, procs int, run streamBenchRun, active *atomic.Int64) streamBenchTotals {
 	b.Helper()
 	workers := runtime.GOMAXPROCS(0)
+	if workers != procs {
+		b.Fatalf("measured leaf has GOMAXPROCS %d, want %d", workers, procs)
+	}
 	problems := make(chan error, workers)
 	var next atomic.Uint64
 	var writes, outputs, outputBytes, groups atomic.Uint64
@@ -230,6 +234,10 @@ func streamBenchParallelWindow(b *testing.B, corpora []streamBenchCorpus, run st
 		groups.Add(workerGroups)
 	})
 	b.StopTimer()
+	if actual := runtime.GOMAXPROCS(0); actual != workers {
+		b.Fatalf("GOMAXPROCS changed during measurement: started %d, ended %d", workers, actual)
+	}
+	b.ReportMetric(float64(workers), "actual-procs")
 	close(problems)
 	for err := range problems {
 		b.Fatal(err)
@@ -251,20 +259,20 @@ func BenchmarkStreamStandalone(b *testing.B) {
 		b.Run(corpusName, func(b *testing.B) {
 			for _, procs := range []int{1, 4, 16} {
 				b.Run(fmt.Sprintf("P%d", procs), func(b *testing.B) {
-					previous := runtime.GOMAXPROCS(procs)
-					defer runtime.GOMAXPROCS(previous)
 					for _, chunk := range []int{64, 4096, 16384} {
 						b.Run(fmt.Sprintf("Chunk%d", chunk), func(b *testing.B) {
 							corpora := streamBenchCorpora(chunk, holdout)
 							for _, retain := range []int{16, 32, 64, 256} {
 								b.Run(fmt.Sprintf("Retain%d", retain), func(b *testing.B) {
+									previous := runtime.GOMAXPROCS(procs)
+									defer runtime.GOMAXPROCS(previous)
 									library := streamBenchOpen(b, Options{Instances: 1}, 1)
 									for _, corpus := range corpora {
 										if _, err := streamBenchStandalone(library, corpus, retain, true, nil); err != nil {
 											b.Fatal(err)
 										}
 									}
-									streamBenchParallel(b, corpora, func(corpus streamBenchCorpus) (streamBenchTotals, error) {
+									streamBenchParallel(b, corpora, procs, func(corpus streamBenchCorpus) (streamBenchTotals, error) {
 										return streamBenchStandalone(library, corpus, retain, false, nil)
 									})
 								})
