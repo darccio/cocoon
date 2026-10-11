@@ -4,6 +4,92 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Low-copy batching: measurements before implementation (2026-10-11)
+
+After all three PRs merged, `main` and `origin/main` matched at `47ae180`.
+Track 1 starts with matched inputs and a private checked prototype, before any
+generator, runtime, or guest change. [Raw samples, driver, provenance, oracle
+checks, and disassembly](measurements/low-copy-phase0.txt) retain every sample.
+
+The serial matrix ingests identical ordered groups through public scalar calls,
+public `AddMany`, and the prototype, at 1, 32, 1,024, and 8,192 points. Corpora
+cover repeated values, nearby distinct values, integers distinct within each
+group, verified nonzero negative bins, and an independent nonmonotonic broad
+exponent/mantissa holdout. All groups repeat after one untimed warmup; this is
+steady ingestion, not an indefinitely unique stream or a finite growth lifetime.
+The Wasm-derived collapse assertion verifies the large holdout crosses the pinned
+2,048-bin capacity. Complete protobuf and Count comparisons against ordered
+original-Wasm scalar calls cover three repetitions and empty inputs. Prototype
+proofs also cover invalid tails, exact errors, healthy recovery, input limits,
+closed resources/libraries, and size-error precedence over a closed handle.
+
+Seven isolated 500 ms samples use Go 1.26.8, CGO disabled, GOAMD64=v1, PGO off,
+default GC/memory, and unpinned AMD Ryzen 7 5800HS CPUs 0–15. Each measured leaf
+sets, asserts, and reports actual GOMAXPROCS, serial P1 or contention P1/P16.
+The printed `-16` suffix reflects the initial setting, not a P1 measurement.
+Scalar/facade/prototype group order reverses on alternating samples. No builds,
+linting, fuzzing, or reviewer tool work overlapped timing. Go 1.26.8 tests and
+one-iteration benchmark oracles passed beforehand, as did strict lint 2.13.1.
+
+Selected medians (microseconds per group; no scalar-latency improvement claim):
+
+| Corpus / points | Ordered scalars | Public AddMany | Checked prototype | Prototype vs AddMany |
+| --- | ---: | ---: | ---: | --- |
+| Repeated / 1 | 0.09297 | 0.2226 | 0.2243 | no detected change, p=0.831 |
+| Repeated / 32 | 2.886 | 1.786 | 1.694 | −5.15%, p=0.001 |
+| Repeated / 1,024 | 92.241 | 47.089 | 44.421 | −5.67%, p=0.001 |
+| Repeated / 8,192 | 737.442 | 372.421 | 353.798 | −5.00%, p=0.001 |
+| Nearby / 1,024 | 92.733 | 46.901 | 44.785 | −4.51%, p=0.026 |
+| Distinct group / 8,192 | 742.070 | 369.963 | 356.068 | no detected change, p=0.073 |
+| Negative bins / 1 | 0.09267 | 0.2251 | 0.2425 | no detected change, p=0.209 |
+| Negative bins / 1,024 | 92.714 | 47.550 | 44.961 | −5.44%, p=0.026 |
+| Holdout / 1,024 | 90.695 | 43.404 | 40.393 | −6.94%, p=0.001 |
+| Holdout / 8,192 | 730.207 | 342.795 | 322.779 | −5.84%, p=0.001 |
+
+Several prototype samples have 20–50% dispersion. Small batches and multiple
+corpus/size cells show no detected gain; raw results include them all. These are
+exploratory, unadjusted comparisons. Removing one temporary Go allocation saves
+8×N B/call in every measured prototype cell; Go allocations become zero. Rust
+still clones/decodes owned vectors, so guest execution remains allocating.
+
+Independently timed controls (N=1/32/1,024/8,192) measure encode-only medians
+20.93 ns / 80.66 ns / 1.796 µs / 11.55 µs; checked reserve/copy of preencoded
+input 37.94 ns / 42.13 ns / 129.0 ns / 1.479 µs; checked direct preparation
+51.83 ns / 76.94 ns / 987.9 ns / 7.304 µs; and raw prepared guest execution
+94.22 ns / 1.510 µs / 43.42 µs / 347.4 µs. Their preparations, checks, locking,
+and state differ: do not add or subtract them into an end-to-end cost model.
+Preparation throughput is not ingestion throughput; raw guest calls bypass
+supported ownership/execution checks.
+
+The prototype preserves admission, owner resolution, execution locking,
+per-operation state/memory checks, canonical reply validation, and poisoning.
+It obtains a checked reservation cursor with `PutBytes(nil)`, borrows its current
+bounded memory using `Range`, writes little-endian floats, and advances actual
+reservation usage with `PutBytes` of that same view. The frozen Go 1.26.8 amd64
+`PutBytes` assembly compares source/destination and skips `runtime.memmove` when
+equal. This verifies the measured copy bypass, not a cross-toolchain performance
+guarantee; the extra range/accounting work remains in the prototype. Inspection
+used Go 1.24.1 objdump because the installed Go 1.26 package lacks that tool.
+
+Contention uses one warmed resource per worker, with encoding outside the
+instance lock in the facade and inside it in the prototype. At P16, one home
+limits N32 to 16.255 vs 17.174 million points/s and N1,024 to 20.868 vs 21.816
+million points/s (−5.38% and −4.34% time/op, p=0.001/0.002). Sixteen homes reach
+139.462 vs 149.061 million points/s at N32 and 166.589 vs 184.086 at N1,024;
+neither sharded timing difference is detected (p=0.073/0.165). Logical guest
+memory is 1,179,648 B for one home and 18,874,368 B for sixteen, with measured
+zero growth after warmup. Serial N8,192 uses 1,441,792 B; smaller groups use
+1,179,648 B, also with zero warmed growth. These are logical lengths, not RSS
+or proofs of zero guest allocation.
+
+The measured ceiling justifies a small host-only generator experiment for all
+six top-level numeric slice types using existing checked reservation APIs.
+Keep Rust owned decoding, record codecs, standalone scalar/SQL bodies, and the
+public contract unchanged. Retention still requires fresh paired full-facade,
+scalar/SQL/trace/streaming holdouts and independent spike comparisons, fault and
+growth proofs, all quality gates, and repeat builds. No production gain or M1
+acceptance is established by this phase.
+
 ## Default streaming cost investigation (2026-10-11)
 
 After PR #1 merged at `0a5969e`, the first follow-up investigates the repeated

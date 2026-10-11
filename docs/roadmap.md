@@ -278,6 +278,16 @@ tracks; use their results to decide whether larger compiler or runtime work is j
 
 #### 1. Low-copy batching
 
+The 2026-10-11 entry measurements are recorded in the performance notes and
+`docs/measurements/low-copy-phase0.txt`. Matched ordered scalar/batch groups and
+an existing-API checked prototype cover all five corpora, four sizes, P1/P16,
+one/sixteen homes, host allocations, and warmed logical guest memory. Several
+large-batch prototype comparisons improve about 4–7%; small/noisy cases show
+no detected gain. This supports the private host-only experiment specified in
+`docs/low-copy-batching.md`; implementation and qualification remain pending.
+The prototype requires no new public contract, and its measured same-address
+copy bypass is verified for Go 1.26.8 amd64. Rust decoding stays owned.
+
 - First generate encoding directly into a checked guest-memory reservation,
   eliminating the intermediate Go byte buffer and copy. Keep reservation and
   memory access inside the execution lock; do not let borrowed views escape or
