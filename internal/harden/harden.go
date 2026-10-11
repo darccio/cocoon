@@ -144,6 +144,7 @@ func Rewrite(source []byte, expected []string) ([]byte, error) {
 		return nil, tableErr
 	}
 	removeDeadReturns(file)
+	reusePublicationMemory(file)
 	var output bytes.Buffer
 	if err := format.Node(&output, fset, file); err != nil {
 		return nil, fmt.Errorf("format hardened Go: %w", err)

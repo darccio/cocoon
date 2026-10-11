@@ -109,6 +109,7 @@ func (m *Module) fn2(v0, v1 int32) {
 	panic("unreachable")
 }
 func (m *Module) fn3(v0, v1, v2, v3, v4 int32) {
+	var cocoonMemoryView1 []byte
 	var v5 int32
 	t0 := m.g0
 	v5 = t0 - i32(16)
@@ -150,10 +151,11 @@ func (m *Module) fn3(v0, v1, v2, v3, v4 int32) {
 		m.fn2(t12, t13)
 		panic("unreachable")
 	}
-	t14 := int32(load32(m.memory, uint64(uint32(v5))+8))
+	cocoonMemoryView1 = m.memory
+	t14 := int32(load32(cocoonMemoryView1, uint64(uint32(v5))+8))
 	v2 = t14
-	store32(m.memory, uint32(v0), uint32(v1))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v2))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v1))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v2))
 	m.g0 = v5 + i32(16)
 }
 func (m *Module) fn4(v0, v1 int32) int32 {
@@ -442,6 +444,7 @@ l0:
 	panic("unreachable")
 }
 func (m *Module) fn7(v0 int32) {
+	var cocoonMemoryView1 []byte
 	var v1, v2, v3 int32
 	t0 := m.g0
 	v1 = t0 - i32(16)
@@ -465,10 +468,11 @@ func (m *Module) fn7(v0 int32) {
 		m.fn2(t7, t8)
 		panic("unreachable")
 	}
-	t9 := int32(load32(m.memory, uint64(uint32(v1))+8))
+	cocoonMemoryView1 = m.memory
+	t9 := int32(load32(cocoonMemoryView1, uint64(uint32(v1))+8))
 	v3 = t9
-	store32(m.memory, uint32(v0), uint32(v2))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v3))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v2))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v3))
 	m.g0 = v1 + i32(16)
 }
 func (m *Module) fn8(v0, v1, v2 int32) {
@@ -2300,6 +2304,7 @@ func (m *Module) fn24(v0 int32) {
 	panic("unreachable")
 }
 func (m *Module) fn25(v0, v1, v2 int32) {
+	var cocoonMemoryView1 []byte
 	var v3 int32
 	t0 := m.g0
 	v3 = t0 - i32(16)
@@ -2335,13 +2340,15 @@ func (m *Module) fn25(v0, v1, v2 int32) {
 		m.fn2(t10, t11)
 		panic("unreachable")
 	}
-	t12 := int32(load32(m.memory, uint64(uint32(v3))+8))
+	cocoonMemoryView1 = m.memory
+	t12 := int32(load32(cocoonMemoryView1, uint64(uint32(v3))+8))
 	v2 = t12
-	store32(m.memory, uint32(v0), uint32(v1))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v2))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v1))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v2))
 	m.g0 = v3 + i32(16)
 }
 func (m *Module) fn26(v0, v1 int32) {
+	var cocoonMemoryView1 []byte
 	var v2 int32
 	t0 := m.g0
 	v2 = t0 - i32(16)
@@ -2352,9 +2359,10 @@ func (m *Module) fn26(v0, v1 int32) {
 	m.fn44(v2+i32(8), t1, t2, t3)
 	t4 := int32(load32(m.memory, uint64(uint32(v2))+12))
 	v1 = t4
-	t5 := int32(load32(m.memory, uint64(uint32(v2))+8))
-	store32(m.memory, uint32(v0), uint32(t5))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v1))
+	cocoonMemoryView1 = m.memory
+	t5 := int32(load32(cocoonMemoryView1, uint64(uint32(v2))+8))
+	store32(cocoonMemoryView1, uint32(v0), uint32(t5))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v1))
 	m.g0 = v2 + i32(16)
 }
 func (m *Module) fn27(v0, v1, v2, v3, v4 int32) {
@@ -5974,6 +5982,7 @@ func (m *Module) fn61() {
 	}
 }
 func (m *Module) fn62(v0, v1 int32) {
+	var cocoonMemoryView1 []byte
 	var v2, v3 int32
 	t0 := m.g0
 	v2 = t0 - i32(16)
@@ -5992,9 +6001,10 @@ func (m *Module) fn62(v0, v1 int32) {
 	m.fn44(t3, t1, t5, p6)
 	t7 := int32(load32(m.memory, uint64(uint32(v2))+12))
 	v1 = t7
-	t8 := int32(load32(m.memory, uint64(uint32(v2))+8))
-	store32(m.memory, uint32(v0), uint32(t8))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v1))
+	cocoonMemoryView1 = m.memory
+	t8 := int32(load32(cocoonMemoryView1, uint64(uint32(v2))+8))
+	store32(cocoonMemoryView1, uint32(v0), uint32(t8))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v1))
 	m.g0 = v2 + i32(16)
 }
 func (m *Module) fn63(v0 int32) {
@@ -10920,6 +10930,7 @@ l0:
 	store32(m.memory, uint32(t1), uint32(p0))
 }
 func (m *Module) fn94(v0 int32) {
+	var cocoonMemoryView1 []byte
 	var v1, v2, v3 int32
 	t0 := m.g0
 	v1 = t0 - i32(16)
@@ -10943,10 +10954,11 @@ func (m *Module) fn94(v0 int32) {
 		m.fn2(t7, t8)
 		panic("unreachable")
 	}
-	t9 := int32(load32(m.memory, uint64(uint32(v1))+8))
+	cocoonMemoryView1 = m.memory
+	t9 := int32(load32(cocoonMemoryView1, uint64(uint32(v1))+8))
 	v3 = t9
-	store32(m.memory, uint32(v0), uint32(v2))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v3))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v2))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v3))
 	m.g0 = v1 + i32(16)
 }
 func (m *Module) fn95(v0, v1, v2 int32) {
@@ -22982,6 +22994,7 @@ l12:
 	m.g0 = v3 + i32(80)
 }
 func (m *Module) fn118(v0, v1, v2 int32) {
+	var cocoonMemoryView1 []byte
 	var v3, v4, v5, v6 int32
 	t0 := m.g0
 	v4 = t0 - i32(16)
@@ -23084,8 +23097,9 @@ func (m *Module) fn118(v0, v1, v2 int32) {
 		l2:
 			store32(m.memory, uint64(uint32(v0))+12, uint32(v2))
 			store32(m.memory, uint64(uint32(v0))+8, uint32(v3))
-			store32(m.memory, uint64(uint32(v0))+4, uint32(v1))
-			store32(m.memory, uint32(v0), uint32(v5))
+			cocoonMemoryView1 = m.memory
+			store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v1))
+			store32(cocoonMemoryView1, uint32(v0), uint32(v5))
 			m.g0 = v4 + i32(16)
 			return
 		}
@@ -27357,6 +27371,7 @@ func (m *Module) fn145(v0, v1, v2 int32) {
 	m.g0 = v3 + i32(32)
 }
 func (m *Module) fn146(v0, v1, v2, v3 int32) {
+	var cocoonMemoryView1 []byte
 	var v4, v5, v6, v7, v8, v9, v10, v11, v12 int32
 	var v13 int64
 	t0 := m.g0
@@ -27647,11 +27662,13 @@ l0:
 	v6 = i32(0)
 l3:
 	store64(m.memory, uint64(uint32(v0))+8, uint64(v13))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v4))
-	store32(m.memory, uint32(v0), uint32(v6))
+	cocoonMemoryView1 = m.memory
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v4))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v6))
 	m.g0 = v5 + i32(48)
 }
 func (m *Module) fn147(v0, v1, v2 int32) {
+	var cocoonMemoryView1 []byte
 	var v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13 int32
 	t0 := m.g0
 	v8 = t0 - i32(16)
@@ -27801,8 +27818,9 @@ func (m *Module) fn147(v0, v1, v2 int32) {
 l0:
 	store32(m.memory, uint64(uint32(v0))+12, uint32(v1))
 	store32(m.memory, uint64(uint32(v0))+8, uint32(v4))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v7))
-	store32(m.memory, uint32(v0), uint32(v6))
+	cocoonMemoryView1 = m.memory
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v7))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v6))
 	m.g0 = v8 + i32(16)
 }
 func (m *Module) fn148(v0, v1, v2, v3 int32) {
@@ -27933,6 +27951,7 @@ func (m *Module) fn149(v0 int32) int32 {
 	return p2
 }
 func (m *Module) fn150(v0, v1 int32) int32 {
+	var cocoonMemoryView1 []byte
 	var v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27, v28, v29, v30, v31, v32, v33, v34, v35, v36, v37, v38, v39, v40 int32
 	var v41, v42, v43, v44, v45, v46, v47, v48, v49, v50, v51, v52, v53, v54, v55, v56, v57, v58, v59, v60 int64
 	var v61 float64
@@ -30070,8 +30089,9 @@ func (m *Module) fn150(v0, v1 int32) int32 {
 								panic("unreachable")
 							}
 							store16(m.memory, uint64(uint32(v19))+8, uint16(v6))
-							store32(m.memory, uint64(uint32(v19))+4, uint32(v13))
-							store32(m.memory, uint32(v19), uint32(v17))
+							cocoonMemoryView1 = m.memory
+							store32(cocoonMemoryView1, uint64(uint32(v19))+4, uint32(v13))
+							store32(cocoonMemoryView1, uint32(v19), uint32(v17))
 							m.g0 = v2 + i32(1312)
 							goto l123
 						}
@@ -35672,6 +35692,7 @@ l2:
 	m.g0 = v4 + i32(16)
 }
 func (m *Module) fn176(v0, v1 int32, v2 float64) {
+	var cocoonMemoryView1, cocoonMemoryView2 []byte
 	var v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15 int32
 	var v16, v17, v18 float64
 	var v19, v20 int64
@@ -36195,17 +36216,19 @@ func (m *Module) fn176(v0, v1 int32, v2 float64) {
 		}
 	l2:
 		v1 = p2
-		store32(m.memory, uint64(uint32(v13))+4, uint32(v3))
-		store32(m.memory, uint32(v13), uint32(v1))
+		cocoonMemoryView2 = m.memory
+		store32(cocoonMemoryView2, uint64(uint32(v13))+4, uint32(v3))
+		store32(cocoonMemoryView2, uint32(v13), uint32(v1))
 		m.g0 = v11 + i32(16)
 		goto l24
 	}
 l24:
 	t117 := int32(load32(m.memory, uint64(uint32(v10))+12))
 	v1 = t117
-	t118 := int32(load32(m.memory, uint64(uint32(v10))+8))
-	store32(m.memory, uint32(v0), uint32(t118))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v1))
+	cocoonMemoryView1 = m.memory
+	t118 := int32(load32(cocoonMemoryView1, uint64(uint32(v10))+8))
+	store32(cocoonMemoryView1, uint32(v0), uint32(t118))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v1))
 	m.g0 = v10 + i32(16)
 }
 func (m *Module) fn177(v0, v1, v2 int32) {
@@ -38531,6 +38554,7 @@ func (m *Module) fn192(v0, v1 int32) int32 {
 	return t9
 }
 func (m *Module) fn193(v0, v1, v2 int32) {
+	var cocoonMemoryView1 []byte
 	var v3 int32
 	t0 := m.g0
 	v3 = t0 - i32(16)
@@ -38543,8 +38567,9 @@ func (m *Module) fn193(v0, v1, v2 int32) {
 	t5 := int32(load32(m.memory, uint64(uint32(v3))+12))
 	t6 := m.fn14(v2, t4, t5)
 	v1 = t6
-	store32(m.memory, uint32(v0), uint32(i32(-1)))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v1))
+	cocoonMemoryView1 = m.memory
+	store32(cocoonMemoryView1, uint32(v0), uint32(i32(-1)))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v1))
 	m.g0 = v3 + i32(16)
 }
 func (m *Module) fn194(v0, v1, v2 int32) int32 {
@@ -39165,6 +39190,7 @@ l3:
 	store64(m.memory, uint64(uint32(v0))+8, math.Float64bits(v2))
 }
 func (m *Module) fn197(v0 int32) {
+	var cocoonMemoryView1 []byte
 	var v1, v2, v3 int32
 	t0 := m.g0
 	v1 = t0 - i32(16)
@@ -39188,10 +39214,11 @@ func (m *Module) fn197(v0 int32) {
 		m.fn2(t7, t8)
 		panic("unreachable")
 	}
-	t9 := int32(load32(m.memory, uint64(uint32(v1))+8))
+	cocoonMemoryView1 = m.memory
+	t9 := int32(load32(cocoonMemoryView1, uint64(uint32(v1))+8))
 	v3 = t9
-	store32(m.memory, uint32(v0), uint32(v2))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v3))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v2))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v3))
 	m.g0 = v1 + i32(16)
 }
 func (m *Module) fn198(v0, v1, v2, v3 int32) {
@@ -39828,6 +39855,7 @@ l18:
 	return i32(0)
 }
 func (m *Module) fn201(v0, v1, v2 int32) {
+	var cocoonMemoryView1 []byte
 	var v3, v4 int32
 	t0 := m.g0
 	v3 = t0 - i32(96)
@@ -39863,8 +39891,9 @@ func (m *Module) fn201(v0, v1, v2 int32) {
 	}
 l0:
 	store32(m.memory, uint64(uint32(v0))+8, uint32(v2))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v1))
-	store32(m.memory, uint32(v0), uint32(v2))
+	cocoonMemoryView1 = m.memory
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v1))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v2))
 	m.g0 = v3 + i32(96)
 }
 func (m *Module) fn202(v0, v1, v2 int32) {
@@ -44570,6 +44599,7 @@ l9:
 	m.g0 = v4 - i32(-64)
 }
 func (m *Module) fn214(v0 int32) {
+	var cocoonMemoryView1 []byte
 	var v1, v2, v3 int32
 	t0 := m.g0
 	v1 = t0 - i32(16)
@@ -44593,10 +44623,11 @@ func (m *Module) fn214(v0 int32) {
 		m.fn2(t7, t8)
 		panic("unreachable")
 	}
-	t9 := int32(load32(m.memory, uint64(uint32(v1))+8))
+	cocoonMemoryView1 = m.memory
+	t9 := int32(load32(cocoonMemoryView1, uint64(uint32(v1))+8))
 	v3 = t9
-	store32(m.memory, uint32(v0), uint32(v2))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v3))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v2))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v3))
 	m.g0 = v1 + i32(16)
 }
 func (m *Module) fn215(v0, v1, v2 int32) {
@@ -60887,6 +60918,7 @@ func (m *Module) fn263(v0, v1 int32) {
 	store32(m.memory, uint32(v0), uint32(i32(1086396)))
 }
 func (m *Module) fn264(v0 int32) {
+	var cocoonMemoryView1 []byte
 	var v1, v2, v3 int32
 	t0 := m.g0
 	v1 = t0 - i32(16)
@@ -60910,10 +60942,11 @@ func (m *Module) fn264(v0 int32) {
 		m.fn2(t7, t8)
 		panic("unreachable")
 	}
-	t9 := int32(load32(m.memory, uint64(uint32(v1))+8))
+	cocoonMemoryView1 = m.memory
+	t9 := int32(load32(cocoonMemoryView1, uint64(uint32(v1))+8))
 	v3 = t9
-	store32(m.memory, uint32(v0), uint32(v2))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v3))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v2))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v3))
 	m.g0 = v1 + i32(16)
 }
 func (m *Module) fn265(v0, v1, v2 int32) int32 {
@@ -61087,6 +61120,7 @@ func (m *Module) fn271(v0, v1, v2 int32) int32 {
 	return t5
 }
 func (m *Module) fn272(v0, v1 int32) {
+	var cocoonMemoryView1 []byte
 	var v2, v3, v4, v5 int32
 	var v6 int64
 	t0 := m.g0
@@ -61148,11 +61182,13 @@ func (m *Module) fn272(v0, v1 int32) {
 	store32(m.memory, uint64(uint32(v1))+8, uint32(t16))
 	t17 := int64(load64(m.memory, uint64(uint32(v2))+16))
 	store64(m.memory, uint32(v1), uint64(t17))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(i32(1085996)))
-	store32(m.memory, uint32(v0), uint32(v1))
+	cocoonMemoryView1 = m.memory
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(i32(1085996)))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v1))
 	m.g0 = v2 + i32(32)
 }
 func (m *Module) fn273(v0, v1 int32) {
+	var cocoonMemoryView1 []byte
 	var v2, v3, v4, v5 int32
 	var v6 int64
 	t0 := m.g0
@@ -61200,8 +61236,9 @@ func (m *Module) fn273(v0, v1 int32) {
 		store32(m.memory, uint64(uint32(v1))+8, uint32(v2))
 		store64(m.memory, uint32(v1), uint64(v6))
 	}
-	store32(m.memory, uint64(uint32(v0))+4, uint32(i32(1085996)))
-	store32(m.memory, uint32(v0), uint32(v1))
+	cocoonMemoryView1 = m.memory
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(i32(1085996)))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v1))
 	m.g0 = v3 + i32(32)
 }
 func (m *Module) fn274(v0, v1 int32) int32 {
@@ -61746,6 +61783,7 @@ func (m *Module) fn292(v0, v1, v2 int32) int64 {
 	return t5
 }
 func (m *Module) fn293(v0 int32) {
+	var cocoonMemoryView1 []byte
 	var v1, v2, v3 int32
 	t0 := m.g0
 	v1 = t0 - i32(16)
@@ -61769,13 +61807,15 @@ func (m *Module) fn293(v0 int32) {
 		m.fn2(t7, t8)
 		panic("unreachable")
 	}
-	t9 := int32(load32(m.memory, uint64(uint32(v1))+8))
+	cocoonMemoryView1 = m.memory
+	t9 := int32(load32(cocoonMemoryView1, uint64(uint32(v1))+8))
 	v3 = t9
-	store32(m.memory, uint32(v0), uint32(v2))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v3))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v2))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v3))
 	m.g0 = v1 + i32(16)
 }
 func (m *Module) fn294(v0 int32) {
+	var cocoonMemoryView1 []byte
 	var v1, v2, v3 int32
 	t0 := m.g0
 	v1 = t0 - i32(16)
@@ -61799,10 +61839,11 @@ func (m *Module) fn294(v0 int32) {
 		m.fn2(t7, t8)
 		panic("unreachable")
 	}
-	t9 := int32(load32(m.memory, uint64(uint32(v1))+8))
+	cocoonMemoryView1 = m.memory
+	t9 := int32(load32(cocoonMemoryView1, uint64(uint32(v1))+8))
 	v3 = t9
-	store32(m.memory, uint32(v0), uint32(v2))
-	store32(m.memory, uint64(uint32(v0))+4, uint32(v3))
+	store32(cocoonMemoryView1, uint32(v0), uint32(v2))
+	store32(cocoonMemoryView1, uint64(uint32(v0))+4, uint32(v3))
 	m.g0 = v1 + i32(16)
 }
 func (m *Module) fn295(v0, v1 int32) int32 {

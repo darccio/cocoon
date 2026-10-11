@@ -1,0 +1,206 @@
+package wasm
+
+import (
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"os"
+	"runtime"
+	"strings"
+	"testing"
+)
+
+type viewEvent struct {
+	Kind   uint32 `json:"kind"`
+	Before uint32 `json:"before"`
+	Pages  uint32 `json:"pages"`
+}
+
+type viewStep struct {
+	Export string      `json:"export"`
+	Trap   string      `json:"trap"`
+	Args   []uint32    `json:"args"`
+	Memory []byte      `json:"memory"`
+	Events []viewEvent `json:"events"`
+	Stack  uint32      `json:"stack"`
+}
+
+type viewHistory struct {
+	Name  string     `json:"name"`
+	Steps []viewStep `json:"steps"`
+}
+
+type viewHost struct {
+	module *Module
+	events []viewEvent
+}
+
+func (host *viewHost) Init(value any) { host.module = value.(*Module) }
+
+func (host *viewHost) Xtouch(kind int32) {
+	memory := *host.module.Xmemory().Slice()
+	host.events = append(host.events, viewEvent{uint32(kind), binary.LittleEndian.Uint32(memory), uint32(len(memory) >> 16)})
+	switch kind {
+	case 0:
+		return
+	case 1:
+	case 2:
+		if host.module.Xmemory().Grow(1, 4) < 0 {
+			panic("fixture import growth failed")
+		}
+	case 3:
+		replacement := bytes.Repeat([]byte{0xde}, len(memory))
+		*host.module.Xmemory().Slice() = replacement
+	default:
+		panic("unsupported fixture import")
+	}
+	memory = *host.module.Xmemory().Slice()
+	binary.LittleEndian.PutUint32(memory[32:], 0x0a0b0c0d+uint32(len(host.events)))
+}
+
+func invokeView(module *Module, step viewStep) (trap string) {
+	defer func() {
+		if value := recover(); value != nil {
+			if fault, ok := value.(runtime.Error); ok && strings.Contains(fault.Error(), "out of range") {
+				trap = "memory"
+			} else {
+				trap = fmt.Sprintf("%T: %v", value, value)
+			}
+		}
+	}()
+	arg := func(index int) int32 { return int32(step.Args[index]) }
+	switch step.Export {
+	case "publish":
+		module.Xpublish(arg(0), arg(1), arg(2))
+	case "reverse":
+		module.Xreverse(arg(0), arg(1), arg(2))
+	case "copy_tuple":
+		module.Xcopy_tuple(arg(0), arg(1), arg(2))
+	case "mixed_tuple":
+		module.Xmixed_tuple(arg(0), arg(1))
+	case "wrapping_tuple":
+		module.Xwrapping_tuple(arg(0))
+	case "after_import":
+		module.Xafter_import(arg(0), arg(1))
+	case "grow_tuple":
+		module.Xgrow_tuple(arg(0), arg(1))
+	case "loop_tuples":
+		module.Xloop_tuples(arg(0), arg(1), arg(2))
+	case "conditional_tuple":
+		module.Xconditional_tuple(arg(0), arg(1))
+	default:
+		panic("unsupported fixture export")
+	}
+	return trap
+}
+
+func TestMemoryViewHistories(t *testing.T) {
+	data, err := os.ReadFile("histories.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var histories []viewHistory
+	if err := json.Unmarshal(data, &histories); err != nil {
+		t.Fatal(err)
+	}
+	if len(histories) == 0 {
+		t.Fatal("missing independent memory histories")
+	}
+	for _, history := range histories {
+		t.Run(history.Name, func(t *testing.T) {
+			host := new(viewHost)
+			module := New(host)
+			for index, step := range history.Steps {
+				trap := invokeView(module, step)
+				memory := *module.Xmemory().Slice()
+				if trap != step.Trap || !bytes.Equal(memory, step.Memory) || uint32(module.Xstack_value()) != step.Stack {
+					t.Fatalf("memory-view history mismatch at step %d (%s): trap=%q want=%q memory-equal=%v len=%d/%d stack=%d/%d", index, step.Export, trap, step.Trap, bytes.Equal(memory, step.Memory), len(memory), len(step.Memory), uint32(module.Xstack_value()), step.Stack)
+				}
+				if len(host.events) != len(step.Events) {
+					t.Fatalf("memory-view import history mismatch at step %d: %v/%v", index, host.events, step.Events)
+				}
+				for event, want := range step.Events {
+					if host.events[event] != want {
+						t.Fatalf("memory-view import order mismatch at step %d: %v/%v", index, host.events, step.Events)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestMemoryViewLogicalLength(t *testing.T) {
+	module := New(new(viewHost))
+	backing := bytes.Repeat([]byte{0xef}, 64)
+	clear(backing[:12])
+	*module.Xmemory().Slice() = backing[:12]
+	step := viewStep{Export: "publish", Args: []uint32{8, 0x11223344, 0x55667788}}
+	if trap := invokeView(module, step); trap != "memory" {
+		t.Fatalf("memory-view logical-length trap mismatch: %q", trap)
+	}
+	if binary.LittleEndian.Uint32(backing[8:]) != 0x11223344 || !bytes.Equal(backing[12:], bytes.Repeat([]byte{0xef}, 52)) || module.Xstack_value() != 49136 {
+		t.Fatal("memory-view logical-length prefix mismatch")
+	}
+}
+
+func TestMemoryViewHeaderReplacement(t *testing.T) {
+	for _, loop := range []bool{false, true} {
+		t.Run(fmt.Sprintf("loop=%v", loop), func(t *testing.T) {
+			host := new(viewHost)
+			module := New(host)
+			old := *module.Xmemory().Slice()
+			if loop {
+				module.Xloop_tuples(3, 0, 3)
+			} else {
+				module.Xafter_import(3, 80)
+			}
+			memory := *module.Xmemory().Slice()
+			if &old[0] == &memory[0] {
+				t.Fatal("fixture did not replace the header")
+			}
+			if loop {
+				if binary.LittleEndian.Uint32(memory) != 0x11223344 || len(host.events) != 3 {
+					t.Fatal("memory-view loop capture mismatch")
+				}
+				for index, event := range host.events {
+					want := uint32(0x11223344)
+					if index == 0 {
+						want = 0
+					}
+					if event.Before != want {
+						t.Fatal("memory-view loop observation mismatch", host.events)
+					}
+				}
+			} else if binary.LittleEndian.Uint32(memory[80:]) != 0x0a0b0c0e || binary.LittleEndian.Uint32(memory[84:]) != 0x55667788 || binary.LittleEndian.Uint64(old[80:]) != 0 {
+				t.Fatal("memory-view replacement capture mismatch")
+			}
+			if module.Xstack_value() != 49152 {
+				t.Fatal("memory-view replacement restoration mismatch")
+			}
+		})
+	}
+}
+
+func TestMemoryViewGrowthStorage(t *testing.T) {
+	for _, spare := range []bool{false, true} {
+		t.Run(fmt.Sprintf("spare=%v", spare), func(t *testing.T) {
+			module := New(new(viewHost))
+			capacity := 65536
+			if spare {
+				capacity *= 3
+			}
+			backing := make([]byte, 65536, capacity)
+			copy(backing, *module.Xmemory().Slice())
+			*module.Xmemory().Slice() = backing
+			module.Xgrow_tuple(65536, 1)
+			memory := *module.Xmemory().Slice()
+			if (&memory[0] == &backing[0]) != spare {
+				t.Fatal("fixture growth did not exercise requested storage path")
+			}
+			if len(memory) != 131072 || binary.LittleEndian.Uint32(memory[65536:]) != 0x11223344 || binary.LittleEndian.Uint32(memory[65540:]) != 0x55667788 || module.Xstack_value() != 49152 {
+				t.Fatal("memory-view growth capture mismatch")
+			}
+		})
+	}
+}
