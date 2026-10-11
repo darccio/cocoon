@@ -467,6 +467,26 @@ The original entry requirements remain guardrails for future extensions:
 
 #### 5. Translation optimizations
 
+The 2026-10-11 phase 0 is positive for a narrow result-publication pattern.
+Matching Go 1.26.8 profiles/SSA/assembly show repeated memory-header reloads
+after checked scalar stores. A broad hash-pinned view diagnostic improves the
+original and repeated-value batches by roughly 10%; two sketch publication
+regions reproduce the gain at 11–13% lower time (about 13–15% more points/s).
+The broad batch holdout has no detected gain. The broad screen establishes no
+scalar or SQL speedup, and the first SQL holdout slowdown does not repeat.
+Code placement/frame effects remain relevant; the reload and batch-export-only
+controls have measured negatives. No production pass or generated edit is
+retained, and M1 performance remains unaccepted.
+
+The retained SQL holdout has complete original-Wasm output oracles. See
+[conditions, all outcomes, and raw evidence](performance.md#translation-analysis-positive-phase-0-2026-10-11)
+and [the private production experiment requirements](translation-memory-views.md).
+Next: derive a conservative publication-region predicate, add bound helper/
+effect/ownership checks and executable WAT alias/growth/trap proofs, then
+implement it in the hardener and qualify freshly regenerated output. Diagnostic
+function-number/line selection must not become production policy. This proposes
+no new public contract; production correctness/performance remain pending.
+
 - Inspect matching Go compiler SSA/assembly and guest profiles for repeated
   memory accesses or Wasm stack temporaries that provably do not escape. Scope
   the first experiment to one demonstrated pattern; cleaner generated Go alone
