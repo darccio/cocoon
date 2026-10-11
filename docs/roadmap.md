@@ -467,25 +467,31 @@ The original entry requirements remain guardrails for future extensions:
 
 #### 5. Translation optimizations
 
-The 2026-10-11 phase 0 is positive for a narrow result-publication pattern.
-Matching Go 1.26.8 profiles/SSA/assembly show repeated memory-header reloads
-after checked scalar stores. A broad hash-pinned view diagnostic improves the
-original and repeated-value batches by roughly 10%; two sketch publication
-regions reproduce the gain at 11–13% lower time (about 13–15% more points/s).
-The broad batch holdout has no detected gain. The broad screen establishes no
-scalar or SQL speedup, and the first SQL holdout slowdown does not repeat.
-Code placement/frame effects remain relevant; the reload and batch-export-only
-controls have measured negatives. No production pass or generated edit is
-retained, and M1 performance remains unaccepted.
+The 2026-10-11 production round retains a conservative publication-tail hardener
+pass. Its private structural predicate was committed before implementation and
+new timing; it validates bound helpers/types, addresses, construction/ownership,
+and region effects. Function-number/line/payload filters remain diagnostic only.
+All three proof modules and locks regenerate from authored inputs. Executable
+WAT/wazero and native-header proofs cover aliasing, trap prefixes, growth,
+imports, logical length, and labelled loop entry; three semantic mutants fail
+the runtime oracle. Native Go 1.26 amd64/386 correctness, all six gates plus
+integration, two identical proof/runtime rebuilds, and staged validation pass.
 
-The retained SQL holdout has complete original-Wasm output oracles. See
-[conditions, all outcomes, and raw evidence](performance.md#translation-analysis-positive-phase-0-2026-10-11)
-and [the private production experiment requirements](translation-memory-views.md).
-Next: derive a conservative publication-region predicate, add bound helper/
-effect/ownership checks and executable WAT alias/growth/trap proofs, then
-implement it in the hardener and qualify freshly regenerated output. Diagnostic
-function-number/line selection must not become production policy. This proposes
-no new public contract; production correctness/performance remain pending.
+Fresh isolated Go 1.26.8 pairs repeat batch gains: original time −11.39%/−11.58%
+and matched repeated-value time −11.91%/−11.90% (screen/confirmation). Matched
+confirmation throughput rises 22.99→26.10 million points/s. Broad batch, SQL,
+and streaming have no detected gain; SQL/trace upward medians and the 16-home
+streaming holdout's +1.07%/+2.94% remain recorded. No smaller repeated standalone
+scalar loss occurs, but code placement/control effects prevent a scalar latency
+claim. M1 performance remains unaccepted. This adds no public contract.
+
+See [conditions, negatives, rates, and complete evidence](performance.md#publication-memory-views-production-qualification-2026-10-11)
+and [the private specification](translation-memory-views.md). Next: use matching
+profiles to choose another demonstrated translation pattern, or run track 6's
+same-Wasm backend control to locate the remaining guest-heavy gap. Treat either
+as a separate measured experiment; do not broaden the retained predicate based
+on this batch result or add screening gains together. Native arm64 performance
+still requires hardware; cross compilation is not execution evidence.
 
 - Inspect matching Go compiler SSA/assembly and guest profiles for repeated
   memory accesses or Wasm stack temporaries that provably do not escape. Scope

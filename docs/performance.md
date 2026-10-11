@@ -4,6 +4,200 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Publication memory views: production qualification (2026-10-11)
+
+Retain the conservative hardener pass for batch throughput. Original batch time
+falls 11.39% in screening and 11.58% in confirmation; the matched repeated-value
+batch falls 11.91% and 11.90%. Confirmation throughput for the matched batch rises
+from 22.99 to 26.10 million points/s. The broad batch holdout, SQL, and streaming
+have no detected gain. Standalone scalar guards have no repeated slowdown, but
+this round makes no scalar latency claim. **M1 performance remains unaccepted.**
+The pass introduces no public API, ABI, manifest option, or lock format change.
+The implementation is retained in `cd90392`; guest, host, and adversarial
+reviewers approve its proofs and the complete qualification evidence.
+
+The [private specification](translation-memory-views.md) was committed in
+`865be46` before implementation. `f18a6ec` clarified capture placement inside
+labelled blocks before restoring that rule or running new timings. Production
+selection uses bound declarations, helper bodies, ownership and address proofs,
+and short publication-tail syntax; function numbers, lines, payload names, and
+holdout results are never selection inputs. The measured output has 21 Datadog
+captures across 20 methods, including both sketch publication tails, and four
+captures each in compute and streaming. Every original access, operand order,
+logical-length check, trap, and guest byte effect remains. Runtime admission,
+reset, ownership, reply validation, poisoning, and drain checks are unchanged.
+
+[The complete archive](measurements/translation-memory-views.txt) retains all
+826 raw outputs and metrics, exact process commands and timestamps, frozen
+source/binary fingerprints, build and reference provenance, controls, matching
+SSA/disassembly, proof/gate logs, and procedural failures. Its compressed bundle
+preserves exact artifact bytes with a per-member SHA-256 manifest; readable
+sections normalize whitespace only. No sample or outlier was discarded.
+
+### Conditions and provenance
+
+Start from `f18a6ec`, with `main` and freshly fetched `origin/main` both at
+`1510d69`. Measurements use Go 1.26.8, CGO disabled, `GOAMD64=v1`, explicit
+`-pgo=off`, default GC/memory limits, and unpinned CPUs 0–15 on the Ryzen 7 5800HS
+(8 physical / 16 logical cores). The recorded governor is powersave, with boost
+enabled; neither policy nor affinity was changed. All six before/after/reload/
+reference/streaming binaries were built fresh before timing. All authored
+benchmark files byte-match `865be46`; overlays change only generated modules or
+adapt the independent reference. All 166 frozen files remain identical through
+both rounds and the final hash audit before documentation edits.
+
+Seventeen leaves produce 59 role invocations per pass. Seven alternating 500 ms
+passes precede seven one-second passes with role and leaf order reversed. No
+compilation, tests, lint, fuzzing, profiling, or reviewer tools overlap timing.
+The runner cannot itself prove absence of unrelated external work. Original
+seven and raw-guest leaves use initial GOMAXPROCS=16, `-test.cpu=16`, and frozen
+source without a processor override; their `-16` suffix is additional evidence,
+not an in-window metric. New SQL/corpus/matched leaves verify actual P1, and all
+four streaming leaves verify actual P16. Their initial `-16` suffix alone does
+not describe the timed processor count. Every custom metric is archived.
+
+The baseline Datadog Go module hashes to
+`f50d20e7fe091569353ac1ced7865a53cd23bc9add668c3aac0f5f3a0ac8eed4`;
+the production module hashes to
+`f92c5853385d9c4b3cfc3d164507def81beff36b9f7a8564c92f247c9a3ab948`.
+Original Wasm remains
+`ae0119ca34206c2fcd8b69ae4e81421214417abb364d589c3afabcf16d8c6333`.
+Both original proof packages and streaming were regenerated from authored
+inputs. Only translated Go bytes and corresponding `go_sha256` lock fields
+change; Wasm, facade, schema, and generated proof inputs remain identical.
+
+### Paired outcomes
+
+Entries are medians; each role has seven samples per round. Time change is
+after/before minus one. P-values are exploratory and unadjusted across the
+matrix. An undetected difference does not establish equivalence. Complete
+benchstat intervals and every allocation/custom metric remain in the archive.
+
+| Workload | Before, screen → confirm | After, screen → confirm | Time change, screen → confirm | p, screen / confirm |
+| --- | ---: | ---: | ---: | ---: |
+| Scalar | 90.51 → 90.17 ns | 88.44 → 89.34 ns | −2.29% → −0.92% | .001 / .002 |
+| SQL | 2.167 → 2.184 µs | 2.184 → 2.204 µs | +0.78% → +0.92% | .135 / .090 |
+| Batch 1k | 43.248 → 43.287 µs | 38.323 → 38.274 µs | −11.39% → −11.58% | .001 / .001 |
+| Trace 1k | 2.553 → 2.589 ms | 2.592 → 2.615 ms | +1.56% → +1.01% | .053 / .456 |
+| Varied scalar | 91.39 → 90.55 ns | 89.52 → 89.29 ns | −2.05% → −1.39% | .002 / .001 |
+| Varied SQL | 2.763 → 2.761 µs | 2.775 → 2.778 µs | +0.43% → +0.62% | .684 / .332 |
+| Negative bins | 90.70 → 90.62 ns | 89.18 → 88.93 ns | −1.68% → −1.86% | .001 / .001 |
+| SQL holdout, P1 | 5.443 → 5.427 µs | 5.446 → 5.456 µs | +0.06% → +0.53% | .902 / .334 |
+| Increasing scalar, P1 | 91.16 → 91.06 ns | 90.00 → 89.92 ns | −1.27% → −1.25% | .001 / .002 |
+| Broad scalar holdout, P1 | 90.63 → 89.73 ns | 90.54 → 90.26 ns | −0.10% → +0.59% | .558 / .777 |
+| Repeated batch 1024, P1 | 44.577 → 44.542 µs | 39.267 → 39.240 µs | −11.91% → −11.90% | .001 / .001 |
+| Broad batch 8192, P1 | 323.542 → 321.896 µs | 324.239 → 322.280 µs | +0.22% → +0.12% | .805 / .902 |
+| Raw scalar guest | 54.39 → 54.52 ns | 53.75 → 53.74 ns | −1.18% → −1.43% | .004 / .001 |
+| Stream, one home, fixed, P16 | 188.144 → 188.597 µs | 189.231 → 189.853 µs | +0.58% → +0.67% | .535 / .209 |
+| Stream, one home, holdout, P16 | 228.473 → 229.689 µs | 229.427 → 230.506 µs | +0.42% → +0.36% | .456 / .535 |
+| Stream, 16 homes, fixed, P16 | 28.003 → 27.870 µs | 27.812 → 28.398 µs | −0.68% → +1.89% | .805 / .209 |
+| Stream, 16 homes, holdout, P16 | 35.724 → 35.839 µs | 36.106 → 36.894 µs | +1.07% → +2.94% | .209 / .456 |
+
+The SQL and trace upward medians are negatives, even though neither has a
+detected difference. Confirmation trace intervals are ±7% before and ±26%
+after; matched repeated batch after is ±11%, and broad batch after is ±12%.
+The 16-home streaming holdout's +2.94% confirmation is close to the predeclared
+3% repeated-loss rejection threshold, with ±20% before and ±3% after. Its screen
+loss is +1.07%; neither round detects a difference. Retention accepts this
+remaining uncertainty, not a claim of streaming equivalence. There is no
+repeated loss of 3% or more and no smaller repeated standalone scalar loss.
+The broad scalar confirmation's +0.59% remains visible.
+
+Scalar, bin, matched-batch, and raw-guest leaves stay at zero Go allocations.
+SQL/varied/holdout and traces report one allocation/op in both production roles.
+Streaming stays at 250 allocations/stream fixed and 268 holdout. Allocation
+bytes vary for setup-amortizing benchmarks: confirmation varied SQL is 77→78
+B/op, trace 233,074→233,206 B/op, and one-home holdout 19,618→19,617 B/stream.
+These values are retained rather than rounded into a claim of identical bytes.
+Reported corpus/matched guest sizes and zero timed growth match across roles.
+
+### Reload control, reference, and machine code
+
+The reload control derives from the actual production-selected inventory,
+preserving declarations and all 54 memory-containing statements (42 stores,
+12 loads), but refreshing the header between accesses. It repeats batch
+penalties: +1.80%/+1.62% for original batch and +1.24%/+1.27% for matched repeat.
+The broad holdout is +0.89%/+0.82%, detected only in confirmation (p=.026).
+Trace control is +1.40%/+0.87%, detected only in screening (p=.038/1.000).
+Scalar control also improves, −1.68%/−1.47% (p=.038/.004). Thus source placement,
+liveness, bounds code, and code shape remain attribution limits; this control
+restores inspected header reloads, not identical machine code. Reject it as a
+production alternative and make no standalone latency or sole-mechanism claim.
+
+Rebuild the independent spike from its locked unversioned source snapshot with
+Rust 1.97 std/panic_abort, Binaryen 133 metaDCE/O3, wasm2go 0.4.16 unsafe, and its
+own hardener. Fresh native/wazero tests and 48 one-iteration matched/corpus
+oracles pass before timing. The rebuilt Wasm and Go binary reproduce their
+previous hashes, respectively
+`8bda5ff7acff11fd64fd47a0a48165a71d610c28413665e4cc4d4034150d0651` and
+`f8846dd93bd22b1adcf3b7762f685c8e96199a9d77a62f7d8ad9f1639a48bbea`.
+Its ABI 2 borrowed-input facade, background context, and four instances differ
+from checked ABI 3. Original batch/trace inputs also differ; their times are
+context only, not facade overhead. Matched corpora and Count checks align.
+Confirmation reference scalar is 55.85 ns versus production 89.34 ns; SQL is
+1.993 versus 2.204 µs. Matched repeated batch is 36.562 versus 39.240 µs, and
+broad batch is 299.072 versus 322.280 µs. These gaps remain; M1 is not accepted.
+
+Matching Go 1.26.8 SSA and machine code confirm four eliminated header reloads
+in the two sketch tails. Go 1.27.1 `nm`/`objdump` tools inspect those binaries;
+diagnostic SSA binaries are not timing binaries. Sketch `fn176` is 5,866→5,834
+bytes, frame 144 bytes in all roles. SSA StoreReg/LoadReg counts remain 40/160,
+and stack-operand instruction counts remain 209; stack operands are not all
+spills. All 20 selected-method frames remain unchanged. One stack-operand count in
+`fn150` falls 1,438→1,437; the other 19 remain unchanged. This is not a proven
+spill reduction.
+Total generated TEXT shrinks 991,637→991,552 bytes (85 bytes); reload is 991,660.
+Offset-pattern counts 102→98→102 corroborate the inspected reloads, not a
+general alias proof. No fewer-spills claim follows.
+
+### Streaming rates and qualification
+
+These are fresh before/after generated binaries for four P16 workloads,
+using standalone per-write methods. They do not requalify the earlier P1/64
+default-stream cost or claim a command-buffer speedup. Fixed streams use 256
+64-byte writes, retain outputs in groups of 32, and produce 257 outputs. Rates include complete stream lifetimes, bounded output
+retention, and standalone Write/End/Close calls; they are observed throughput,
+not strict ceilings. Holdouts vary
+chunks/matches, with 344.5 outputs/stream on average. Sixteen-home rows use the
+explicit resource-home setting with pool size one. Confirmation metrics are:
+
+| Workload | Writes/s, before → after | Streams/s, before → after | MB/s, before → after |
+| --- | ---: | ---: | ---: |
+| One home, fixed | 1,357,395 → 1,348,412 | 5,302 → 5,267 | 86.87 → 86.30 |
+| One home, holdout | 1,495,502 → 1,490,201 | 4,354 → 4,338 | 71.33 → 71.08 |
+| 16 homes, fixed | 9,185,652 → 9,014,624 | 35,881 → 35,213 | 587.88 → 576.94 |
+| 16 homes, holdout | 9,584,554 → 9,310,540 | 27,903 → 27,105 | 457.16 → 444.09 |
+
+All seven required commands pass: `make check` (tests, vet, pinned golangci-lint 2.13.1 and
+49 strict linters), `make race`, `make rust`, `make cross`, `make smoke`,
+`make fuzz`, plus `make integration`. Quality uses Go 1.27.1; all fixtures use
+Rust 1.97.0 and Binaryen 133. Two further builds of all three proof packages
+and `go generate ./rt` reproduce all 59 recorded files/locks. Exact staged-tree
+tests under Go 1.27 and 1.26, vet, formatter, strict lint, and darna pass.
+
+The new fixture runs WAT through the actual pinned translator and production
+hardener, then compares 14 complete per-operation histories with original Wasm
+in wazero. It covers overlapping writes, later reads, late traps, widened versus
+wrapping addresses, imports, growth, and labelled loop re-entry. Native Go
+assertions cover header replacement and logical length below capacity. Three
+post-validation semantic mutants must run and fail the memory oracle; a compile
+failure cannot satisfy that check. Final strengthened fixture and full generated
+consumer oracles pass natively on Go 1.26.8 amd64 and 386. Timings are amd64 only;
+there is no native arm64 hardware. Cross checks compile all required targets,
+and the CGO-disabled smoke child is not race-instrumented by its parent.
+Trusted native hosts must obey the documented ownership precondition excluding
+fabricated backing aliases inside Module and concurrent raw mutation.
+
+Pre-timing negative runs are preserved: competing lint runs hit its process
+lock; an interim blanket labelled-block exclusion disabled the loop proof;
+native386 first hit sandbox seccomp; a first SSA selector produced no method
+dumps; the independent shim retained its upstream unused-import warning.
+Final retries, the pre-timing private spec clarification, and every required
+gate pass. Retain the generic pass and executable proofs because the repeated
+batch benefit survives those checks with negligible generated code-size cost.
+Keep further translation changes separate, with new profiles and their own
+qualification; this result supplies no broad scalar/SQL/streaming acceptance.
+
 ## Translation analysis: positive phase 0 (2026-10-11)
 
 The memory-view diagnostic finds a promising batch optimization. Reusing the
@@ -12,9 +206,9 @@ the original batch's measured time by 11.21% in the narrow screen and 11.86% in
 confirmation. The matched repeated-value batch improves by 11.55% and 12.80%.
 The broad batch holdout has no detected gain. Retain the SQL holdout harness,
 [raw evidence](measurements/translation-phase0.txt), and
-[production experiment requirements](translation-memory-views.md). No compiler
-pass, generated-module edit, public API, lock change, or default profile is
-retained. M1 performance remains unaccepted.
+[production experiment requirements](translation-memory-views.md). At this
+phase-0 checkpoint, no compiler pass, generated-module edit, public API, lock
+change, or default profile is retained. M1 performance remains unaccepted.
 
 ### Matching profiles and machine code
 

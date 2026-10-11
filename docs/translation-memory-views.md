@@ -1,16 +1,23 @@
-# Translation memory views: phase 0
+# Translation memory views
 
-The 2026-10-11 analysis identifies a promising private compiler optimization:
-reuse a linear-memory slice header within a short region whose effects cannot
-change it. Two sketch result-publication regions reproduce the broad probe's
-batch benefit. This is a measured diagnostic, not an implemented hardener pass
-or a new public contract. The standalone API and ABI v3 remain unchanged.
+The 2026-10-11 production qualification retains a private compiler optimization:
+reuse a linear-memory slice header within a short publication region whose
+effects cannot change it. The generic hardener pass repeats the diagnostic's
+batch benefit, with no detected broad-batch, SQL, or streaming gain. It changes
+no public contract; the standalone API and ABI v3 remain unchanged. There is no
+standalone scalar latency claim, and M1 performance remains unaccepted.
 
 Measurements, negative results, conditions, and raw reproduction material are in
-[performance.md](performance.md#translation-analysis-positive-phase-0-2026-10-11)
-and [the archive](measurements/translation-phase0.txt).
+[performance.md](performance.md#publication-memory-views-production-qualification-2026-10-11)
+and [the production archive](measurements/translation-memory-views.txt).
+The historical phase-0 diagnostic and its hash-pinned selection remain in
+[the earlier archive](measurements/translation-phase0.txt). The production
+predicate below was committed in `865be46`; labelled-block entry was clarified
+in `f18a6ec`, before implementation restoration or qualification timing.
 
 ## Demonstrated pattern
+
+This section records the phase-0 diagnostic that motivated the production pass.
 
 Go 1.26.8 inlines wasm2go's checked scalar memory helpers. Their unsafe backing
 writes nevertheless invalidate the compiler's knowledge of `Module.memory`:
@@ -190,5 +197,7 @@ gate; cross compilation alone is not native performance evidence.
 The phase 0 gain is limited to the measured original and repeated-value batches.
 The broad batch holdout has no detected gain. The broader screen establishes no
 scalar speedup; the focused control's small scalar improvement is insufficient
-for a standalone latency claim. A production result needs its own qualification.
+for a standalone latency claim. Phase 0 alone did not qualify a production
+transform; the subsequent result has its own paired measurements and executable
+proofs linked above.
 M1 performance remains unaccepted.
