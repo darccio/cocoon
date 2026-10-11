@@ -86,11 +86,13 @@ Select a short publication tail inside one lexical Go block:
    `int32(load32(...))` assignment may join the tail, up to four statements.
    No other expression or statement joins it. Require only live-byte accesses;
    do not cache loaded values, combine stores, or infer pointer disjointness.
-4. Labels and all other control-flow nodes end the prefix. A label's attached
-   statement stays unchanged. Capture after it, immediately before the first
-   eligible memory access; never above a label or at function entry. No label
-   can target the middle of the resulting straight-line region. A later goto
-   successor receives a fresh capture if its own tail qualifies.
+4. Labels and all other control-flow nodes end the prefix. A direct labelled
+   load, store, or copy stays unchanged. A labelled block may contain eligible
+   straight-line tails, with each capture inside that block after label entry.
+   Capture immediately before the first eligible memory access; never above
+   a label or at function entry. No label can target the middle of the resulting
+   straight-line region. A later goto successor receives a fresh capture if its
+   own tail qualifies. This includes loop re-entry into a labelled block.
 
 Validate binding objects as well as syntax. The bound scalar `load32`, `store32`,
 and identity `i32` declarations must match the pinned translator's complete
