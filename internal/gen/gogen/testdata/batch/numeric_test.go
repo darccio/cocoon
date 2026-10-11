@@ -115,7 +115,7 @@ func TestNumericLateRecordValidationPrecedesReserve(t *testing.T) {
 
 func TestNumericMixedConstructorCursor(t *testing.T) {
 	t.Parallel()
-	library, _, _, _ := fixtureStream(t, Options{})
+	library := fixtureLibrary(t, Options{})
 	vectors, err := library.NewVectors([]uint32{math.MaxUint32}, "x", []uint64{math.MaxUint64})
 	if err != nil {
 		t.Fatal(err)
