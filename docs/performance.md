@@ -4,6 +4,611 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Publication memory views: production qualification (2026-10-11)
+
+Retain the conservative hardener pass for batch throughput. Original batch time
+falls 11.39% in screening and 11.58% in confirmation; the matched repeated-value
+batch falls 11.91% and 11.90%. Confirmation throughput for the matched batch rises
+from 22.99 to 26.10 million points/s. The broad batch holdout, SQL, and streaming
+have no detected gain. Standalone scalar guards have no repeated slowdown, but
+this round makes no scalar latency claim. **M1 performance remains unaccepted.**
+The pass introduces no public API, ABI, manifest option, or lock format change.
+The implementation is retained in `cd90392`; guest, host, and adversarial
+reviewers approve its proofs and the complete qualification evidence.
+
+The [private specification](translation-memory-views.md) was committed in
+`865be46` before implementation. `f18a6ec` clarified capture placement inside
+labelled blocks before restoring that rule or running new timings. Production
+selection uses bound declarations, helper bodies, ownership and address proofs,
+and short publication-tail syntax; function numbers, lines, payload names, and
+holdout results are never selection inputs. The measured output has 21 Datadog
+captures across 20 methods, including both sketch publication tails, and four
+captures each in compute and streaming. Every original access, operand order,
+logical-length check, trap, and guest byte effect remains. Runtime admission,
+reset, ownership, reply validation, poisoning, and drain checks are unchanged.
+
+[The complete archive](measurements/translation-memory-views.txt) retains all
+826 raw outputs and metrics, exact process commands and timestamps, frozen
+source/binary fingerprints, build and reference provenance, controls, matching
+SSA/disassembly, proof/gate logs, and procedural failures. Its compressed bundle
+preserves exact artifact bytes with a per-member SHA-256 manifest; readable
+sections normalize whitespace only. No sample or outlier was discarded.
+
+### Conditions and provenance
+
+Start from `f18a6ec`, with `main` and freshly fetched `origin/main` both at
+`1510d69`. Measurements use Go 1.26.8, CGO disabled, `GOAMD64=v1`, explicit
+`-pgo=off`, default GC/memory limits, and unpinned CPUs 0–15 on the Ryzen 7 5800HS
+(8 physical / 16 logical cores). The recorded governor is powersave, with boost
+enabled; neither policy nor affinity was changed. All six before/after/reload/
+reference/streaming binaries were built fresh before timing. All authored
+benchmark files byte-match `865be46`; overlays change only generated modules or
+adapt the independent reference. All 166 frozen files remain identical through
+both rounds and the final hash audit before documentation edits.
+
+Seventeen leaves produce 59 role invocations per pass. Seven alternating 500 ms
+passes precede seven one-second passes with role and leaf order reversed. No
+compilation, tests, lint, fuzzing, profiling, or reviewer tools overlap timing.
+The runner cannot itself prove absence of unrelated external work. Original
+seven and raw-guest leaves use initial GOMAXPROCS=16, `-test.cpu=16`, and frozen
+source without a processor override; their `-16` suffix is additional evidence,
+not an in-window metric. New SQL/corpus/matched leaves verify actual P1, and all
+four streaming leaves verify actual P16. Their initial `-16` suffix alone does
+not describe the timed processor count. Every custom metric is archived.
+
+The baseline Datadog Go module hashes to
+`f50d20e7fe091569353ac1ced7865a53cd23bc9add668c3aac0f5f3a0ac8eed4`;
+the production module hashes to
+`f92c5853385d9c4b3cfc3d164507def81beff36b9f7a8564c92f247c9a3ab948`.
+Original Wasm remains
+`ae0119ca34206c2fcd8b69ae4e81421214417abb364d589c3afabcf16d8c6333`.
+Both original proof packages and streaming were regenerated from authored
+inputs. Only translated Go bytes and corresponding `go_sha256` lock fields
+change; Wasm, facade, schema, and generated proof inputs remain identical.
+
+### Paired outcomes
+
+Entries are medians; each role has seven samples per round. Time change is
+after/before minus one. P-values are exploratory and unadjusted across the
+matrix. An undetected difference does not establish equivalence. Complete
+benchstat intervals and every allocation/custom metric remain in the archive.
+
+| Workload | Before, screen → confirm | After, screen → confirm | Time change, screen → confirm | p, screen / confirm |
+| --- | ---: | ---: | ---: | ---: |
+| Scalar | 90.51 → 90.17 ns | 88.44 → 89.34 ns | −2.29% → −0.92% | .001 / .002 |
+| SQL | 2.167 → 2.184 µs | 2.184 → 2.204 µs | +0.78% → +0.92% | .135 / .090 |
+| Batch 1k | 43.248 → 43.287 µs | 38.323 → 38.274 µs | −11.39% → −11.58% | .001 / .001 |
+| Trace 1k | 2.553 → 2.589 ms | 2.592 → 2.615 ms | +1.56% → +1.01% | .053 / .456 |
+| Varied scalar | 91.39 → 90.55 ns | 89.52 → 89.29 ns | −2.05% → −1.39% | .002 / .001 |
+| Varied SQL | 2.763 → 2.761 µs | 2.775 → 2.778 µs | +0.43% → +0.62% | .684 / .332 |
+| Negative bins | 90.70 → 90.62 ns | 89.18 → 88.93 ns | −1.68% → −1.86% | .001 / .001 |
+| SQL holdout, P1 | 5.443 → 5.427 µs | 5.446 → 5.456 µs | +0.06% → +0.53% | .902 / .334 |
+| Increasing scalar, P1 | 91.16 → 91.06 ns | 90.00 → 89.92 ns | −1.27% → −1.25% | .001 / .002 |
+| Broad scalar holdout, P1 | 90.63 → 89.73 ns | 90.54 → 90.26 ns | −0.10% → +0.59% | .558 / .777 |
+| Repeated batch 1024, P1 | 44.577 → 44.542 µs | 39.267 → 39.240 µs | −11.91% → −11.90% | .001 / .001 |
+| Broad batch 8192, P1 | 323.542 → 321.896 µs | 324.239 → 322.280 µs | +0.22% → +0.12% | .805 / .902 |
+| Raw scalar guest | 54.39 → 54.52 ns | 53.75 → 53.74 ns | −1.18% → −1.43% | .004 / .001 |
+| Stream, one home, fixed, P16 | 188.144 → 188.597 µs | 189.231 → 189.853 µs | +0.58% → +0.67% | .535 / .209 |
+| Stream, one home, holdout, P16 | 228.473 → 229.689 µs | 229.427 → 230.506 µs | +0.42% → +0.36% | .456 / .535 |
+| Stream, 16 homes, fixed, P16 | 28.003 → 27.870 µs | 27.812 → 28.398 µs | −0.68% → +1.89% | .805 / .209 |
+| Stream, 16 homes, holdout, P16 | 35.724 → 35.839 µs | 36.106 → 36.894 µs | +1.07% → +2.94% | .209 / .456 |
+
+The SQL and trace upward medians are negatives, even though neither has a
+detected difference. Confirmation trace intervals are ±7% before and ±26%
+after; matched repeated batch after is ±11%, and broad batch after is ±12%.
+The 16-home streaming holdout's +2.94% confirmation is close to the predeclared
+3% repeated-loss rejection threshold, with ±20% before and ±3% after. Its screen
+loss is +1.07%; neither round detects a difference. Retention accepts this
+remaining uncertainty, not a claim of streaming equivalence. There is no
+repeated loss of 3% or more and no smaller repeated standalone scalar loss.
+The broad scalar confirmation's +0.59% remains visible.
+
+Scalar, bin, matched-batch, and raw-guest leaves stay at zero Go allocations.
+SQL/varied/holdout and traces report one allocation/op in both production roles.
+Streaming stays at 250 allocations/stream fixed and 268 holdout. Allocation
+bytes vary for setup-amortizing benchmarks: confirmation varied SQL is 77→78
+B/op, trace 233,074→233,206 B/op, and one-home holdout 19,618→19,617 B/stream.
+These values are retained rather than rounded into a claim of identical bytes.
+Reported corpus/matched guest sizes and zero timed growth match across roles.
+
+### Reload control, reference, and machine code
+
+The reload control derives from the actual production-selected inventory,
+preserving declarations and all 54 memory-containing statements (42 stores,
+12 loads), but refreshing the header between accesses. It repeats batch
+penalties: +1.80%/+1.62% for original batch and +1.24%/+1.27% for matched repeat.
+The broad holdout is +0.89%/+0.82%, detected only in confirmation (p=.026).
+Trace control is +1.40%/+0.87%, detected only in screening (p=.038/1.000).
+Scalar control also improves, −1.68%/−1.47% (p=.038/.004). Thus source placement,
+liveness, bounds code, and code shape remain attribution limits; this control
+restores inspected header reloads, not identical machine code. Reject it as a
+production alternative and make no standalone latency or sole-mechanism claim.
+
+Rebuild the independent spike from its locked unversioned source snapshot with
+Rust 1.97 std/panic_abort, Binaryen 133 metaDCE/O3, wasm2go 0.4.16 unsafe, and its
+own hardener. Fresh native/wazero tests and 48 one-iteration matched/corpus
+oracles pass before timing. The rebuilt Wasm and Go binary reproduce their
+previous hashes, respectively
+`8bda5ff7acff11fd64fd47a0a48165a71d610c28413665e4cc4d4034150d0651` and
+`f8846dd93bd22b1adcf3b7762f685c8e96199a9d77a62f7d8ad9f1639a48bbea`.
+Its ABI 2 borrowed-input facade, background context, and four instances differ
+from checked ABI 3. Original batch/trace inputs also differ; their times are
+context only, not facade overhead. Matched corpora and Count checks align.
+Confirmation reference scalar is 55.85 ns versus production 89.34 ns; SQL is
+1.993 versus 2.204 µs. Matched repeated batch is 36.562 versus 39.240 µs, and
+broad batch is 299.072 versus 322.280 µs. These gaps remain; M1 is not accepted.
+
+Matching Go 1.26.8 SSA and machine code confirm four eliminated header reloads
+in the two sketch tails. Go 1.27.1 `nm`/`objdump` tools inspect those binaries;
+diagnostic SSA binaries are not timing binaries. Sketch `fn176` is 5,866→5,834
+bytes, frame 144 bytes in all roles. SSA StoreReg/LoadReg counts remain 40/160,
+and stack-operand instruction counts remain 209; stack operands are not all
+spills. All 20 selected-method frames remain unchanged. One stack-operand count in
+`fn150` falls 1,438→1,437; the other 19 remain unchanged. This is not a proven
+spill reduction.
+Total generated TEXT shrinks 991,637→991,552 bytes (85 bytes); reload is 991,660.
+Offset-pattern counts 102→98→102 corroborate the inspected reloads, not a
+general alias proof. No fewer-spills claim follows.
+
+### Streaming rates and qualification
+
+These are fresh before/after generated binaries for four P16 workloads,
+using standalone per-write methods. They do not requalify the earlier P1/64
+default-stream cost or claim a command-buffer speedup. Fixed streams use 256
+64-byte writes, retain outputs in groups of 32, and produce 257 outputs. Rates include complete stream lifetimes, bounded output
+retention, and standalone Write/End/Close calls; they are observed throughput,
+not strict ceilings. Holdouts vary
+chunks/matches, with 344.5 outputs/stream on average. Sixteen-home rows use the
+explicit resource-home setting with pool size one. Confirmation metrics are:
+
+| Workload | Writes/s, before → after | Streams/s, before → after | MB/s, before → after |
+| --- | ---: | ---: | ---: |
+| One home, fixed | 1,357,395 → 1,348,412 | 5,302 → 5,267 | 86.87 → 86.30 |
+| One home, holdout | 1,495,502 → 1,490,201 | 4,354 → 4,338 | 71.33 → 71.08 |
+| 16 homes, fixed | 9,185,652 → 9,014,624 | 35,881 → 35,213 | 587.88 → 576.94 |
+| 16 homes, holdout | 9,584,554 → 9,310,540 | 27,903 → 27,105 | 457.16 → 444.09 |
+
+All seven required commands pass: `make check` (tests, vet, pinned golangci-lint 2.13.1 and
+49 strict linters), `make race`, `make rust`, `make cross`, `make smoke`,
+`make fuzz`, plus `make integration`. Quality uses Go 1.27.1; all fixtures use
+Rust 1.97.0 and Binaryen 133. Two further builds of all three proof packages
+and `go generate ./rt` reproduce all 59 recorded files/locks. Exact staged-tree
+tests under Go 1.27 and 1.26, vet, formatter, strict lint, and darna pass.
+
+The new fixture runs WAT through the actual pinned translator and production
+hardener, then compares 14 complete per-operation histories with original Wasm
+in wazero. It covers overlapping writes, later reads, late traps, widened versus
+wrapping addresses, imports, growth, and labelled loop re-entry. Native Go
+assertions cover header replacement and logical length below capacity. Three
+post-validation semantic mutants must run and fail the memory oracle; a compile
+failure cannot satisfy that check. Final strengthened fixture and full generated
+consumer oracles pass natively on Go 1.26.8 amd64 and 386. Timings are amd64 only;
+there is no native arm64 hardware. Cross checks compile all required targets,
+and the CGO-disabled smoke child is not race-instrumented by its parent.
+Trusted native hosts must obey the documented ownership precondition excluding
+fabricated backing aliases inside Module and concurrent raw mutation.
+
+Pre-timing negative runs are preserved: competing lint runs hit its process
+lock; an interim blanket labelled-block exclusion disabled the loop proof;
+native386 first hit sandbox seccomp; a first SSA selector produced no method
+dumps; the independent shim retained its upstream unused-import warning.
+Final retries, the pre-timing private spec clarification, and every required
+gate pass. Retain the generic pass and executable proofs because the repeated
+batch benefit survives those checks with negligible generated code-size cost.
+Keep further translation changes separate, with new profiles and their own
+qualification; this result supplies no broad scalar/SQL/streaming acceptance.
+
+## Translation analysis: positive phase 0 (2026-10-11)
+
+The memory-view diagnostic finds a promising batch optimization. Reusing the
+linear-memory slice header in just two sketch result-publication regions lowers
+the original batch's measured time by 11.21% in the narrow screen and 11.86% in
+confirmation. The matched repeated-value batch improves by 11.55% and 12.80%.
+The broad batch holdout has no detected gain. Retain the SQL holdout harness,
+[raw evidence](measurements/translation-phase0.txt), and
+[production experiment requirements](translation-memory-views.md). At this
+phase-0 checkpoint, no compiler pass, generated-module edit, public API, lock
+change, or default profile is retained. M1 performance remains unaccepted.
+
+### Matching profiles and machine code
+
+Start from `5a5c8df` on a clean tree; `main` and freshly fetched `origin/main`
+both equal `1510d69`. The profile binary has SHA-256
+`cd533f99b56712793f8456c4188a874399711b1fe7052101be87750ebb4eb82e`,
+identical to the preceding frozen untouched binary. The unchanged translated
+Datadog module hashes to
+`f50d20e7fe091569353ac1ced7865a53cd23bc9add668c3aac0f5f3a0ac8eed4`;
+its original Wasm hashes to
+`ae0119ca34206c2fcd8b69ae4e81421214417abb364d589c3afabcf16d8c6333`.
+Five sequential ten-second CPU-profile benchmarks precede timing. Profiles are
+diagnostics, not timing samples. Compiler SSA opt/regalloc/genssa dumps and
+disassembly use matching Go 1.26.8 production source and ordinary optimization
+flags; dump flags add no optimization. The timing binaries include the new
+holdout harness and therefore have different linking from the profile binary.
+
+| Profile | Guest hotspot | Flat | Cumulative |
+| --- | --- | ---: | ---: |
+| Checked scalar | Sketch export | 7.33% | 51.54% |
+| Checked scalar | `fn176` | 29.81% | 37.39% |
+| Raw scalar guest | `fn176` | 47.71% | 63.47% |
+| SQL | `fn96` | 45.44% | 75.61% |
+| Batch 1k | `fn176` | 60.32% | 80.62% |
+| Trace 1k | `fn96` | 37.35% | 63.06% |
+
+Checked scalar reply validation accounts for 11.99% cumulatively. Inlined
+helpers and containing functions overlap; these percentages are attribution,
+not additive attainable gains. The earlier conclusion still holds: the dense
+log polynomial is register-resident, explicit rounding is meaningful, and no
+new exact math simplification is justified.
+
+The demonstrated pattern is surviving memory-header reloads after inlined
+unsafe stores. A SQL initializer reloads the pointer and logical length after
+each store, and its two later stack-slot loads also survive. Broad stack-value
+promotion is rejected as a starting point: addresses cross calls, generic
+pointers can alias, and wrapping i32 addition differs from widened addition.
+Keeping every original access while reusing only the slice header has a smaller
+proof obligation.
+
+### Diagnostic scope and controls
+
+The ignored AST utility requires the exact full-module SHA. It recognizes
+simple straight-line scalar regions, predeclares slice locals to preserve Go
+goto rules, and assigns a view at the original first memory-containing statement.
+Unproved calls, imports, growth, header mutation, labels, branches, gotos, returns,
+nested blocks, declarations, and unsupported expressions are barriers. All loads,
+stores, casts, helper checks, and stack restorations retain their original order.
+It does not forward values or change logarithms, validation, reply publication,
+or checked host work. The ownership precondition is ordinary generated-facade
+construction, with separate Module and backing-byte allocations; fabricated
+unsafe raw-host aliases and concurrent raw-module mutation are outside this
+diagnostic's proof.
+
+The broad probe covers 1,426 regions and 5,656 memory references. An AST roundtrip
+byte-matches the untouched module. A control keeps the same region/local
+inventory but reloads the header before each memory-containing statement.
+Disassembly confirms that this restores inspected reloads; it does not restore
+identical machine code. Neither helper bindings nor ownership/address proofs
+are generic: the full hash pins them. Existing full Datadog tests and focused
+original-Wasm/count/bin/SQL oracles pass before timing. Those checks qualify
+screening, not a reusable production transform.
+
+| Function | Before bytes / frame | Broad view bytes / frame | Reload control bytes / frame |
+| --- | ---: | ---: | ---: |
+| SQL `fn96` | 111,763 / 856 | 109,518 / 872 | 111,891 / 856 |
+| Sketch `fn176` | 5,866 / 144 | 5,834 / 144 | 5,797 / 144 |
+| Handle `fn84` | 1,029 / 32 | 966 / 32 | 1,061 / 32 |
+| Scalar export | 3,004 / 112 | 2,696 / 112 | 3,016 / 112 |
+
+These frames exclude saved-frame/return bookkeeping. The broad math function
+has four more instructions despite slightly fewer bytes. Code size, register
+allocation, frame size, and placement all change; fewer header loads alone do
+not establish the timing mechanism.
+
+### Broad paired measurements
+
+Use Go 1.26.8, CGO disabled, `GOAMD64=v1`, explicit `-pgo=off`, default GC/memory,
+and unpinned CPUs 0–15 on the Ryzen 7 5800HS (8 physical / 16 logical cores).
+Freeze every binary first. Seven interleaved 500 ms samples per leaf are followed
+by seven one-second samples with role and leaf order reversed. No compilation,
+lint, tests, fuzzing, profiling, or reviewer tools overlap timing. Preserve every
+sample. Original/varied/negative/raw-guest leaves start with GOMAXPROCS=16;
+new SQL, bin-corpus, and matched-batch leaves verify actual P1. The `-16` suffix
+on those leaves reports initial processors, not their timed processor count.
+Translation p-values are exploratory and unadjusted across the comparison matrix.
+
+Rebuild the independent spike from its locked Rust 1.97 shim with std/panic_abort,
+Binaryen 133 metaDCE/O3, wasm2go 0.4.16 unsafe, and its own hardener. Native Go and
+wazero tests pass; only harness/corpora are shared. Its unversioned local source
+archive and generated artifacts are hashed. ABI 2 borrowed input, background
+context, and four instances differ from Cocoon's checked ABI 3. Original batch
+and trace inputs also differ, so their reference times are controls, not facade
+overhead comparisons. Matched batches use identical corpora and Count checks.
+
+| Workload | Before, screen → confirm | Broad view, screen → confirm | Time change, screen → confirm |
+| --- | ---: | ---: | ---: |
+| Scalar | 99.14 → 91.24 ns | 100.8 → 90.36 ns | +1.67% → −0.96%, undetected |
+| SQL | 2.415 → 2.263 µs | 2.424 → 2.227 µs | +0.37% → −1.59%, undetected |
+| Batch 1k | 46.080 → 44.101 µs | 41.132 → 39.731 µs | −10.74% → −9.91%, p=.017/.001 |
+| Trace 1k | 3.006 → 2.654 ms | 2.880 → 2.646 ms | −4.21% → −0.30%, undetected |
+| Varied scalar | 97.01 → 92.68 ns | 95.34 → 91.56 ns | −1.72% → −1.21%, undetected |
+| Varied SQL | 3.202 → 2.816 µs | 3.150 → 2.864 µs | −1.62% → +1.70%, undetected |
+| Negative bins | 108.0 → 92.81 ns | 102.8 → 90.91 ns | −4.81% → −2.05%, undetected |
+| New SQL holdout, P1 | 6.133 → 5.572 µs | 6.662 → 5.629 µs | +8.63% → +1.02%, p=.535/.435 |
+| Repeated batch 1024, P1 | 47.942 → 44.970 µs | 43.999 → 40.341 µs | −8.22% → −10.29%, p=.002/.026 |
+| Broad batch 8192, P1 | 351.116 → 326.724 µs | 351.522 → 329.074 µs | +0.12% → +0.72%, undetected |
+
+Increasing and broad scalar bin corpora also show no detected change. Checked
+scalar and batch workloads remain zero-allocation; SQL/trace allocations are
+preserved in raw rows. The SQL holdout cycles six long/comment/escaped/Unicode/
+quoted-name queries and compares complete outputs against original Wasm in two
+untimed correctness passes. Its benchmark includes initial lazy guest setup,
+not an untimed full-corpus warm pass.
+
+Screening dispersion is substantial: original SQL's interval reaches ±66%.
+The first SQL holdout slowdown does not repeat and is not statistically detected;
+it establishes neither a material regression nor equivalence. The reload control
+lacks the repeated-batch gain, but its confirmation regresses varied SQL by 4.44%
+and trace by 3.75% (both p=.038), demonstrating code-shape sensitivity. Retain
+these negatives rather than claiming all effect derives from header reuse.
+
+Fresh confirmation reference scalar is 57.10 ns and SQL is 2.054 µs. The checked
+baseline is 59.79% and 10.18% slower respectively. Baseline scalar 91.24 ns remains
+above the original 55.44 ns limit; SQL 2.263 µs is above 2.2154 µs. The measured
+candidate does not satisfy those limits either. No M1 acceptance follows.
+
+### Narrow attribution experiment
+
+The successful AddMany per-point loop retains the same point-load → `fn176` →
+status-load sequence and 208-byte frame. Its ten rewritten regions mostly cover
+one-time setup/finalization or errors. The two `fn176` terminal regions at baseline
+lines 36198 and 36206 execute per point and remove four memory-header reloads.
+The 144-byte frame and original guest accesses remain. Three further hash-pinned
+controls select the nine sketch-function regions, ten batch-export regions, or
+only those two publication regions. These function/line filters are diagnostic
+controls, not acceptable production rules.
+
+Repeat seven 500 ms samples and seven reversed one-second samples with the same
+frozen before/broad/narrow binaries. This focused experiment covers original
+scalar/batch, raw guest, and matched repeated/broad batches; it does not qualify
+the narrowed variants across all workloads or native architectures.
+
+| Workload | Before, confirm | Two regions, confirm | Time change, screen → confirm |
+| --- | ---: | ---: | ---: |
+| Batch 1k | 43.365 µs | 38.220 µs | −11.21% → −11.86%, p=.001/.001 |
+| Repeated batch 1024, P1 | 44.792 µs | 39.060 µs | −11.55% → −12.80%, p=.001/.001 |
+| Broad batch 8192, P1 | 321.449 µs | 321.337 µs | +0.44% → −0.03%, undetected |
+| Checked scalar | 90.02 ns | 88.71 ns | −1.82% → −1.46%, p=.155/.002 |
+
+The two-region confirmation gives about 13.46% more original-batch points/s and
+14.68% more repeated-batch points/s. The whole sketch-function control reproduces
+the batch gain too. The batch-export-only control instead regresses original
+batch by 2.48% and repeated batch by 2.17% in confirmation (both p=.001).
+This supports targeting the publication pattern. It does not eliminate placement/
+register effects or establish a general per-byte or standalone-scalar benefit.
+Narrow scalar improvement is detected only in its own confirmation, not its
+screening round. Broad scalar comparisons have no detected gain; the narrowed
+candidate has not run the full guard matrix. Absolute latency remains far above M1.
+
+### Streaming controls, review, and next step
+
+At actual P16 with 64-byte fixed writes, the unchanged single-home stream gives
+1.242M writes/s in screening and 1.301M in confirmation; sixteen resource homes
+give 6.181M and 7.453M. Held-out chunking gives 1.404M/1.391M on one home and
+6.811M/7.933M on sixteen homes. These are same-binary synthetic workload controls,
+not before/after gains from this Datadog-only probe. Variation from previous
+rounds is preserved; it is not evidence of a streaming code regression.
+
+Guest, host, and adversarial reviewers approve diagnostic timing and the retained
+harness/evidence scope. Broad retention is deferred because it lacks generic
+binding/effect/ownership proofs and executable WAT adversaries. The narrowed
+publication pattern is a positive candidate for that implementation round;
+see [the production requirements](translation-memory-views.md). No NEW public
+contract is proposed or approved in this analysis.
+
+The retained harness/evidence pass `make check` with pinned golangci-lint 2.13.1,
+`make race`, `make rust`, `make cross`, `make smoke`, `make fuzz`, and
+`make integration`. Two further builds reproduce all three proof packages,
+locks, and runtime adapters unchanged. Exact staged-snapshot tests/strict lint
+and darna precede the signed local commit. Production qualification of a future
+hardener pass remains pending.
+
+## Exact bin reuse: phase 0 no-go (2026-10-11)
+
+Reject both measured default exact-value cache candidates. Retain only the
+measurement harness and [raw evidence](measurements/bin-reuse-phase0.txt).
+Neither capacity passes the preregistered requirement: the same capacity must
+improve complete checked scalar calls by at least 5% on constant inputs **and**
+a frozen mixed/phase corpus, versus untouched execution, in both rounds
+(p < 0.05). Confirmed median regressions above 1% on miss-heavy, held-out or
+original guards also reject a candidate. Smaller detected costs and uncertain
+negatives remain reportable. This is a decision about these implementations
+as defaults, not a claim that every exact cache or repeated batch is useless.
+No production code, generated artifact, lock, public contract or manifest
+option changes. No implementation spec is approved or needed for the retained
+diagnostic work. M1 performance remains unaccepted.
+
+### Frozen experiment and limits
+
+Baseline is merged `main=origin/main=1510d69`; local work starts on
+`task/exact-bin-reuse`. The private diagnostic driver checks the SHA-256 of the
+entire pinned translated module, uniquely extracts its existing ln/affine/
+floor/saturated-conversion block, and builds temporary Go overlays. It uses
+neither host `math.Log` nor copied upstream/reference mapping code. The four
+shapes are untouched, extracted/no-cache, extracted/cache1 and
+extracted/cache64. These are not retained compiler specializations.
+
+The cache stores only logical i32 indices, keyed by all five u64 words: value
+bits plus current gamma, multiplier, minimum and offset bits. Parameter loads
+remain inside execution, after unchanged validity/zero-threshold checks.
+Every original counter/store/collapse update still executes in order. Tables
+are private to a module; replacement creates empty storage. Direct mapping
+hashes value bits with two xor-right-33 steps around multiplication by
+`0xff51afd7ed558ccd`, then masks by capacity minus one; full-key equality and
+an explicit valid flag decide hits. A valid collision replaces the entry.
+On amd64 entries occupy 48 B: 48/3,072 B for capacities 1/64, plus a 24 B module
+slice field and allocator overhead. Capacity 256 is 12,288 B of entry data.
+This host memory is outside guest logical lengths; zero warmed B/op does not
+count construction. All extracted variants add the slice field/helper code,
+so untouched-to-extracted includes layout, allocation size and placement
+effects; it does not isolate a function-call cost.
+
+Go 1.26.8, CGO disabled, GOAMD64=v1, PGO off, default GC/memory, unpinned Ryzen
+7 5800HS CPUs 0–15 (8 physical/16 logical). Seven 300 ms samples interleave
+roles per leaf, reversing role order each sample. Separate seven 500 ms samples
+reverse starting roles, families and leaves on the same frozen binaries.
+Hashes remain identical after both rounds. No compilation, lint, fuzz or
+reviewer tools overlap timing. New scalar/mapping/matched leaves set, assert
+and report actual P1; original serial guards use initial P16. Printed `-16`
+suffixes alone are not processor evidence. No samples are filtered. Dispersion
+is substantial in several screening cells; p-values are exploratory and
+unadjusted across the matrix. An undetected difference is not equivalence.
+
+### Value and bin locality
+
+The 8,192-point corpora are frozen before cache selection/timing. Timed arrays
+repeat after a full pass, so uniqueness below is within each finite cycle.
+The additional Increasing control and original `SketchAdd` instead continue
+through nonrepeating integers; measured N stays below binary64's integer
+precision limit. A complete untimed pass warms each new scalar store. Exact
+logical bins come from fresh singleton sketches in the unchanged Wasm under
+wazero, not collapsed store offsets or approximate host logarithms. Zero
+count and logical index zero are distinguished separately by boundary tests.
+
+| Corpus | Distinct values | Logical bins | Adjacent same-bin pairs / 8,191 | Second-pass hits: cap1 / cap64 |
+| --- | ---: | ---: | ---: | ---: |
+| Repeated (42) | 1 | 1 | 8,191 | 8,192 / 8,192 |
+| UniqueCycle (1…8,192) | 8,192 | 377 | 7,815 | 0 / 0 |
+| NearbyUniqueCycle (adjacent bits above 42) | 8,192 | 1 | 8,191 | 0 / 0 |
+| MostlyUniqueCycle (one hot point per 16) | 7,681 | 3 | 7,167 | 0 / 413 |
+| Phases (16 hot integers / unique cold phases) | 4,112 | 18 | 4,092 | 0 / 0 |
+| BroadHoldout (unique mantissa/exponent permutation) | 8,192 | 5,373 | 0 | 0 / 0 |
+| NegativeBins (existing eight-value cycle) | 8 | 8 | 0 | 0 / 8,192 |
+
+Actual cache probes run outside timing, with first-pass and continuous second-
+pass hits, misses, collisions/evictions per 1,024-point phase in the archive.
+Capacities 1/16/64/256 are checked. Capacity 64's mostly-unique hit rate is
+5.04%, below the nominal 6.25% hot frequency because collisions evict 42.
+The 16 hot integers map to only four slots at capacity 64 and thrash, giving
+zero hits in hot phases too. Keep this negative; the hash is not rerolled
+against the observed corpora. The broad/unique/nearby cycles have zero replay
+hits even at capacity 256. These are properties of the frozen policy, not
+universal hit-rate bounds for another hash, associativity or capacity.
+
+High adjacent-bin locality supports investigating certified intervals. It
+does not certify membership: oracle samples, monotone bit search or approximate
+exponential thresholds cannot substitute for a proof of the pinned mapping's
+floating-point behavior. An interval design must fall back around boundaries
+and uncertified values and retain ordered collapse. None is implemented here.
+
+### Mapping controls and complete checked calls
+
+Raw mapping controls include common indirect method invocation, bypass
+ownership/locks/validation/current guest parameter loads, and are not additive
+parts of facade latency. Original and hits use 42; OriginalIncreasing and
+miss-dominated controls use identical increasing integers. The latter prime
+42 once and can have at most one surviving priming hit. The increasing flag
+is precomputed outside timing. Screening → confirmation medians (ns/op):
+
+| Control | Screening | Confirmation |
+| --- | ---: | ---: |
+| Original mapping, 42 | 17.61 | 16.83 |
+| Original mapping, increasing | 18.76 | 17.74 |
+| Cache1 hit | 12.84 | 11.42 |
+| Cache1 miss/fill | 40.32 | 39.30 |
+| Cache64 hit | 13.92 | 12.66 |
+| Cache64 miss/fill | 40.33 | 39.35 |
+
+The attainable measured raw saving is only about 4–5 ns on 42, while a miss
+adds roughly 21–22 ns. A weighted estimate using these matched input classes
+needs about 80%/84% hits for capacities 1/64 just to break even. It is not a
+full-call ceiling or prediction: instruction layout, direct versus indirect
+calls, memory loads and stores interact. The increasing standalone workload
+has no exact reuse regardless of hash quality.
+
+Confirmation complete P1 scalar medians, ns/point; all cache miss-heavy losses
+listed detect a difference (p ≤ 0.015). Constant cap1's modest gain is p=0.011;
+screening detects no constant gain for either capacity.
+
+| Corpus | Untouched | Extracted | Cache1 | Cache64 | Cache64 change: screening / confirmation |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Increasing | 91.86 | 92.85 | 115.4 | 116.0 | +25.53% / +26.28% |
+| Repeated | 91.21 | 92.45 | 88.53 | 91.36 | −3.35% / +0.16% |
+| UniqueCycle | 92.39 | 94.02 | 110.8 | 114.7 | +20.02% / +24.15% |
+| NearbyUniqueCycle | 91.69 | 94.93 | 112.3 | 115.3 | +27.66% / +25.75% |
+| MostlyUniqueCycle | 90.88 | 92.35 | 111.7 | 114.9 | +24.97% / +26.43% |
+| Phases | 92.54 | 92.60 | 110.4 | 114.5 | +27.44% / +23.73% |
+| BroadHoldout | 91.43 | 94.26 | 116.9 | 120.4 | +29.54% / +31.69% |
+| NegativeBins | 90.58 | 95.82 | 111.0 | 91.69 | +5.70% / +1.23% |
+
+The cap64 NegativeBins comparison detects no gain or loss in either round.
+Cap1 constant improvement is only 3.60%/2.94%, below the 5% criterion and
+unconfirmed in screening. Neither mixed/phase candidate improves. Extraction
+alone increases BroadHoldout 3.10% in confirmation (p=0.007), while most other
+scalar extraction comparisons detect no difference. Keep the full-shape cost
+separate from lookup/fill overhead.
+Extraction's Increasing screening cost is 11.46% (p=0.038), without
+confirmation (+1.08%, p=0.209). NegativeBins extraction rises 5.78% in
+confirmation with benchstat's rounded p=0.050; retain that threshold ambiguity
+rather than treating the printed value as proof of p < 0.05.
+
+Original guards and matched batch qualification reject retention too:
+
+| Workload | Confirmation untouched → cache64 | Cache64 change: screening / confirmation | Confirmation p |
+| --- | --- | --- | ---: |
+| Original increasing scalar | 91.22 → 109.9 ns | +16.42% / +20.48% | 0.001 |
+| Original AddMany1k | 43.41 → 57.90 µs | +37.00% / +33.36% | 0.001 |
+| Matched repeated N1,024 | 45.18 → 28.96 µs | −32.27% / −35.90% | 0.001 |
+| Matched holdout N8,192 | 325.9 → 498.8 µs | +50.08% / +53.05% | 0.001 |
+| SQL | 2.175 → 2.244 µs | +0.21% / +3.17% | 1.000 |
+| Varied SQL | 2.785 → 2.841 µs | +1.75% / +2.01% | 0.620 |
+| Varied scalar | 91.02 → 89.56 ns | +0.84% / −1.60% | 0.318 |
+| Negative-bin scalar | 93.01 → 85.43 ns | −10.41% / −8.15% | 0.128 |
+| Traces | 2.612 → 2.619 ms | −1.62% / +0.27% | 0.620 |
+
+SQL/varied/trace differences and cap64's confirmation negative-bin gain are
+not detected; their point estimates still remain. Cap1 original scalar and
+AddMany1k regress 23.22%/34.41% in confirmation, both p=0.001. Its matched
+repeated batch gains 35.80%/37.26%, while the matched holdout loses 48.20%/50.21%.
+Extraction alone loses 4.94%/7.56% on matched holdout (p=0.002/0.017), and its
+repeated-batch screening cost is 2.61% (p=0.038), without confirmation
+(p=0.053). Strong repeated-batch gains do not qualify a default scalar cache.
+
+The unchanged streaming binary is shared by all DD-only overlay shapes;
+there is no before/after stream implementation difference to test. Fresh P16
+64 B fixed/held-out default streams reach 1.275/1.417 million writes/s in
+screening, 1.331/1.480 in confirmation. Sixteen-home standalone streams reach
+7.555/7.933 then 8.877/10.009 million writes/s. These single-binary controls
+show dispersion; they are not cache gains or a resolution of the older default
+streaming negative. Existing checked Batch32 remains unchanged.
+
+### Reference, correctness, gates and next work
+
+Rebuild the independent local spike from its hash-recorded unversioned sources:
+Rust 1.97.0 `--locked` std/panic_abort, Binaryen 133 meta-DCE/O3, wasm2go 0.4.16
+unsafe and its own hardener. Its Wasm again reproduces
+`8bda5ff7acff11fd64fd47a0a48165a71d610c28413665e4cc4d4034150d0651`.
+Native Go/wazero tests and matched one-iteration Count checks pass. Only corpus
+and benchmark code is shared, with no Cocoon implementation transplant or
+external source edit. Raw labels/provenance/commands remain in the archive;
+only comparison files normalize the reference package label. As in track 1,
+the original batch/trace shapes and ABI2 borrowed/background/four-instance
+contract differ; new P1 scalar corpora and matched groups use identical inputs.
+Fresh original scalar is 57.48 ns reference versus 91.22 ns untouched Cocoon
+(+58.70%); SQL is 1.982 versus 2.175 µs (+9.74%). Historical runs with different
+harness/binary placement are not paired evidence of an intervening regression.
+The real injector benchmark remains unavailable at its original machine path.
+
+Before freeze all three reviewers approve the guest, host and adversarial
+controls. Every overlay passes the entire DD test package, including point
+validation/errors, late-invalid batch atomicity/recovery, boundary/zero tests
+and growth/collapse. New tests check full value/parameter identity, collision
+replacement, reset and fresh module isolation. Every corpus compares Count and
+full protobuf after two complete ordered passes plus low-bin revisits, through
+both standalone scalar and prevalidated batch calls, against original Wasm.
+The 5,373-bin holdout necessarily crosses the 2,048-bin store capacity.
+
+`make check`, `race`, `rust`, `cross`, `smoke`, `fuzz` and `integration` pass
+using Go 1.27.1, official golangci-lint 2.13.1, Rust 1.97.0 and Binaryen 133.
+These gates, including race/fuzz, use unchanged generated modules. The private
+overlays receive the full DD test package, not separate race/fuzz qualification.
+Cross checks compile rather than execute non-native targets. Race includes
+generated consumer subprocesses; fuzz covers parsers, hardening and all
+generated wazero adapters plus stateful streaming. Two further builds of each
+of the three proofs and locks plus runtime adapter generation reproduce all
+57 existing fixture/runtime files and the new harness unchanged. Exact staged
+snapshot tests/vet/strict lint and Darna are required before the local signed
+measurement commit. Gate/proof logs and source/binary hashes are archived.
+
+Retain the phase-0 harness, decision and evidence in one local measurement
+commit. Reject cache1/cache64 and extraction-only as production changes; no
+rejected generated module is committed. Next choose whether to specify a
+certified interval experiment or pursue translation analysis. Interval work
+needs a credible floating-point proof and upstream API or checked compiler
+specialization before implementation, original fallback, new holdouts and all
+existing correctness/performance guards. Exact-value cache gains on repeated
+batches alone do not solve standalone M1. No publication follows from this
+round.
+
 ## Low-copy numeric inputs: qualified host encoding (2026-10-11)
 
 Retain the private generator stage of track 1. Top-level numeric slices now
@@ -160,9 +765,10 @@ for byte. Datadog and streaming Wasm remain byte-identical to baseline; compute
 Wasm changes only to add the synthetic numeric proof operations. Retained
 commits additionally validate their exact staged snapshots with darna.
 
-Track 1's host stage is qualified. Next measure exact-bin-reuse viability for
-standalone scalar work, keeping capacity/collapse/reuse semantics and independent
-holdouts. Guest borrowed/lazy input decoding remains a separate design and
+Track 1's host stage is qualified. The subsequent exact-bin-reuse measurements
+above reject both default cache prototypes; certified intervals or translation
+analysis require a separate decision. Guest borrowed/lazy input decoding remains
+a separate design and
 lifetime/aliasing review requiring operator approval for any new public contract
 before implementation. These throughput results do not accept scalar latency
 or the remaining guest-decoding cost.
