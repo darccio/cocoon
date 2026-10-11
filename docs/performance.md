@@ -4,6 +4,133 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Default streaming cost investigation (2026-10-11)
+
+After PR #1 merged at `0a5969e`, the first follow-up investigates the repeated
+default fixed P1/64 B slowdown. It retains diagnostic benchmarks and evidence;
+there is **no production optimization or new public contract**. Default
+standalone streams with ResourceInstances=1 bear the repeated fixed-stream cost;
+home-sharding throughput gains require opt-in. **M1 performance is not accepted**.
+
+The [raw archive](measurements/default-streaming-phases.txt) contains all samples,
+drivers, commands, source/binary hashes, build metadata, and summaries. Conditions
+match streaming qualification: Go 1.26.8, CGO disabled, PGO off, GOAMD64=v1,
+Ryzen 5800HS, CPUs 0–15 without affinity, and default GC/memory settings. Each
+leaf sets and asserts actual P1 despite the process's initial `-16` suffix.
+Compilation, checks, fuzzing, profiles, and reviewer tools do not overlap timing.
+The baseline remains Phase 0 `36a8e6f`, with production unchanged from `9623228`.
+Both sides use the same standalone benchmark, Wasm, and translated guest.
+
+### Frozen full-stream reproduction
+
+Seven alternating 700 ms pairs screen fixed/holdout inputs at 64 B and 4 KiB;
+seven reversed-order 1 s pairs confirm 64 B. After diagnostic measurements,
+another seven 1 s pairs repeat the original frozen binaries.
+
+| Workload | Frozen screen | Reversed confirmation | Frozen repeat after diagnostics |
+|---|---:|---:|---:|
+| Fixed 64 B | 157.2 → 160.4 µs, +2.01%, p=0.007 | 156.5 → 161.2 µs, +3.01%, p=0.001 | 157.7 → 161.6 µs, +2.50%, p=0.004 |
+| Holdout 64 B | 197.0 → 196.3 µs, p=0.710 | 197.9 → 198.1 µs, p=0.902 | 197.9 → 197.3 µs, p=0.209 |
+| Fixed 4 KiB | 5.137 → 5.139 ms, p=1.000 | — | — |
+| Holdout 4 KiB | 5.468 → 5.423 ms, p=0.209 | — | — |
+
+The fixed 64 B cost repeats; these sets detect no holdout or 4 KiB regression.
+No detected difference is not equivalence. Allocation counts are unchanged.
+
+### Bounded phase controls
+
+`BenchmarkStreamPhases` uses identical source with both facades and the ordinary
+checked APIs. NewClose measures a warm complete resource lifetime. Write controls
+prime a full 1 KiB window, either before or after injection, then retain only
+the trailing 32 owned replies. End and abandoned Close measure groups of 32
+fresh resources. Preparation and verification are untimed; cleanup follows
+timed End, while abandoned Close times disposal directly. End states cover
+empty/short/full windows, prior injection, an entire match, and a partial match
+at the tail. Independent whole-body oracles validate preparation and End; untimed
+different replies overwrite guest storage to check retained-result ownership.
+Live resources never exceed 32, independent of b.N. Close warm-up abandons
+pending data without End.
+
+Both binaries pass a 1x oracle run before seven alternating 250 ms pairs.
+The following End/Close times divide the raw group ns/op by 32; NewClose and
+Writes already measure one call/lifetime. These controls are **not additive**:
+priming, output retention, live resources, timer transitions, and GC differ
+from a complete stream.
+
+| Control | Baseline | Merged | p-value |
+|---|---:|---:|---:|
+| NewClose | 551.5 ns | 564.0 ns | 0.128 |
+| Write, uninjected, 64 B | 698.9 ns | 692.9 ns | 0.318 |
+| Write, uninjected, 4 KiB | 23.60 µs | 23.35 µs | 0.259 |
+| Write, uninjected, 16 KiB | 92.98 µs | 92.33 µs | 0.318 |
+| Write, injected, 64 B | 637.3 ns | 624.2 ns | 0.012 |
+| Write, injected, 4 KiB | 20.72 µs | 19.87 µs | 0.001 |
+| Write, injected, 16 KiB | 79.84 µs | 78.18 µs | 0.004 |
+| End, empty | 127.4 ns | 124.0 ns | 0.053 |
+| End, short | 255.5 ns | 250.5 ns | 0.364 |
+| End, uninjected full window | 5.922 µs | 5.881 µs | 0.805 |
+| End, injected full window | 5.047 µs | 4.972 µs | 0.165 |
+| End, whole match at tail | 239.4 ns | 232.8 ns | 0.053 |
+| End, partial match at tail | 5.872 µs | 5.919 µs | 0.535 |
+| Close, abandoned full window | 98.56 ns | 98.13 ns | 0.596 |
+
+No phase detects a slowdown in this newly linked comparison. Some injected
+Write controls favor the merged version; they do not establish a production
+gain. Host Go allocations match: NewClose uses 200 bytes/8 allocations per
+lifetime, each steady Write copies its chunk into one owned allocation,
+nonempty End copies its tail into one allocation, and empty End/Close allocate
+nothing. This does not count Rust/Wasm allocator activity.
+Every control reports zero post-warm guest growth. Warm linear memory is
+1,179,648 bytes except the 16 KiB Write controls, which use 1,245,184 bytes.
+Write growth is sampled before untimed End. Grouped growth covers the
+whole diagnostic, including untimed preparation, ownership probes and disposal;
+it is neither an End-only measure nor a resident-memory bound.
+
+### Adding benchmark source changes the comparison's sign
+
+Seven reversed-order 700 ms full-stream pairs in the diagnostic binaries give
+fixed 64 B 162.2 → 159.2 µs (−1.85%, p=0.038), fixed 4 KiB 5.215 → 5.114 ms
+(−1.94%, p=0.017), holdout 64 B 203.1 → 198.5 µs (−2.24%, p=0.026), and holdout
+4 KiB 5.438 → 5.401 ms (p=0.383). The holdout candidate has 21% dispersion.
+This is one exploratory set, without independent confirmation of a gain.
+P-values are unadjusted across exploratory comparisons.
+Removing only the new benchmark source and rebuilding reproduces **both frozen
+binaries byte for byte**. The post-diagnostic frozen repeat still detects the
+fixed slowdown. Consequently, adding test source can change the measured sign
+without a production-source change. Link placement and allocation/GC effects
+are hypotheses, not an established cause or a fix.
+
+Source review finds unchanged standalone Write/End/Close bodies, Resource and
+Lifecycle paths, and original Instance Call/ResultView bodies and footprint.
+Normalized frozen instructions agree for outer End, Close, execution/reply
+validation, resource use, and guest writes; Write and End's callback differ
+only in option-field offsets. Normalization masks unnamed data relocations;
+it does not prove equal placement, referenced data, metadata, or performance.
+Resource construction has the new home-selection machinery; selection is not
+repeated on each write. These observations narrow the search but do not
+attribute the complete-stream delta to one check or constructor cost.
+
+Retain the diagnostic controls; retain no speculative production rewrite from
+this round. The default fixed-stream negative remains unresolved and visible.
+Future candidates need frozen end-to-end guardrails and holdouts even if their
+phase controls improve. Resume low-copy batching with matched scalar/batch input
+corpora; refresh the independently rebuilt spike before any M1 acceptance claim.
+
+### Qualification
+
+Guest, host, and adversarial reviewers checked the harness, raw evidence, and
+conclusions before retention. `make check` (tests, vet, 49 strict linters with
+official golangci-lint 2.13.1), `make race`, `make rust`, `make cross`, `make
+smoke`, `make fuzz`, and `make integration` pass with Go 1.27.1/Rust 1.97.0/
+Binaryen 133. Smoke initially failed because the sandbox denied Go module
+verification network access; the authorized network retry passed. Two further
+builds of all three proofs plus runtime generation reproduce all 54 existing
+tracked proof/runtime files byte for byte, including their locks. A Go 1.27.1
+race-instrumented 1x run exercises every new benchmark's oracle and ownership
+checks; its timings are validation only, excluded from performance results.
+The retained change adds only diagnostics and documentation, with no generated
+artifact or lock delta. Darna and exact staged-snapshot tests gate its commit.
+
 ## Streaming qualification harness correction (2026-10-11)
 
 The first end-to-end streaming run and the stopped private-layout candidate

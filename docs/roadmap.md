@@ -251,6 +251,17 @@ other tracks below remain planned experiments. Distinguish standalone
 `SketchAdd` latency from ingestion throughput: batching and sessions can improve
 throughput without making an individual `Add` faster.
 
+PR #1 merged at `0a5969e`. The first follow-up reproduces the default fixed
+P1/64 B streaming cost at 2–3% in frozen binaries. Bounded New/Write/End/Close
+controls detect no phase slowdown in their separately linked binaries, and
+adding only benchmark source reverses the full-stream comparison's sign;
+removing it rebuilds the frozen binaries byte for byte. This does not establish
+a cause or a fix. Retain the controls and the explicit streaming negative,
+with [samples and limits](performance.md#default-streaming-cost-investigation-2026-10-11).
+No production change or new contract follows from this investigation. The next
+implementation experiment remains low-copy batching with matched inputs and
+standalone/streaming holdouts; refresh the independent spike before M1 acceptance.
+
 Start with a matched-input baseline matrix: scalar versus batch calls, repeated
 values, distinct nearby values, mostly unique values, and negative-bin values.
 Measure encoding, copies, allocation, admission, reply validation, and guest
