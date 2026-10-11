@@ -271,8 +271,10 @@ batch benchmarks use different inputs; their per-point timings are not a
 controlled speedup comparison. Record cache hit rates and estimated ceilings
 before committing to larger designs.
 
-The low-copy host encoding stage is qualified below. Next measure bin-reuse
-viability for standalone scalar work. Typed returns still need a compatibility
+The low-copy host encoding stage is qualified below. Exact-value bin reuse now
+has a phase-0 no-go for both measured defaults. Next decide whether a certified
+interval proof is credible or start translation analysis. Typed returns still
+need a compatibility
 decision before implementation; the session decision is recorded in track 3.
 Translation analysis and the alternative-backend comparison are diagnostic
 tracks; use their results to decide whether larger compiler or runtime work is justified.
@@ -318,6 +320,29 @@ copy bypass is verified for Go 1.26.8 amd64. Rust decoding stays owned.
   regressions. The generator change should remain useful beyond sketches.
 
 #### 2. Exact bin reuse
+
+Phase 0 is complete (2026-10-11): retain the measured harness/evidence, reject
+the two default exact-value cache prototypes. Frozen 8,192-point cyclic inputs
+include unique, nearby, mostly-unique, hot/cold and independent broad holdouts;
+Increasing and the original scalar guard are nonrepeating. Unchanged-Wasm
+singleton labels show substantial nearby-bin locality but zero exact hits on
+distinct nearby values. The frozen direct hash also thrashes the 16-value hot
+phase; retain that negative rather than tuning it against the corpus.
+
+Matched raw mapping controls cost about 17–18 ns original, 11–13 ns on a hit,
+and 39 ns on a miss/fill in confirmation. Complete constant scalar gains fail
+the 5% repeated/mixed requirement; original increasing scalar regresses
+23.22%/20.48% for capacities 1/64, and original AddMany1k loses 34.41%/33.36%.
+Matched repeated batches gain 37.26%/35.90%, but the held-out batch loses
+50.21%/53.05%. No default cache implementation, specialization or public
+contract follows. All quality gates/integration and repeated proof/lock builds
+pass; the fresh spike scalar remains 57.48 ns versus 91.22 ns untouched Cocoon.
+M1 performance remains unaccepted. See [conditions, raw samples and limits](performance.md#exact-bin-reuse-phase-0-no-go-2026-10-11).
+
+The next decision is whether to specify a certified interval experiment with
+a credible pinned-floating-point proof, or start translation analysis. Oracle
+locality alone is insufficient. The requirements below remain for future work;
+exact-value caching on repeated batches does not solve standalone scalar cost.
 
 - Measure mapping cost and value/bin locality first. An exact cache keyed by
   value bits and all mapping parameters can avoid repeated logarithms, but the

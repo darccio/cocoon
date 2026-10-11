@@ -4,6 +4,223 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Exact bin reuse: phase 0 no-go (2026-10-11)
+
+Reject both measured default exact-value cache candidates. Retain only the
+measurement harness and [raw evidence](measurements/bin-reuse-phase0.txt).
+Neither capacity passes the preregistered requirement: the same capacity must
+improve complete checked scalar calls by at least 5% on constant inputs **and**
+a frozen mixed/phase corpus, versus untouched execution, in both rounds
+(p < 0.05). Confirmed median regressions above 1% on miss-heavy, held-out or
+original guards also reject a candidate. Smaller detected costs and uncertain
+negatives remain reportable. This is a decision about these implementations
+as defaults, not a claim that every exact cache or repeated batch is useless.
+No production code, generated artifact, lock, public contract or manifest
+option changes. No implementation spec is approved or needed for the retained
+diagnostic work. M1 performance remains unaccepted.
+
+### Frozen experiment and limits
+
+Baseline is merged `main=origin/main=1510d69`; local work starts on
+`task/exact-bin-reuse`. The private diagnostic driver checks the SHA-256 of the
+entire pinned translated module, uniquely extracts its existing ln/affine/
+floor/saturated-conversion block, and builds temporary Go overlays. It uses
+neither host `math.Log` nor copied upstream/reference mapping code. The four
+shapes are untouched, extracted/no-cache, extracted/cache1 and
+extracted/cache64. These are not retained compiler specializations.
+
+The cache stores only logical i32 indices, keyed by all five u64 words: value
+bits plus current gamma, multiplier, minimum and offset bits. Parameter loads
+remain inside execution, after unchanged validity/zero-threshold checks.
+Every original counter/store/collapse update still executes in order. Tables
+are private to a module; replacement creates empty storage. Direct mapping
+hashes value bits with two xor-right-33 steps around multiplication by
+`0xff51afd7ed558ccd`, then masks by capacity minus one; full-key equality and
+an explicit valid flag decide hits. A valid collision replaces the entry.
+On amd64 entries occupy 48 B: 48/3,072 B for capacities 1/64, plus a 24 B module
+slice field and allocator overhead. Capacity 256 is 12,288 B of entry data.
+This host memory is outside guest logical lengths; zero warmed B/op does not
+count construction. All extracted variants add the slice field/helper code,
+so untouched-to-extracted includes layout, allocation size and placement
+effects; it does not isolate a function-call cost.
+
+Go 1.26.8, CGO disabled, GOAMD64=v1, PGO off, default GC/memory, unpinned Ryzen
+7 5800HS CPUs 0–15 (8 physical/16 logical). Seven 300 ms samples interleave
+roles per leaf, reversing role order each sample. Separate seven 500 ms samples
+reverse starting roles, families and leaves on the same frozen binaries.
+Hashes remain identical after both rounds. No compilation, lint, fuzz or
+reviewer tools overlap timing. New scalar/mapping/matched leaves set, assert
+and report actual P1; original serial guards use initial P16. Printed `-16`
+suffixes alone are not processor evidence. No samples are filtered. Dispersion
+is substantial in several screening cells; p-values are exploratory and
+unadjusted across the matrix. An undetected difference is not equivalence.
+
+### Value and bin locality
+
+The 8,192-point corpora are frozen before cache selection/timing. Timed arrays
+repeat after a full pass, so uniqueness below is within each finite cycle.
+The additional Increasing control and original `SketchAdd` instead continue
+through nonrepeating integers; measured N stays below binary64's integer
+precision limit. A complete untimed pass warms each new scalar store. Exact
+logical bins come from fresh singleton sketches in the unchanged Wasm under
+wazero, not collapsed store offsets or approximate host logarithms. Zero
+count and logical index zero are distinguished separately by boundary tests.
+
+| Corpus | Distinct values | Logical bins | Adjacent same-bin pairs / 8,191 | Second-pass hits: cap1 / cap64 |
+| --- | ---: | ---: | ---: | ---: |
+| Repeated (42) | 1 | 1 | 8,191 | 8,192 / 8,192 |
+| UniqueCycle (1…8,192) | 8,192 | 377 | 7,815 | 0 / 0 |
+| NearbyUniqueCycle (adjacent bits above 42) | 8,192 | 1 | 8,191 | 0 / 0 |
+| MostlyUniqueCycle (one hot point per 16) | 7,681 | 3 | 7,167 | 0 / 413 |
+| Phases (16 hot integers / unique cold phases) | 4,112 | 18 | 4,092 | 0 / 0 |
+| BroadHoldout (unique mantissa/exponent permutation) | 8,192 | 5,373 | 0 | 0 / 0 |
+| NegativeBins (existing eight-value cycle) | 8 | 8 | 0 | 0 / 8,192 |
+
+Actual cache probes run outside timing, with first-pass and continuous second-
+pass hits, misses, collisions/evictions per 1,024-point phase in the archive.
+Capacities 1/16/64/256 are checked. Capacity 64's mostly-unique hit rate is
+5.04%, below the nominal 6.25% hot frequency because collisions evict 42.
+The 16 hot integers map to only four slots at capacity 64 and thrash, giving
+zero hits in hot phases too. Keep this negative; the hash is not rerolled
+against the observed corpora. The broad/unique/nearby cycles have zero replay
+hits even at capacity 256. These are properties of the frozen policy, not
+universal hit-rate bounds for another hash, associativity or capacity.
+
+High adjacent-bin locality supports investigating certified intervals. It
+does not certify membership: oracle samples, monotone bit search or approximate
+exponential thresholds cannot substitute for a proof of the pinned mapping's
+floating-point behavior. An interval design must fall back around boundaries
+and uncertified values and retain ordered collapse. None is implemented here.
+
+### Mapping controls and complete checked calls
+
+Raw mapping controls include common indirect method invocation, bypass
+ownership/locks/validation/current guest parameter loads, and are not additive
+parts of facade latency. Original and hits use 42; OriginalIncreasing and
+miss-dominated controls use identical increasing integers. The latter prime
+42 once and can have at most one surviving priming hit. The increasing flag
+is precomputed outside timing. Screening → confirmation medians (ns/op):
+
+| Control | Screening | Confirmation |
+| --- | ---: | ---: |
+| Original mapping, 42 | 17.61 | 16.83 |
+| Original mapping, increasing | 18.76 | 17.74 |
+| Cache1 hit | 12.84 | 11.42 |
+| Cache1 miss/fill | 40.32 | 39.30 |
+| Cache64 hit | 13.92 | 12.66 |
+| Cache64 miss/fill | 40.33 | 39.35 |
+
+The attainable measured raw saving is only about 4–5 ns on 42, while a miss
+adds roughly 21–22 ns. A weighted estimate using these matched input classes
+needs about 80%/84% hits for capacities 1/64 just to break even. It is not a
+full-call ceiling or prediction: instruction layout, direct versus indirect
+calls, memory loads and stores interact. The increasing standalone workload
+has no exact reuse regardless of hash quality.
+
+Confirmation complete P1 scalar medians, ns/point; all cache miss-heavy losses
+listed detect a difference (p ≤ 0.015). Constant cap1's modest gain is p=0.011;
+screening detects no constant gain for either capacity.
+
+| Corpus | Untouched | Extracted | Cache1 | Cache64 | Cache64 change: screening / confirmation |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Increasing | 91.86 | 92.85 | 115.4 | 116.0 | +25.53% / +26.28% |
+| Repeated | 91.21 | 92.45 | 88.53 | 91.36 | −3.35% / +0.16% |
+| UniqueCycle | 92.39 | 94.02 | 110.8 | 114.7 | +20.02% / +24.15% |
+| NearbyUniqueCycle | 91.69 | 94.93 | 112.3 | 115.3 | +27.66% / +25.75% |
+| MostlyUniqueCycle | 90.88 | 92.35 | 111.7 | 114.9 | +24.97% / +26.43% |
+| Phases | 92.54 | 92.60 | 110.4 | 114.5 | +27.44% / +23.73% |
+| BroadHoldout | 91.43 | 94.26 | 116.9 | 120.4 | +29.54% / +31.69% |
+| NegativeBins | 90.58 | 95.82 | 111.0 | 91.69 | +5.70% / +1.23% |
+
+The cap64 NegativeBins comparison detects no gain or loss in either round.
+Cap1 constant improvement is only 3.60%/2.94%, below the 5% criterion and
+unconfirmed in screening. Neither mixed/phase candidate improves. Extraction
+alone increases BroadHoldout 3.10% in confirmation (p=0.007), while most other
+scalar extraction comparisons detect no difference. Keep the full-shape cost
+separate from lookup/fill overhead.
+Extraction's Increasing screening cost is 11.46% (p=0.038), without
+confirmation (+1.08%, p=0.209). NegativeBins extraction rises 5.78% in
+confirmation with benchstat's rounded p=0.050; retain that threshold ambiguity
+rather than treating the printed value as proof of p < 0.05.
+
+Original guards and matched batch qualification reject retention too:
+
+| Workload | Confirmation untouched → cache64 | Cache64 change: screening / confirmation | Confirmation p |
+| --- | --- | --- | ---: |
+| Original increasing scalar | 91.22 → 109.9 ns | +16.42% / +20.48% | 0.001 |
+| Original AddMany1k | 43.41 → 57.90 µs | +37.00% / +33.36% | 0.001 |
+| Matched repeated N1,024 | 45.18 → 28.96 µs | −32.27% / −35.90% | 0.001 |
+| Matched holdout N8,192 | 325.9 → 498.8 µs | +50.08% / +53.05% | 0.001 |
+| SQL | 2.175 → 2.244 µs | +0.21% / +3.17% | 1.000 |
+| Varied SQL | 2.785 → 2.841 µs | +1.75% / +2.01% | 0.620 |
+| Varied scalar | 91.02 → 89.56 ns | +0.84% / −1.60% | 0.318 |
+| Negative-bin scalar | 93.01 → 85.43 ns | −10.41% / −8.15% | 0.128 |
+| Traces | 2.612 → 2.619 ms | −1.62% / +0.27% | 0.620 |
+
+SQL/varied/trace differences and cap64's confirmation negative-bin gain are
+not detected; their point estimates still remain. Cap1 original scalar and
+AddMany1k regress 23.22%/34.41% in confirmation, both p=0.001. Its matched
+repeated batch gains 35.80%/37.26%, while the matched holdout loses 48.20%/50.21%.
+Extraction alone loses 4.94%/7.56% on matched holdout (p=0.002/0.017), and its
+repeated-batch screening cost is 2.61% (p=0.038), without confirmation
+(p=0.053). Strong repeated-batch gains do not qualify a default scalar cache.
+
+The unchanged streaming binary is shared by all DD-only overlay shapes;
+there is no before/after stream implementation difference to test. Fresh P16
+64 B fixed/held-out default streams reach 1.275/1.417 million writes/s in
+screening, 1.331/1.480 in confirmation. Sixteen-home standalone streams reach
+7.555/7.933 then 8.877/10.009 million writes/s. These single-binary controls
+show dispersion; they are not cache gains or a resolution of the older default
+streaming negative. Existing checked Batch32 remains unchanged.
+
+### Reference, correctness, gates and next work
+
+Rebuild the independent local spike from its hash-recorded unversioned sources:
+Rust 1.97.0 `--locked` std/panic_abort, Binaryen 133 meta-DCE/O3, wasm2go 0.4.16
+unsafe and its own hardener. Its Wasm again reproduces
+`8bda5ff7acff11fd64fd47a0a48165a71d610c28413665e4cc4d4034150d0651`.
+Native Go/wazero tests and matched one-iteration Count checks pass. Only corpus
+and benchmark code is shared, with no Cocoon implementation transplant or
+external source edit. Raw labels/provenance/commands remain in the archive;
+only comparison files normalize the reference package label. As in track 1,
+the original batch/trace shapes and ABI2 borrowed/background/four-instance
+contract differ; new P1 scalar corpora and matched groups use identical inputs.
+Fresh original scalar is 57.48 ns reference versus 91.22 ns untouched Cocoon
+(+58.70%); SQL is 1.982 versus 2.175 µs (+9.74%). Historical runs with different
+harness/binary placement are not paired evidence of an intervening regression.
+The real injector benchmark remains unavailable at its original machine path.
+
+Before freeze all three reviewers approve the guest, host and adversarial
+controls. Every overlay passes the entire DD test package, including point
+validation/errors, late-invalid batch atomicity/recovery, boundary/zero tests
+and growth/collapse. New tests check full value/parameter identity, collision
+replacement, reset and fresh module isolation. Every corpus compares Count and
+full protobuf after two complete ordered passes plus low-bin revisits, through
+both standalone scalar and prevalidated batch calls, against original Wasm.
+The 5,373-bin holdout necessarily crosses the 2,048-bin store capacity.
+
+`make check`, `race`, `rust`, `cross`, `smoke`, `fuzz` and `integration` pass
+using Go 1.27.1, official golangci-lint 2.13.1, Rust 1.97.0 and Binaryen 133.
+These gates, including race/fuzz, use unchanged generated modules. The private
+overlays receive the full DD test package, not separate race/fuzz qualification.
+Cross checks compile rather than execute non-native targets. Race includes
+generated consumer subprocesses; fuzz covers parsers, hardening and all
+generated wazero adapters plus stateful streaming. Two further builds of each
+of the three proofs and locks plus runtime adapter generation reproduce all
+57 existing fixture/runtime files and the new harness unchanged. Exact staged
+snapshot tests/vet/strict lint and Darna are required before the local signed
+measurement commit. Gate/proof logs and source/binary hashes are archived.
+
+Retain the phase-0 harness, decision and evidence in one local measurement
+commit. Reject cache1/cache64 and extraction-only as production changes; no
+rejected generated module is committed. Next choose whether to specify a
+certified interval experiment or pursue translation analysis. Interval work
+needs a credible floating-point proof and upstream API or checked compiler
+specialization before implementation, original fallback, new holdouts and all
+existing correctness/performance guards. Exact-value cache gains on repeated
+batches alone do not solve standalone M1. No publication follows from this
+round.
+
 ## Low-copy numeric inputs: qualified host encoding (2026-10-11)
 
 Retain the private generator stage of track 1. Top-level numeric slices now
@@ -160,9 +377,10 @@ for byte. Datadog and streaming Wasm remain byte-identical to baseline; compute
 Wasm changes only to add the synthetic numeric proof operations. Retained
 commits additionally validate their exact staged snapshots with darna.
 
-Track 1's host stage is qualified. Next measure exact-bin-reuse viability for
-standalone scalar work, keeping capacity/collapse/reuse semantics and independent
-holdouts. Guest borrowed/lazy input decoding remains a separate design and
+Track 1's host stage is qualified. The subsequent exact-bin-reuse measurements
+above reject both default cache prototypes; certified intervals or translation
+analysis require a separate decision. Guest borrowed/lazy input decoding remains
+a separate design and
 lifetime/aliasing review requiring operator approval for any new public contract
 before implementation. These throughput results do not accept scalar latency
 or the remaining guest-decoding cost.
