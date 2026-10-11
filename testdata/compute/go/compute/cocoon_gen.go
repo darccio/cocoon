@@ -12,7 +12,7 @@ import (
 	"unicode/utf8"
 )
 
-const schemaHash uint64 = 4076813288107292652
+const schemaHash uint64 = 17577806210291613188
 const maximumMemory uint64 = 16777216
 
 type Options struct {
@@ -917,6 +917,153 @@ func (l *Library) Bounce(_ctx context.Context, _arg0 Payload) (Payload, error) {
 	})
 	return _output, _err
 }
+func (l *Library) BounceSlices(_ctx context.Context, _arg0 string, _arg1 []int32, _arg2 []byte, _arg3 []uint32, _arg4 Numbers, _arg5 []int64, _arg6 []uint64, _arg7 []float32, _arg8 []float64) (Payload, error) {
+	if _err := l.admission(_ctx); _err != nil {
+		return Payload{}, _err
+	}
+	defer l.life.Leave()
+	var _size uint64
+	var _err error
+	_part0, _err := sizeString(_arg0, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part0)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_part1, _err := sizeSliceI32(_arg1, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part1)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_part2, _err := sizeBytes(_arg2, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part2)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_part3, _err := sizeSliceU32(_arg3, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part3)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_part4, _err := sizeNumbers(_arg4, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part4)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_part5, _err := sizeSliceI64(_arg5, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part5)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_part6, _err := sizeSliceU64(_arg6, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part6)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_part7, _err := sizeSliceF32(_arg7, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part7)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_part8, _err := sizeSliceF64(_arg8, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part8)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	if !utf8.ValidString(_arg0) {
+		return Payload{}, &rt.AppError{Op: "encode", Status: rt.ErrArg, Message: "invalid UTF-8"}
+	}
+	_data2, _err := encodeBytes(_arg2, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	_data4, _err := encodeNumbers(_arg4, l.options.MaxInput)
+	if _err != nil {
+		return Payload{}, _err
+	}
+	var _output Payload
+	_err = l.pool.Do(_ctx, func(_guest *guest) error {
+		return _guest.instance.Call("bounce_slices", func(_call *rt.Call) error {
+			if _inputErr := _call.PrepareInput(_size); _inputErr != nil {
+				return _inputErr
+			}
+			_pointer0, _putErr := _call.PutString(_arg0)
+			if _putErr != nil {
+				return _putErr
+			}
+			_pointer1, _putErr := putSliceI32(_call, _arg1, _part1)
+			if _putErr != nil {
+				return _putErr
+			}
+			_pointer2, _putErr := _call.PutBytes(_data2)
+			if _putErr != nil {
+				return _putErr
+			}
+			_pointer3, _putErr := putSliceU32(_call, _arg3, _part3)
+			if _putErr != nil {
+				return _putErr
+			}
+			_pointer4, _putErr := _call.PutBytes(_data4)
+			if _putErr != nil {
+				return _putErr
+			}
+			_pointer5, _putErr := putSliceI64(_call, _arg5, _part5)
+			if _putErr != nil {
+				return _putErr
+			}
+			_pointer6, _putErr := putSliceU64(_call, _arg6, _part6)
+			if _putErr != nil {
+				return _putErr
+			}
+			_pointer7, _putErr := putSliceF32(_call, _arg7, _part7)
+			if _putErr != nil {
+				return _putErr
+			}
+			_pointer8, _putErr := putSliceF64(_call, _arg8, _part8)
+			if _putErr != nil {
+				return _putErr
+			}
+			_status := rt.Status(_guest.module.Xcocoon_bounce_slices(int32(_pointer0), int32(len(_arg0)), int32(_pointer1), int32(_part1), int32(_pointer2), int32(len(_data2)), int32(_pointer3), int32(_part3), int32(_pointer4), int32(len(_data4)), int32(_pointer5), int32(_part5), int32(_pointer6), int32(_part6), int32(_pointer7), int32(_part7), int32(_pointer8), int32(_part8)))
+			_reply, _resultErr := _call.ResultView("bounce_slices", _status)
+			if _resultErr != nil {
+				return _resultErr
+			}
+			_decoded, _decodeErr := decodePayload(_reply, l.options.MaxOutput)
+			if _decodeErr != nil {
+				return _decodeErr
+			}
+			_output = _decoded
+			return nil
+		})
+	})
+	return _output, _err
+}
 func (l *Library) ScalarValues(_ctx context.Context, _arg0 int32, _arg1 uint32, _arg2 int64, _arg3 uint64, _arg4 float32, _arg5 float64, _arg6 bool) (Numbers, error) {
 	if _err := l.admission(_ctx); _err != nil {
 		return Numbers{}, _err
@@ -1041,6 +1188,51 @@ func (r *Counter) Add(_arg0 uint64) (uint64, error) {
 	})
 	return _output, _err
 }
+func (r *Counter) Sum(_arg0 []uint64) (uint64, error) {
+	if r == nil || r.library == nil || r.owner == nil {
+		return 0, &rt.HandleError{Op: "sum", Reason: "nil resource"}
+	}
+	l := r.library
+	if _err := l.life.Enter(); _err != nil {
+		return 0, _err
+	}
+	defer l.life.Leave()
+	var _size uint64
+	var _err error
+	_part0, _err := sizeSliceU64(_arg0, l.options.MaxInput)
+	if _err != nil {
+		return 0, _err
+	}
+	_size, _err = rt.InputSize(l.options.MaxInput, 1, _size, _part0)
+	if _err != nil {
+		return 0, _err
+	}
+	var _output uint64
+	_err = r.owner.Use("sum", func(_instance *rt.Instance, _handle uint64) error {
+		_guest := r.guest
+		return _instance.Call("sum", func(_call *rt.Call) error {
+			if _inputErr := _call.PrepareInput(_size); _inputErr != nil {
+				return _inputErr
+			}
+			_pointer0, _putErr := putSliceU64(_call, _arg0, _part0)
+			if _putErr != nil {
+				return _putErr
+			}
+			_status := rt.Status(_guest.module.Xcocoon_counter_sum(int64(_handle), int32(_pointer0), int32(_part0)))
+			_reply, _resultErr := _call.ResultView("sum", _status)
+			if _resultErr != nil {
+				return _resultErr
+			}
+			_decoded, _decodeErr := decodeU64(_reply, l.options.MaxOutput)
+			if _decodeErr != nil {
+				return _decodeErr
+			}
+			_output = _decoded
+			return nil
+		})
+	})
+	return _output, _err
+}
 func (r *Counter) Count() (uint64, error) {
 	if r == nil || r.library == nil || r.owner == nil {
 		return 0, &rt.HandleError{Op: "count", Reason: "nil resource"}
@@ -1096,6 +1288,20 @@ type CounterAddResult struct{ Value uint64 }
 
 func (CounterAddResult) _cocoonCounterResult() {}
 
+type _cocoonCounterSumCommand struct {
+	_arg0 []uint64
+}
+
+func (_cocoonCounterSumCommand) _cocoonCounterCommand() {}
+
+// CounterSumCommand retains its input for execution by Batch.
+func CounterSumCommand(_arg0 []uint64) CounterCommand { return _cocoonCounterSumCommand{_arg0: _arg0} }
+
+// CounterSumResult contains one completed sum command.
+type CounterSumResult struct{ Value uint64 }
+
+func (CounterSumResult) _cocoonCounterResult() {}
+
 type _cocoonCounterCountCommand struct {
 }
 
@@ -1113,6 +1319,18 @@ func _cocoonCounterInputSize(command CounterCommand, limit uint64) (uint64, erro
 	case _cocoonCounterAddCommand:
 		_ = value
 		var size uint64
+		return size, nil
+	case _cocoonCounterSumCommand:
+		_ = value
+		var size uint64
+		part0, err := sizeSliceU64(value._arg0, limit)
+		if err != nil {
+			return 0, err
+		}
+		size, err = rt.InputSize(limit, 1, size, part0)
+		if err != nil {
+			return 0, err
+		}
 		return size, nil
 	case _cocoonCounterCountCommand:
 		_ = value
@@ -1158,10 +1376,27 @@ func (r *Counter) Batch(ctx context.Context, commands []CounterCommand, limits r
 	plan := make([]rt.BatchCommand, len(commands))
 	results := make([]CounterResult, len(commands))
 	cursor := 0
+	var pointer0, length0 uint32
 	prepare := func(call *rt.Call) error {
 		switch value := commands[cursor].(type) {
 		case _cocoonCounterAddCommand:
 			_ = value
+			return nil
+		case _cocoonCounterSumCommand:
+			_ = value
+			size0, err := sizeSliceU64(value._arg0, l.options.MaxInput)
+			if err != nil {
+				return err
+			}
+			if err := call.PrepareInput(plan[cursor].InputBytes); err != nil {
+				return err
+			}
+			p0, putErr0 := putSliceU64(call, value._arg0, size0)
+			if putErr0 != nil {
+				return putErr0
+			}
+			pointer0 = p0
+			length0 = uint32(size0)
 			return nil
 		case _cocoonCounterCountCommand:
 			_ = value
@@ -1176,6 +1411,9 @@ func (r *Counter) Batch(ctx context.Context, commands []CounterCommand, limits r
 		case _cocoonCounterAddCommand:
 			_ = value
 			return rt.Status(r.guest.module.Xcocoon_counter_add(int64(handle), int64(value._arg0)))
+		case _cocoonCounterSumCommand:
+			_ = value
+			return rt.Status(r.guest.module.Xcocoon_counter_sum(int64(handle), int32(pointer0), int32(length0)))
 		case _cocoonCounterCountCommand:
 			_ = value
 			return rt.Status(r.guest.module.Xcocoon_counter_count(int64(handle)))
@@ -1192,6 +1430,14 @@ func (r *Counter) Batch(ctx context.Context, commands []CounterCommand, limits r
 				return err
 			}
 			results[cursor] = CounterAddResult{Value: value}
+			cursor++
+			return nil
+		case _cocoonCounterSumCommand:
+			value, err := decodeU64(reply, l.options.MaxOutput)
+			if err != nil {
+				return err
+			}
+			results[cursor] = CounterSumResult{Value: value}
 			cursor++
 			return nil
 		case _cocoonCounterCountCommand:
@@ -1212,6 +1458,8 @@ func (r *Counter) Batch(ctx context.Context, commands []CounterCommand, limits r
 		switch command.(type) {
 		case _cocoonCounterAddCommand:
 			op = "add"
+		case _cocoonCounterSumCommand:
+			op = "sum"
 		case _cocoonCounterCountCommand:
 			op = "count"
 		}
@@ -1220,4 +1468,112 @@ func (r *Counter) Batch(ctx context.Context, commands []CounterCommand, limits r
 	completed, err := r.owner.Batch(ctx, &l.life, limits, plan)
 	clear(results[completed:])
 	return results[:completed:completed], err
+}
+func putSliceI32(call *rt.Call, values []int32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], uint32(value))
+	}
+	return pointer, nil
+}
+func putSliceU32(call *rt.Call, values []uint32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], uint32(value))
+	}
+	return pointer, nil
+}
+func putSliceI64(call *rt.Call, values []int64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], uint64(value))
+	}
+	return pointer, nil
+}
+func putSliceU64(call *rt.Call, values []uint64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], uint64(value))
+	}
+	return pointer, nil
+}
+func putSliceF32(call *rt.Call, values []float32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], math.Float32bits(value))
+	}
+	return pointer, nil
+}
+func putSliceF64(call *rt.Call, values []float64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], math.Float64bits(value))
+	}
+	return pointer, nil
 }

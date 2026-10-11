@@ -222,6 +222,19 @@ pub trait API {
     fn join(&mut self, arg0: String, arg1: String) -> String;
     fn bounce(&mut self, arg0: Payload) -> Payload;
     #[allow(clippy::too_many_arguments)]
+    fn bounce_slices(
+        &mut self,
+        arg0: String,
+        arg1: Vec<i32>,
+        arg2: Vec<u8>,
+        arg3: Vec<u32>,
+        arg4: Numbers,
+        arg5: Vec<i64>,
+        arg6: Vec<u64>,
+        arg7: Vec<f32>,
+        arg8: Vec<f64>,
+    ) -> Payload;
+    #[allow(clippy::too_many_arguments)]
     fn scalar_values(
         &mut self,
         arg0: i32,
@@ -235,6 +248,7 @@ pub trait API {
     fn test_trap(&mut self, arg0: u32);
     fn counter_new(&mut self, arg0: u64) -> Self::Counter;
     fn counter_add(&mut self, resource: &mut Self::Counter, arg0: u64) -> Result<u64>;
+    fn counter_sum(&mut self, resource: &mut Self::Counter, arg0: Vec<u64>) -> Result<u64>;
     fn counter_count(&mut self, resource: &mut Self::Counter) -> u64;
     fn counter_close(&mut self, resource: Self::Counter) {
         drop(resource);
@@ -253,7 +267,7 @@ pub extern "C" fn cocoon_abi_version() -> u32 {
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_schema_hash() -> u64 {
-    4076813288107292652u64
+    17577806210291613188u64
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn cocoon_init() {
@@ -313,6 +327,143 @@ pub extern "C" fn cocoon_bounce(arg0_ptr: usize, arg0_len: usize) -> i32 {
     cocoon_guest::reply(__result)
 }
 #[unsafe(no_mangle)]
+pub extern "C" fn cocoon_bounce_slices(
+    arg0_ptr: usize,
+    arg0_len: usize,
+    arg1_ptr: usize,
+    arg1_len: usize,
+    arg2_ptr: usize,
+    arg2_len: usize,
+    arg3_ptr: usize,
+    arg3_len: usize,
+    arg4_ptr: usize,
+    arg4_len: usize,
+    arg5_ptr: usize,
+    arg5_len: usize,
+    arg6_ptr: usize,
+    arg6_len: usize,
+    arg7_ptr: usize,
+    arg7_len: usize,
+    arg8_ptr: usize,
+    arg8_len: usize,
+) -> i32 {
+    let __result = STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {
+        let __arg0 = cocoon_guest::input(arg0_ptr, arg0_len)?;
+        let arg0 = String::from_utf8(__arg0).map_err(|_| Error::argument("invalid UTF-8"))?;
+        let __arg1 = cocoon_guest::input(arg1_ptr, arg1_len)?;
+        let arg1 = {
+            if !__arg1.as_slice().len().is_multiple_of(4) {
+                return Err(Error::argument("slice length"));
+            }
+            __arg1
+                .as_slice()
+                .chunks_exact(4)
+                .map(|__chunk| {
+                    Ok(i32::from_le_bytes(
+                        __chunk
+                            .try_into()
+                            .map_err(|_| Error::argument("scalar length"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
+        let __arg2 = cocoon_guest::input(arg2_ptr, arg2_len)?;
+        let arg2 = __arg2;
+        let __arg3 = cocoon_guest::input(arg3_ptr, arg3_len)?;
+        let arg3 = {
+            if !__arg3.as_slice().len().is_multiple_of(4) {
+                return Err(Error::argument("slice length"));
+            }
+            __arg3
+                .as_slice()
+                .chunks_exact(4)
+                .map(|__chunk| {
+                    Ok(u32::from_le_bytes(
+                        __chunk
+                            .try_into()
+                            .map_err(|_| Error::argument("scalar length"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
+        let __arg4 = cocoon_guest::input(arg4_ptr, arg4_len)?;
+        let arg4 = Numbers::decode(__arg4.as_slice())?;
+        let __arg5 = cocoon_guest::input(arg5_ptr, arg5_len)?;
+        let arg5 = {
+            if !__arg5.as_slice().len().is_multiple_of(8) {
+                return Err(Error::argument("slice length"));
+            }
+            __arg5
+                .as_slice()
+                .chunks_exact(8)
+                .map(|__chunk| {
+                    Ok(i64::from_le_bytes(
+                        __chunk
+                            .try_into()
+                            .map_err(|_| Error::argument("scalar length"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
+        let __arg6 = cocoon_guest::input(arg6_ptr, arg6_len)?;
+        let arg6 = {
+            if !__arg6.as_slice().len().is_multiple_of(8) {
+                return Err(Error::argument("slice length"));
+            }
+            __arg6
+                .as_slice()
+                .chunks_exact(8)
+                .map(|__chunk| {
+                    Ok(u64::from_le_bytes(
+                        __chunk
+                            .try_into()
+                            .map_err(|_| Error::argument("scalar length"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
+        let __arg7 = cocoon_guest::input(arg7_ptr, arg7_len)?;
+        let arg7 = {
+            if !__arg7.as_slice().len().is_multiple_of(4) {
+                return Err(Error::argument("slice length"));
+            }
+            __arg7
+                .as_slice()
+                .chunks_exact(4)
+                .map(|__chunk| {
+                    Ok(f32::from_le_bytes(
+                        __chunk
+                            .try_into()
+                            .map_err(|_| Error::argument("scalar length"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
+        let __arg8 = cocoon_guest::input(arg8_ptr, arg8_len)?;
+        let arg8 = {
+            if !__arg8.as_slice().len().is_multiple_of(8) {
+                return Err(Error::argument("slice length"));
+            }
+            __arg8
+                .as_slice()
+                .chunks_exact(8)
+                .map(|__chunk| {
+                    Ok(f64::from_le_bytes(
+                        __chunk
+                            .try_into()
+                            .map_err(|_| Error::argument("scalar length"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
+        let __value = __state
+            .service
+            .bounce_slices(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+        __value.encode()
+    });
+    cocoon_guest::reply(__result)
+}
+#[unsafe(no_mangle)]
 pub extern "C" fn cocoon_scalar_values(
     arg0: i32,
     arg1: u32,
@@ -357,6 +508,32 @@ pub extern "C" fn cocoon_counter_add(__handle: u64, arg0: u64) -> i32 {
     let __result = STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {
         let __resource = __state.counter.get_mut(__handle)?;
         let __value = __state.service.counter_add(__resource, arg0)?;
+        Ok(__value.to_le_bytes().to_vec())
+    });
+    cocoon_guest::reply(__result)
+}
+#[unsafe(no_mangle)]
+pub extern "C" fn cocoon_counter_sum(__handle: u64, arg0_ptr: usize, arg0_len: usize) -> i32 {
+    let __result = STATE.with_borrow_mut(|__state| -> Result<Vec<u8>> {
+        let __arg0 = cocoon_guest::input(arg0_ptr, arg0_len)?;
+        let arg0 = {
+            if !__arg0.as_slice().len().is_multiple_of(8) {
+                return Err(Error::argument("slice length"));
+            }
+            __arg0
+                .as_slice()
+                .chunks_exact(8)
+                .map(|__chunk| {
+                    Ok(u64::from_le_bytes(
+                        __chunk
+                            .try_into()
+                            .map_err(|_| Error::argument("scalar length"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>>>()?
+        };
+        let __resource = __state.counter.get_mut(__handle)?;
+        let __value = __state.service.counter_sum(__resource, arg0)?;
         Ok(__value.to_le_bytes().to_vec())
     });
     cocoon_guest::reply(__result)

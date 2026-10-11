@@ -246,8 +246,9 @@ notes. No default PGO profile was added.
 
 ### Remaining performance work
 
-Track 3 now has an approved implementation and streaming qualification; the
-other tracks below remain planned experiments. Distinguish standalone
+Track 3 has an approved implementation and streaming qualification; track 1's
+host encoding stage is also qualified. Remaining stages below are planned
+experiments. Distinguish standalone
 `SketchAdd` latency from ingestion throughput: batching and sessions can improve
 throughput without making an individual `Add` faster.
 
@@ -259,10 +260,10 @@ removing it rebuilds the frozen binaries byte for byte. This does not establish
 a cause or a fix. Retain the controls and the explicit streaming negative,
 with [samples and limits](performance.md#default-streaming-cost-investigation-2026-10-11).
 No production change or new contract follows from this investigation. The next
-implementation experiment remains low-copy batching with matched inputs and
-standalone/streaming holdouts; refresh the independent spike before M1 acceptance.
+round qualifies low-copy host encoding below with matched inputs and
+standalone/streaming holdouts, including a freshly rebuilt independent spike.
 
-Start with a matched-input baseline matrix: scalar versus batch calls, repeated
+The entry baseline matrix compares scalar versus batch calls, repeated
 values, distinct nearby values, mostly unique values, and negative-bin values.
 Measure encoding, copies, allocation, admission, reply validation, and guest
 execution separately as well as end to end. Existing scalar and 1,000-point
@@ -270,8 +271,8 @@ batch benchmarks use different inputs; their per-point timings are not a
 controlled speedup comparison. Record cache hit rates and estimated ceilings
 before committing to larger designs.
 
-Execution priority is low-copy batching first, with the bin-reuse viability
-study as the next scalar investigation. Typed returns still need a compatibility
+The low-copy host encoding stage is qualified below. Next measure bin-reuse
+viability for standalone scalar work. Typed returns still need a compatibility
 decision before implementation; the session decision is recorded in track 3.
 Translation analysis and the alternative-backend comparison are diagnostic
 tracks; use their results to decide whether larger compiler or runtime work is justified.
@@ -284,7 +285,15 @@ an existing-API checked prototype cover all five corpora, four sizes, P1/P16,
 one/sixteen homes, host allocations, and warmed logical guest memory. Several
 large-batch prototype comparisons improve about 4–7%; small/noisy cases show
 no detected gain. This supports the private host-only experiment specified in
-`docs/low-copy-batching.md`; implementation and qualification remain pending.
+`docs/low-copy-batching.md`. The host stage is implemented and qualified with
+repeated full-facade gains, all quality gates/integration, and two identical
+builds of all three proofs and locks. A first placement candidate was rejected
+for a repeated SQL negative; the retained ordering passes the scalar, SQL,
+trace and streaming guards with no detected regression in both timing sets.
+The original 1,000-point batch improves 6.00%/6.46%, removing one Go allocation.
+Matched larger groups improve about 3–5%; sharded N32's gain lacks confirmation.
+The fresh spike scalar remains about 55.5 ns versus 89.7 ns, so M1 remains
+unaccepted. See [retained and rejected evidence](performance.md#low-copy-numeric-inputs-qualified-host-encoding-2026-10-11).
 The prototype requires no new public contract, and its measured same-address
 copy bypass is verified for Go 1.26.8 amd64. Rust decoding stays owned.
 
@@ -293,11 +302,16 @@ copy bypass is verified for Go 1.26.8 amd64. Rust decoding stays owned.
   memory access inside the execution lock; do not let borrowed views escape or
   survive memory growth. Benchmark sizes from one point through large batches,
   including allocation and memory-use measurements.
+  This host stage is qualified; numeric helpers are private and emitted after
+  operations, with unchanged checked cursor accounting. Its gains do not accept
+  standalone scalar latency, guest decoding, or default streaming performance.
 - If guest decoding remains material, investigate a call-scoped borrowed or
   lazy-decoded input path instead of collecting an owned Rust `Vec`. This needs
   a generator/guest API design and lifetime/aliasing review, not an isolated
   generated-file edit. Validate the entire batch before any sketch mutation and
   retain input order, including collapse behavior.
+  Any new public contract requires an explicit operator decision before
+  implementation; none is introduced by the qualified host stage.
 - Gate both stages on malformed input, invalid values late in a batch,
   allocation/growth failures, and exact Count/full-protobuf equivalence. Retain
   each stage only if it gives repeatable end-to-end gains without scalar or SQL
@@ -534,11 +548,11 @@ canonical replies, malformed/status/limit errors, once-only Close, sibling
 invalidation, and healthy replacement instances. The malformed successful-reply
 regression was also demonstrated to fail against the old generator.
 
-The new point-boundary differential tests explicitly assert the reference status
-and canonical unit reply. The generic differential comparison still compares
-error messages without requiring equal non-OK status codes. Strengthen that
-general oracle in a focused quality change; do not infer status equivalence from
-matching messages.
+The point-boundary differential tests explicitly assert the reference status
+and canonical unit reply. The generic differential generator now also compares
+status codes, including non-OK codes, before converting application errors;
+all three regenerated proof adapters include this check. This follow-up is
+complete. Matching messages alone do not establish status equivalence.
 
 ## Next milestone
 

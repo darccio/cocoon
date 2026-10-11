@@ -173,6 +173,8 @@ func generatedInvoke(g *guest, name string, args []cocoontest.Arg, pointers []ui
 		return rt.Status(g.module.Xcocoon_join(int32(pointers[0]), int32(len(args[0].Bytes)), int32(pointers[1]), int32(len(args[1].Bytes))))
 	case "cocoon_bounce":
 		return rt.Status(g.module.Xcocoon_bounce(int32(pointers[0]), int32(len(args[0].Bytes))))
+	case "cocoon_bounce_slices":
+		return rt.Status(g.module.Xcocoon_bounce_slices(int32(pointers[0]), int32(len(args[0].Bytes)), int32(pointers[1]), int32(len(args[1].Bytes)), int32(pointers[2]), int32(len(args[2].Bytes)), int32(pointers[3]), int32(len(args[3].Bytes)), int32(pointers[4]), int32(len(args[4].Bytes)), int32(pointers[5]), int32(len(args[5].Bytes)), int32(pointers[6]), int32(len(args[6].Bytes)), int32(pointers[7]), int32(len(args[7].Bytes)), int32(pointers[8]), int32(len(args[8].Bytes))))
 	case "cocoon_scalar_values":
 		return rt.Status(g.module.Xcocoon_scalar_values(int32(args[0].Value), int32(args[1].Value), int64(args[2].Value), int64(args[3].Value), math.Float32frombits(uint32(args[4].Value)), math.Float64frombits(args[5].Value), int32(args[6].Value)))
 	case "cocoon_test_trap":
@@ -181,6 +183,8 @@ func generatedInvoke(g *guest, name string, args []cocoontest.Arg, pointers []ui
 		return rt.Status(g.module.Xcocoon_counter_new(int64(args[0].Value)))
 	case "cocoon_counter_add":
 		return rt.Status(g.module.Xcocoon_counter_add(int64(args[0].Value), int64(args[1].Value)))
+	case "cocoon_counter_sum":
+		return rt.Status(g.module.Xcocoon_counter_sum(int64(args[0].Value), int32(pointers[1]), int32(len(args[1].Bytes))))
 	case "cocoon_counter_count":
 		return rt.Status(g.module.Xcocoon_counter_count(int64(args[0].Value)))
 	case "cocoon_counter_close":
@@ -195,10 +199,12 @@ func generatedCases(t testing.TB) []generatedCase {
 		{name: "cocoon_echo", args: []cocoontest.Arg{{Buffer: true, Bytes: generatedSeed(t, encodeString, "")}}},
 		{name: "cocoon_join", args: []cocoontest.Arg{{Buffer: true, Bytes: generatedSeed(t, encodeString, "")}, {Buffer: true, Bytes: generatedSeed(t, encodeString, "")}}},
 		{name: "cocoon_bounce", args: []cocoontest.Arg{{Buffer: true, Bytes: generatedSeed(t, encodePayload, Payload{})}}},
+		{name: "cocoon_bounce_slices", args: []cocoontest.Arg{{Buffer: true, Bytes: generatedSeed(t, encodeString, "")}, {Buffer: true, Bytes: generatedSeed(t, encodeSliceI32, nil)}, {Buffer: true, Bytes: generatedSeed(t, encodeBytes, nil)}, {Buffer: true, Bytes: generatedSeed(t, encodeSliceU32, nil)}, {Buffer: true, Bytes: generatedSeed(t, encodeNumbers, Numbers{})}, {Buffer: true, Bytes: generatedSeed(t, encodeSliceI64, nil)}, {Buffer: true, Bytes: generatedSeed(t, encodeSliceU64, nil)}, {Buffer: true, Bytes: generatedSeed(t, encodeSliceF32, nil)}, {Buffer: true, Bytes: generatedSeed(t, encodeSliceF64, nil)}}},
 		{name: "cocoon_scalar_values", args: []cocoontest.Arg{{}, {}, {}, {}, {}, {}, {}}},
 		{name: "cocoon_test_trap", args: []cocoontest.Arg{{}}},
 		{name: "cocoon_counter_new", args: []cocoontest.Arg{{}}},
 		{name: "cocoon_counter_add", args: []cocoontest.Arg{{}, {}}},
+		{name: "cocoon_counter_sum", args: []cocoontest.Arg{{}, {Buffer: true, Bytes: generatedSeed(t, encodeSliceU64, nil)}}},
 		{name: "cocoon_counter_count", args: []cocoontest.Arg{{}}},
 		{name: "cocoon_counter_close", args: []cocoontest.Arg{{}}},
 	}

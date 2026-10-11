@@ -19,6 +19,13 @@ Scalar-only, string/bytes-only, and record-only operation bodies stay unchanged.
 The implementation changes the generator and regenerates every proof and lock;
 it never optimizes generated modules independently.
 
+Emit the new private input helper definitions after the existing operations and
+resources, retaining the relative order of owned codecs and public operations.
+The first placement experiment interleaved them with codecs and was rejected
+after detecting a SQL regression. Source order and equal operation bodies do
+not establish latency equivalence; the final placement requires its own paired
+qualification. Keep the rejected experiment's samples and source hashes.
+
 ## Checked reservation protocol
 
 Standalone calls retain admission and all argument/aggregate size checks, then
