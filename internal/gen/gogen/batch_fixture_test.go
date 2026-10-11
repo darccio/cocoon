@@ -24,6 +24,9 @@ var batchModuleTests []byte
 //go:embed testdata/batch/consumer_test.go
 var batchConsumerTests []byte
 
+//go:embed testdata/batch/numeric_test.go
+var batchNumericTests []byte
+
 func TestGeneratedCheckedBatchFixture(t *testing.T) {
 	t.Parallel()
 	m, err := manifest.Parse([]byte(batchFixtureManifest))
@@ -47,6 +50,7 @@ func TestGeneratedCheckedBatchFixture(t *testing.T) {
 		"module.go":        batchModuleSource,
 		"module_test.go":   batchModuleTests,
 		"consumer_test.go": batchConsumerTests,
+		"numeric_test.go":  batchNumericTests,
 	} {
 		if writeErr := os.WriteFile(filepath.Join(directory, name), data, 0o600); writeErr != nil { // #nosec G703 -- Authored fixture names stay under t.TempDir.
 			t.Fatal(writeErr)
@@ -176,6 +180,14 @@ params=[{name="value",type="u64"}]
 returns="u64"
 [[resource.method]]
 name="unit"
+[[resource.method]]
+name="close"
+[[resource]]
+name="Vectors"
+[[resource.method]]
+name="new"
+params=[{name="first",type="[]u32"},{name="text",type="string"},{name="last",type="[]u64"}]
+returns="Vectors"
 [[resource.method]]
 name="close"
 `

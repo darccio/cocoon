@@ -16,7 +16,7 @@ import (
 	"dario.cat/cocoon/rt"
 )
 
-func fixtureStream(t *testing.T, options Options) (*Library, *Stream, *module, uint64) {
+func fixtureLibrary(t *testing.T, options Options) *Library {
 	t.Helper()
 	library, err := Open(options)
 	if err != nil {
@@ -27,6 +27,12 @@ func fixtureStream(t *testing.T, options Options) (*Library, *Stream, *module, u
 			t.Error(err)
 		}
 	})
+	return library
+}
+
+func fixtureStream(t *testing.T, options Options) (*Library, *Stream, *module, uint64) {
+	t.Helper()
+	library := fixtureLibrary(t, options)
 	stream, err := library.NewStream()
 	if err != nil {
 		t.Fatal(err)
@@ -479,10 +485,14 @@ func TestGeneratedBatchAliasCloseWaitsForWholeBuffer(t *testing.T) {
 // cancellation and terminal admission; generation must emit no unused locals.
 func TestGeneratedIdleBatchLifecycle(t *testing.T) {
 	t.Parallel()
-	library, _, m, _ := fixtureStream(t, Options{})
+	library := fixtureLibrary(t, Options{})
 	idle, err := library.NewIdle()
 	if err != nil {
 		t.Fatal(err)
+	}
+	m := idle.guest.module
+	if m.newCalls != 1 {
+		t.Fatal("idle fixture created unrelated resources", m.newCalls)
 	}
 	results, err := idle.Batch(t.Context(), nil, rt.BatchLimits{})
 	if err != nil || len(results) != 0 || cap(results) != 0 || len(m.operations) != 0 || m.reserveCalls != 0 {
@@ -501,8 +511,9 @@ func TestGeneratedIdleBatchLifecycle(t *testing.T) {
 	if !ok {
 		t.Fatal("idle alias changed type")
 	}
+	runtime.GC()
 	if err := idle.Close(); err != nil || alias.Close() != err || m.closeCalls != 1 {
-		t.Fatal("idle Close did not share once-only ownership", err)
+		t.Fatal("idle Close did not share once-only ownership", err, m.closeCalls)
 	}
 	results, err = alias.Batch(t.Context(), nil, rt.BatchLimits{})
 	var invalid *rt.HandleError
@@ -524,11 +535,12 @@ func TestGeneratedIdleBatchLifecycle(t *testing.T) {
 
 func TestGeneratedScalarOnlyBatch(t *testing.T) {
 	t.Parallel()
-	library, _, m, _ := fixtureStream(t, Options{})
+	library := fixtureLibrary(t, Options{})
 	scalar, err := library.NewScalar()
 	if err != nil {
 		t.Fatal(err)
 	}
+	m := scalar.guest.module
 	var handle uint64
 	if err := scalar.owner.Use("fixture", func(_ *rt.Instance, value uint64) error { handle = value; return nil }); err != nil {
 		t.Fatal(err)

@@ -12,6 +12,30 @@ impl crate::cocoon_gen::API for Shim {
     fn bounce(&mut self, payload: crate::cocoon_gen::Payload) -> crate::cocoon_gen::Payload {
         payload
     }
+    fn bounce_slices(
+        &mut self,
+        label: String,
+        signed32: Vec<i32>,
+        data: Vec<u8>,
+        unsigned32: Vec<u32>,
+        numbers: crate::cocoon_gen::Numbers,
+        signed64: Vec<i64>,
+        unsigned64: Vec<u64>,
+        float32: Vec<f32>,
+        float64: Vec<f64>,
+    ) -> crate::cocoon_gen::Payload {
+        crate::cocoon_gen::Payload {
+            label,
+            data,
+            numbers,
+            signed32,
+            unsigned32,
+            signed64,
+            unsigned64,
+            float32,
+            float64,
+        }
+    }
     fn scalar_values(
         &mut self,
         a: i32,
@@ -47,6 +71,17 @@ impl crate::cocoon_gen::API for Shim {
     fn counter_count(&mut self, counter: &mut u64) -> u64 {
         *counter
     }
+    fn counter_sum(&mut self, counter: &mut u64, deltas: Vec<u64>) -> cocoon_guest::Result<u64> {
+        // Validate the entire vector before committing any state change.
+        let mut total = *counter;
+        for delta in deltas {
+            total = total
+                .checked_add(delta)
+                .ok_or_else(|| cocoon_guest::Error::application("counter overflow"))?;
+        }
+        *counter = total;
+        Ok(total)
+    }
 }
 
 #[cfg(test)]
@@ -65,6 +100,14 @@ mod tests {
         let mut counter = shim.counter_new(u64::MAX);
         assert!(shim.counter_add(&mut counter, 1).is_err());
         assert_eq!(shim.counter_count(&mut counter), u64::MAX);
+        let mut counter = shim.counter_new(7);
+        assert_eq!(shim.counter_sum(&mut counter, vec![2, 3]), Ok(12));
+        assert_eq!(shim.counter_sum(&mut counter, vec![]), Ok(12));
+        assert_eq!(
+            shim.counter_sum(&mut counter, vec![1, u64::MAX]),
+            Err(cocoon_guest::Error::application("counter overflow"))
+        );
+        assert_eq!(shim.counter_count(&mut counter), 12);
         assert_eq!(shim.join("a".into(), "b".into()), "ab");
     }
 }

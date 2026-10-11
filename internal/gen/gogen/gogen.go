@@ -41,7 +41,8 @@ func Facade(m *manifest.Manifest) ([]byte, error) {
 	b.WriteString("func (l *Library) selectHome() *homeSlot { l.homeMu.Lock(); defer l.homeMu.Unlock(); slot:=&l.homes[l.nextHome]; l.nextHome++; if l.nextHome==len(l.homes) { l.nextHome=0 }; return slot }\n")
 	b.WriteString("func (l *Library) getHome(slot *homeSlot) (*guest,error) { slot.mu.Lock(); defer slot.mu.Unlock(); if slot.guest!=nil && !slot.guest.instance.Healthy() { slot.guest.close(); slot.guest=nil }; if slot.guest==nil { home,err:=l.newGuest(); if err!=nil { return nil,err }; slot.guest=home }; return slot.guest,nil }\n")
 	b.WriteString("func (l *Library) Close() error { if l==nil { return nil }; return l.life.Close(func() error { err:=l.pool.Close(); for index:=range l.homes { slot:=&l.homes[index]; slot.mu.Lock(); if slot.guest!=nil { slot.guest.close(); slot.guest=nil }; slot.mu.Unlock() }; return err }) }\n")
-	codec(&b)
+	var numericInputs strings.Builder
+	codec(&b, &numericInputs)
 	for _, resource := range m.Resources {
 		if resource.CheckedBatches {
 			batchSupport(&b)
@@ -63,6 +64,9 @@ func Facade(m *manifest.Manifest) ([]byte, error) {
 			resourceBatch(&b, m, resource)
 		}
 	}
+	// Keep new input helpers after operations so existing codec/operation
+	// definitions retain their relative order.
+	b.WriteString(numericInputs.String())
 	formatted, err := format.Source([]byte(b.String()))
 	if err != nil {
 		return nil, fmt.Errorf("format facade: %w", err)
@@ -121,6 +125,15 @@ func helperName(name string) string {
 		return "Slice" + manifest.GoName(strings.TrimPrefix(name, "[]"))
 	}
 	return manifest.GoName(name)
+}
+
+func numericSlice(name string) bool {
+	switch name {
+	case "[]i32", "[]u32", "[]i64", "[]u64", "[]f32", "[]f64":
+		return true
+	default:
+		return false
+	}
 }
 
 func zero(name string) string {
@@ -215,6 +228,9 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 	}
 	for index, param := range function.Params {
 		if m.Variable(param.Type) {
+			if numericSlice(param.Type) {
+				continue
+			}
 			if param.Type == "string" {
 				fmt.Fprintf(b, "if !utf8.ValidString(_arg%d) { %s };\n", index, failure("&rt.AppError{Op:\"encode\",Status:rt.ErrArg,Message:\"invalid UTF-8\"}"))
 				continue
@@ -251,6 +267,11 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 	for index, param := range function.Params {
 		arg := "_arg" + strconv.Itoa(index)
 		if m.Variable(param.Type) {
+			if numericSlice(param.Type) {
+				fmt.Fprintf(b, "_pointer%d,_putErr:=put%s(_call,%s,_part%d); if _putErr!=nil { return _putErr };\n", index, helperName(param.Type), arg, index)
+				args = append(args, fmt.Sprintf("int32(_pointer%d)", index), fmt.Sprintf("int32(_part%d)", index))
+				continue
+			}
 			data, put := fmt.Sprintf("_data%d", index), "PutBytes"
 			if param.Type == "string" {
 				data, put = arg, "PutString"
@@ -299,7 +320,7 @@ func operation(b *strings.Builder, m *manifest.Manifest, function manifest.Funct
 	b.WriteString("}\n")
 }
 
-func codec(b *strings.Builder) {
+func codec(b, numericInputs *strings.Builder) {
 	b.WriteString("func boolParam(value bool) int32 { if value { return 1 }; return 0 }\n")
 	b.WriteString("func sizeString(value string,limit uint64)(uint64,error){ return rt.InputSize(limit,uint64(len(value)),1) }\nfunc sizeBytes(value []byte,limit uint64)(uint64,error){ return rt.InputSize(limit,uint64(len(value)),1) }\n")
 	b.WriteString("func encodeString(value string,limit uint64)([]byte,error){ if _,err:=sizeString(value,limit);err!=nil{return nil,err};if !utf8.ValidString(value){return nil,&rt.AppError{Status:rt.ErrArg,Op:\"encode\",Message:\"invalid UTF-8\"}};return []byte(value),nil }\nfunc encodeBytes(value []byte,limit uint64)([]byte,error){if _,err:=sizeBytes(value,limit);err!=nil{return nil,err};return value,nil}\n")
@@ -325,6 +346,11 @@ func codec(b *strings.Builder) {
 		fmt.Fprintf(b, "func decode%s(data []byte,_ uint64)(%s,error){if len(data)!=%d{return 0,rt.ErrProtocol};return %s,nil}\n", name, goTyp, width, decoded)
 		fmt.Fprintf(b, "func sizeSlice%s(value []%s,limit uint64)(uint64,error){return rt.InputSize(limit,uint64(len(value)),%d)}\n", name, goTyp, width)
 		fmt.Fprintf(b, "func encodeSlice%s(values []%s,limit uint64)([]byte,error){size,err:=sizeSlice%s(values,limit);if err!=nil{return nil,err};data:=make([]byte,0,int(size));for _,value:=range values{ data=binary.LittleEndian.AppendUint%s(data,%s) };return data,nil}\n", name, goTyp, name, bits, encoded)
+		// The caller checks individual/aggregate sizes before Reserve. Claim the
+		// current bounded view through PutBytes before writing, so reservation
+		// membership and cursor advancement still use the runtime's checks.
+		// The view stays local: only its pointer reaches guest invocation.
+		fmt.Fprintf(numericInputs, "func putSlice%s(call *rt.Call,values []%s,size uint64)(uint32,error){pointer,err:=call.PutBytes(nil);if err!=nil{return 0,err};data,err:=call.Range(pointer,uint32(size));if err!=nil{return 0,err};pointer,err=call.PutBytes(data);if err!=nil{return 0,err};for index,value:=range values{binary.LittleEndian.PutUint%s(data[index*%d:],%s)};return pointer,nil}\n", name, goTyp, bits, width, encoded)
 		fmt.Fprintf(b, "func decodeSlice%s(data []byte,limit uint64)([]%s,error){if uint64(len(data))>limit{return nil,rt.ErrTooLarge};if len(data)%%%d!=0{return nil,rt.ErrProtocol};values:=make([]%s,len(data)/%d);for index:=range values { _part:=data[index*%d:]; values[index]=%s };return values,nil}\n", name, goTyp, width, goTyp, width, width, strings.ReplaceAll(decoded, "(data)", "(_part)"))
 	}
 }

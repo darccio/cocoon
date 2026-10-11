@@ -854,3 +854,111 @@ func (r *Stream) Batch(ctx context.Context, commands []StreamCommand, limits rt.
 	clear(results[completed:])
 	return results[:completed:completed], err
 }
+func putSliceI32(call *rt.Call, values []int32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], uint32(value))
+	}
+	return pointer, nil
+}
+func putSliceU32(call *rt.Call, values []uint32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], uint32(value))
+	}
+	return pointer, nil
+}
+func putSliceI64(call *rt.Call, values []int64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], uint64(value))
+	}
+	return pointer, nil
+}
+func putSliceU64(call *rt.Call, values []uint64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], uint64(value))
+	}
+	return pointer, nil
+}
+func putSliceF32(call *rt.Call, values []float32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], math.Float32bits(value))
+	}
+	return pointer, nil
+}
+func putSliceF64(call *rt.Call, values []float64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], math.Float64bits(value))
+	}
+	return pointer, nil
+}

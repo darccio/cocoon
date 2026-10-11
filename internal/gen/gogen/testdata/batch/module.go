@@ -35,6 +35,7 @@ type module struct {
 	operations   []string
 	handles      []uint64
 	mixed        mixedInputs
+	constructor  map[string][]byte
 	cancel       func()
 	started      chan<- struct{}
 	release      <-chan struct{}
@@ -44,19 +45,42 @@ type module struct {
 	closeCalls   int
 	newCalls     int
 	nextHandle   uint64
+	reserveAt    int
+	reserveBase  uint32
+	reserveGrow  int
+	reserveSwap  bool
+	reserveTrap  bool
 }
 
 func newModule(_ Options) (*module, *rt.Host) {
 	return &module{memory: make([]byte, 65536, 131072)}, nil
 }
 
-func (m *module) Memory() []byte          { return m.memory }
-func (*module) Version() uint32           { return rt.ABIVersion }
-func (*module) Schema() uint64            { return schemaHash }
-func (*module) Init()                     {}
-func (m *module) Reserve(_ uint32) uint32 { m.reserveCalls++; return 32 }
-func (*module) Output() uint32            { return 0 }
-func (*module) Trim(_ uint32)             {}
+func (m *module) Memory() []byte { return m.memory }
+func (*module) Version() uint32  { return rt.ABIVersion }
+func (*module) Schema() uint64   { return schemaHash }
+func (*module) Init()            {}
+func (m *module) Reserve(_ uint32) uint32 {
+	m.reserveCalls++
+	if m.reserveAt != 0 && m.reserveCalls != m.reserveAt {
+		return 32
+	}
+	if m.reserveTrap {
+		panic("deliberate reservation trap")
+	}
+	if m.reserveSwap {
+		m.memory = bytes.Clone(m.memory)
+	}
+	if m.reserveGrow != 0 {
+		m.memory = append(m.memory, make([]byte, m.reserveGrow)...)
+	}
+	if m.reserveBase != 0 {
+		return m.reserveBase
+	}
+	return 32
+}
+func (*module) Output() uint32 { return 0 }
+func (*module) Trim(_ uint32)  {}
 
 func (m *module) publish(data []byte, status rt.Status) int32 {
 	copy(m.memory[16384:], data)
@@ -101,6 +125,15 @@ func (m *module) Xcocoon_stream_new() int32 {
 	m.newCalls++
 	m.nextHandle++
 	return m.publish(binary.LittleEndian.AppendUint64(nil, 0xfedcba98_00000000|m.nextHandle), rt.OK)
+}
+func (m *module) Xcocoon_vectors_new(firstPointer, firstSize, textPointer, textSize, lastPointer, lastSize int32) int32 {
+	m.constructor = map[string][]byte{
+		"first": m.input(firstPointer, firstSize), "text": m.input(textPointer, textSize), "last": m.input(lastPointer, lastSize),
+	}
+	return m.Xcocoon_stream_new()
+}
+func (m *module) Xcocoon_vectors_close(handle int64) int32 {
+	return m.Xcocoon_stream_close(handle)
 }
 func (m *module) Xcocoon_stream_close(_ int64) int32 {
 	m.closeCalls++

@@ -154,9 +154,12 @@ func batchPrepare(b *strings.Builder, m *manifest.Manifest, resource string, met
 				continue
 			}
 			hasBuffers = true
-			if param.Type == "string" {
+			switch {
+			case numericSlice(param.Type):
+				fmt.Fprintf(b, "size%d,err:=size%s(value._arg%d,l.options.MaxInput); if err!=nil { return err }\n", index, helperName(param.Type), index)
+			case param.Type == "string":
 				fmt.Fprintf(b, "if !utf8.ValidString(value._arg%d) { return &rt.AppError{Op:\"encode\",Status:rt.ErrArg,Message:\"invalid UTF-8\"} }\n", index)
-			} else {
+			default:
 				fmt.Fprintf(b, "data%d,err:=encode%s(value._arg%d,l.options.MaxInput); if err!=nil { return err }\n", index, helperName(param.Type), index)
 			}
 		}
@@ -165,6 +168,10 @@ func batchPrepare(b *strings.Builder, m *manifest.Manifest, resource string, met
 		}
 		for index, param := range method.Params {
 			if !m.Variable(param.Type) {
+				continue
+			}
+			if numericSlice(param.Type) {
+				fmt.Fprintf(b, "p%d,putErr%d:=put%s(call,value._arg%d,size%d); if putErr%d!=nil { return putErr%d }; pointer%d=p%d; length%d=uint32(size%d)\n", index, index, helperName(param.Type), index, index, index, index, index, index, index, index)
 				continue
 			}
 			data, put := "data"+strconv.Itoa(index), "PutBytes"

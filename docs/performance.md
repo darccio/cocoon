@@ -4,6 +4,255 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Low-copy numeric inputs: qualified host encoding (2026-10-11)
+
+Retain the private generator stage of track 1. Top-level numeric slices now
+encode directly into their checked guest-memory reservation in stateless calls,
+resource constructors/methods, and checked commands. The six integer/float types
+share the existing checked cursor and bounded view APIs. Argument/aggregate size
+checks, UTF-8/record validation order, admission, ownership, per-operation reset
+and memory checks, reply validation, and immediate poisoning remain intact.
+Rust still decodes an owned vector and validates the entire sketch batch before
+mutation. Record codecs remain owned. No public API, ABI, manifest option, or
+borrowed guest lifetime contract is added; the [spec](low-copy-batching.md)
+precedes implementation in phase-0 commit `b04e04e`.
+
+### Rejected placement and retained placement
+
+[Round 1](measurements/low-copy-round1.txt) interleaved the new helpers with
+existing codecs. Its batch gains repeated, but SQL rose 1.07% in confirmation
+(2.143 to 2.166 µs, p=0.038), with the same direction in screening. The streaming
+holdout P16/64 B rose 1.34% in confirmation (p=0.026). Fixed P16/4 KiB rose 0.54%
+in screening (p=0.017), without a detected difference in confirmation. Reject
+that candidate before committing it: batch gains and passing safety gates do
+not waive the latency guards. All samples, source hashes, and negatives remain.
+
+Round 2 appends the identical private helper definitions after operations and
+resources, preserving existing codec/operation relative order. Go 1.26.8 amd64
+inspection shows the four SQL function addresses restored to baseline; round 1
+had moved them by 352 bytes. Equal bodies and changed placement motivated the
+experiment but do not establish cache alignment as the cause. The new placement
+qualifies on its own [paired/reversed evidence](measurements/low-copy-round2.txt).
+All three reviewers approved the bounded implementation and the ordering delta
+before retention. No padding, compiler flags, runtime shortcuts, or isolated
+edits to generated code were used.
+
+### Conditions and batch results
+
+Baseline is `main=origin/main=47ae180` with the identical matched harness from
+`b04e04e`. Frozen before/after and independently rebuilt spike binaries use Go
+1.26.8, CGO disabled, GOAMD64=v1, PGO off, default GC/memory, and unpinned Ryzen
+7 5800HS CPUs 0–15 (8 physical/16 logical). Seven 500 ms samples interleave
+implementations per leaf, reversing role order on alternate samples. A separate
+seven 1 s confirmation reverses the starting role, family and leaf order, without
+rebuilding binaries. No compilation, lint, fuzz, or reviewer tools overlap timing.
+Actual P1/P16 is set/asserted/reported in new leaves; the initial `-16` suffix
+is not evidence of a P16 serial measurement. Original serial guards use initial
+P16. P-values are exploratory, unadjusted across the matrix; no samples are
+filtered. “No detected regression” does not prove timing equivalence.
+
+The screening matrix covers all five corpora at 1/32/1,024/8,192 points, P1/P16,
+one/sixteen homes, the seven original/varied/negative guards, and default/checked
+streaming. Confirmation repeats the original guards, repeated/holdout matched
+cells, P16 contention, and selected streaming guards including both 64 B holdouts
+and fixed P16/4 KiB. Each group repeats after an untimed warmup; distinct values
+are unique within a group, not an indefinitely new stream. The collapse oracle
+crosses capacity during initial ingestion, not necessarily during timed groups.
+Count and full protobuf agreement, invalid-tail atomicity, and recovery are
+checked against the original Wasm before timing.
+
+Selected P1 medians (µs/group; all listed batch comparisons p=0.001):
+
+| Corpus / points | Before | After | Screening change | Confirmation change |
+| --- | ---: | ---: | ---: | ---: |
+| Repeated / 1 | 0.2181 | 0.1893 | −13.20% | −13.34% |
+| Repeated / 32 | 1.737 | 1.673 | −3.68% | −4.02% |
+| Repeated / 1,024 | 45.99 | 44.29 | −3.70% | −3.24% |
+| Repeated / 8,192 | 361.7 | 351.8 | −2.71% | −2.73% |
+| Holdout / 1 | 0.2181 | 0.1894 | −13.16% | −13.14% |
+| Holdout / 32 | 1.740 | 1.681 | −3.39% | −3.56% |
+| Holdout / 1,024 | 41.82 | 40.08 | −4.15% | −4.45% |
+| Holdout / 8,192 | 331.6 | 319.6 | −3.61% | −4.75% |
+
+The original 1,000-point batch improves 45.85 to 43.09 µs (−6.00%), then 46.27
+to 43.28 µs (−6.46%) in confirmation. One-point `AddMany` is still much slower
+than one scalar `Add` (~90 ns); these are batch throughput gains, not a scalar
+latency claim. In every matched cell the temporary 8×N-byte Go buffer and its
+allocation disappear (one allocation to zero). Rust allocation/copying remains.
+The frozen candidate's `PutBytes` assembly checks source/destination equality
+and bypasses `memmove` for the same guest view; this is a measured compiler/target
+fact, not a portable performance guarantee. All cursor/range checks still run.
+
+At P16 with one home, N32 reaches 18.017 million points/s and N1,024 22.289
+million points/s; screening time drops 6.67%/4.78%, confirmed 6.20%/3.57%.
+Sixteen homes reach 181.344/240.285 million points/s. The N32 sharded gain is
+not detected in confirmation (p=0.053); N1,024 improves 7.61% then 10.28%, with
+notable dispersion, so no fixed scaling guarantee follows. Logical guest memory
+is unchanged: 1,179,648 B for one warmed home, 18,874,368 B for sixteen; serial
+N8,192 uses 1,441,792 B, smaller groups 1,179,648 B. Measured post-warmup growth
+is zero. These are logical lengths, not RSS or zero-guest-allocation proofs.
+
+### Standalone and streaming guards
+
+| Workload | Screening before → after | Screening p | Confirmation before → after | Confirmation p |
+| --- | --- | ---: | --- | ---: |
+| SQL | 2.148 → 2.132 µs | 1.000 | 2.154 → 2.156 µs | 0.620 |
+| Scalar Add | 89.10 → 89.65 ns | 0.559 | 89.61 → 89.94 ns | 0.535 |
+| Traces | 2.532 → 2.523 ms | 0.620 | 2.565 → 2.557 ms | 0.259 |
+| Varied SQL | 2.725 → 2.720 µs | 0.648 | 2.737 → 2.732 µs | 0.438 |
+| Varied Add | 89.75 → 89.79 ns | 0.878 | 90.51 → 90.15 ns | 0.902 |
+| Negative-bin Add | 90.02 → 90.25 ns | 0.436 | 90.09 → 90.19 ns | 0.735 |
+
+No standalone scalar, SQL, trace, or streaming guard detects a regression in
+either retained-candidate run. Streaming has no numeric input and shows no
+established benefit from this stage. The fixed P16/4 KiB confirmation still has
+a +0.48% point estimate (p=0.053). Fixed P16 BatchHomesP has a +1.8% screening
+estimate (p=0.053), not repeated in confirmation (p=0.902); other absent gains
+and wide sharded streaming dispersion remain in the archive. This does not
+resolve the older default-stream
+negative against the pre-session implementation.
+
+For synthetic 64 B streams at P16, the default one home reaches 1.369 million
+writes/s (fixed) / 1.544 million (holdout); sixteen homes with standalone calls
+reach 10.546/10.587 million, and Batch32 with sixteen homes 9.618/10.463 million.
+Confirmation reaches 1.370/1.518 million default, 9.564/9.873 million standalone
+sharded, and 8.795/9.979 million Batch sharded. Batch with one home remains
+1.184/1.301 million in screening: sessions do not remove serialization. These
+are warmed aggregate throughput, not per-request latency. Fixed sharded Batch
+still allocates about 49.8 KB/801 allocations per stream versus 17.5 KB/250 for
+standalone. The resource-home and Batch tradeoffs from track 3 remain.
+
+### Independent reference, proofs, and next work
+
+The original spike is a hash-recorded local source archive without `.git`.
+Fresh Rust 1.97.0 `--locked` std/panic_abort Wasm builds, Binaryen 133 meta-DCE/O3,
+wasm2go 0.4.16 unsafe, and its own hardener reproduce Wasm hash
+`8bda5ff7acff11fd64fd47a0a48165a71d610c28413665e4cc4d4034150d0651`.
+Actual commands, source hashes, native-Go/wazero oracles, and build metadata are
+archived. Raw package labels stay intact; only comparison input labels are
+normalized for benchstat. New matched P1 harnesses use identical ordered groups.
+Original batch values (`i*1.5` versus `i`) and trace shapes (20×50 versus 1×1,000)
+differ, and the original ABI2 borrowed decode/mutate and four-instance/background
+context contracts differ from Cocoon's owned/prevalidated ABI3 calls. Compare
+complete implementations; do not subtract their gap as safety overhead.
+
+Fresh scalar is 55.51 ns reference versus 89.65 ns candidate (+61.50%), SQL
+1.945 versus 2.132 µs (+9.61%). Matched reference repeated N1,024/8,192 is
+36.28/290.5 µs versus 44.29/351.8 µs (+22.10%/+21.13%); holdout N8,192 is
+297.4 versus 319.6 µs (+7.48%). The real injector reference at the original
+`/home/bits/inject-bench` path is unavailable on this machine; no fresh
+native/translated/wazero real-payload claim follows. **M1 performance remains
+unaccepted**, and no default PGO profile is added.
+
+Qualification uses Go 1.27.1, Rust 1.97.0 and strict lint 2.13.1. `make check`,
+`make race`, `make rust`, `make cross`, `make smoke`, `make fuzz`, and
+`make integration` pass. Integration rebuilds and checks all three
+proofs and every shim's native tests/all-feature Clippy. `make fuzz` covers the
+parsers/hardener and all three generated wazero adapters plus streaming's own
+adapter. Cross checks compile all five targets; they are not native runs.
+Compiled generated-consumer fixtures exercise the six types, mixed/unaligned
+inputs, exact float bits, constructors/methods and checked commands. Independent
+wire goldens and original-Wasm checks cover bounds, malformed tails, retained
+owned output, current backing memory, undersized reservations before mutation,
+reserve traps/overflow/logical bounds, memory faults, typed errors, and prefix
+stop. Two repeated builds reproduce all 57 proof/runtime files and locks byte
+for byte. Datadog and streaming Wasm remain byte-identical to baseline; compute
+Wasm changes only to add the synthetic numeric proof operations. Retained
+commits additionally validate their exact staged snapshots with darna.
+
+Track 1's host stage is qualified. Next measure exact-bin-reuse viability for
+standalone scalar work, keeping capacity/collapse/reuse semantics and independent
+holdouts. Guest borrowed/lazy input decoding remains a separate design and
+lifetime/aliasing review requiring operator approval for any new public contract
+before implementation. These throughput results do not accept scalar latency
+or the remaining guest-decoding cost.
+
+## Low-copy batching: measurements before implementation (2026-10-11)
+
+After all three PRs merged, `main` and `origin/main` matched at `47ae180`.
+Track 1 starts with matched inputs and a private checked prototype, before any
+generator, runtime, or guest change. [Raw samples, driver, provenance, oracle
+checks, and disassembly](measurements/low-copy-phase0.txt) retain every sample.
+
+The serial matrix ingests identical ordered groups through public scalar calls,
+public `AddMany`, and the prototype, at 1, 32, 1,024, and 8,192 points. Corpora
+cover repeated values, nearby distinct values, integers distinct within each
+group, verified nonzero negative bins, and an independent nonmonotonic broad
+exponent/mantissa holdout. All groups repeat after one untimed warmup; this is
+steady ingestion, not an indefinitely unique stream or a finite growth lifetime.
+The Wasm-derived collapse assertion verifies the large holdout crosses the pinned
+2,048-bin capacity. Complete protobuf and Count comparisons against ordered
+original-Wasm scalar calls cover three repetitions and empty inputs. Prototype
+proofs also cover invalid tails, exact errors, healthy recovery, input limits,
+closed resources/libraries, and size-error precedence over a closed handle.
+
+Seven isolated 500 ms samples use Go 1.26.8, CGO disabled, GOAMD64=v1, PGO off,
+default GC/memory, and unpinned AMD Ryzen 7 5800HS CPUs 0–15. Each measured leaf
+sets, asserts, and reports actual GOMAXPROCS, serial P1 or contention P1/P16.
+The printed `-16` suffix reflects the initial setting, not a P1 measurement.
+Scalar/facade/prototype group order reverses on alternating samples. No builds,
+linting, fuzzing, or reviewer tool work overlapped timing. Go 1.26.8 tests and
+one-iteration benchmark oracles passed beforehand, as did strict lint 2.13.1.
+
+Selected medians (microseconds per group; no scalar-latency improvement claim):
+
+| Corpus / points | Ordered scalars | Public AddMany | Checked prototype | Prototype vs AddMany |
+| --- | ---: | ---: | ---: | --- |
+| Repeated / 1 | 0.09297 | 0.2226 | 0.2243 | no detected change, p=0.831 |
+| Repeated / 32 | 2.886 | 1.786 | 1.694 | −5.15%, p=0.001 |
+| Repeated / 1,024 | 92.241 | 47.089 | 44.421 | −5.67%, p=0.001 |
+| Repeated / 8,192 | 737.442 | 372.421 | 353.798 | −5.00%, p=0.001 |
+| Nearby / 1,024 | 92.733 | 46.901 | 44.785 | −4.51%, p=0.026 |
+| Distinct group / 8,192 | 742.070 | 369.963 | 356.068 | no detected change, p=0.073 |
+| Negative bins / 1 | 0.09267 | 0.2251 | 0.2425 | no detected change, p=0.209 |
+| Negative bins / 1,024 | 92.714 | 47.550 | 44.961 | −5.44%, p=0.026 |
+| Holdout / 1,024 | 90.695 | 43.404 | 40.393 | −6.94%, p=0.001 |
+| Holdout / 8,192 | 730.207 | 342.795 | 322.779 | −5.84%, p=0.001 |
+
+Several prototype samples have 20–50% dispersion. Small batches and multiple
+corpus/size cells show no detected gain; raw results include them all. These are
+exploratory, unadjusted comparisons. Removing one temporary Go allocation saves
+8×N B/call in every measured prototype cell; Go allocations become zero. Rust
+still clones/decodes owned vectors, so guest execution remains allocating.
+
+Independently timed controls (N=1/32/1,024/8,192) measure encode-only medians
+20.93 ns / 80.66 ns / 1.796 µs / 11.55 µs; checked reserve/copy of preencoded
+input 37.94 ns / 42.13 ns / 129.0 ns / 1.479 µs; checked direct preparation
+51.83 ns / 76.94 ns / 987.9 ns / 7.304 µs; and raw prepared guest execution
+94.22 ns / 1.510 µs / 43.42 µs / 347.4 µs. Their preparations, checks, locking,
+and state differ: do not add or subtract them into an end-to-end cost model.
+Preparation throughput is not ingestion throughput; raw guest calls bypass
+supported ownership/execution checks.
+
+The prototype preserves admission, owner resolution, execution locking,
+per-operation state/memory checks, canonical reply validation, and poisoning.
+It obtains a checked reservation cursor with `PutBytes(nil)`, borrows its current
+bounded memory using `Range`, writes little-endian floats, and advances actual
+reservation usage with `PutBytes` of that same view. The frozen Go 1.26.8 amd64
+`PutBytes` assembly compares source/destination and skips `runtime.memmove` when
+equal. This verifies the measured copy bypass, not a cross-toolchain performance
+guarantee; the extra range/accounting work remains in the prototype. Inspection
+used Go 1.24.1 objdump because the installed Go 1.26 package lacks that tool.
+
+Contention uses one warmed resource per worker, with encoding outside the
+instance lock in the facade and inside it in the prototype. At P16, one home
+limits N32 to 16.255 vs 17.174 million points/s and N1,024 to 20.868 vs 21.816
+million points/s (−5.38% and −4.34% time/op, p=0.001/0.002). Sixteen homes reach
+139.462 vs 149.061 million points/s at N32 and 166.589 vs 184.086 at N1,024;
+neither sharded timing difference is detected (p=0.073/0.165). Logical guest
+memory is 1,179,648 B for one home and 18,874,368 B for sixteen, with measured
+zero growth after warmup. Serial N8,192 uses 1,441,792 B; smaller groups use
+1,179,648 B, also with zero warmed growth. These are logical lengths, not RSS
+or proofs of zero guest allocation.
+
+The measured ceiling justifies a small host-only generator experiment for all
+six top-level numeric slice types using existing checked reservation APIs.
+Keep Rust owned decoding, record codecs, standalone scalar/SQL bodies, and the
+public contract unchanged. Retention still requires fresh paired full-facade,
+scalar/SQL/trace/streaming holdouts and independent spike comparisons, fault and
+growth proofs, all quality gates, and repeat builds. No production gain or M1
+acceptance is established by this phase.
+
 ## Default streaming cost investigation (2026-10-11)
 
 After PR #1 merged at `0a5969e`, the first follow-up investigates the repeated

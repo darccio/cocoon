@@ -45,6 +45,12 @@ func TestGeneratedLimitsAndClose(t *testing.T) {
 		}
 	}
 	{
+		_, err := l.BounceSlices(t.Context(), "", nil, nil, nil, Numbers{}, nil, nil, nil, nil)
+		if !errors.Is(err, rt.ErrClosed) {
+			t.Fatalf("call after close: %v", err)
+		}
+	}
+	{
 		_, err := l.ScalarValues(t.Context(), 0, 0, 0, 0, 0, 0, false)
 		if !errors.Is(err, rt.ErrClosed) {
 			t.Fatalf("call after close: %v", err)

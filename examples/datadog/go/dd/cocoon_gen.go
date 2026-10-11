@@ -613,21 +613,17 @@ func (r *Sketch) AddMany(_arg0 []float64) error {
 	if _err != nil {
 		return _err
 	}
-	_data0, _err := encodeSliceF64(_arg0, l.options.MaxInput)
-	if _err != nil {
-		return _err
-	}
 	_err = r.owner.Use("add_many", func(_instance *rt.Instance, _handle uint64) error {
 		_guest := r.guest
 		return _instance.Call("add_many", func(_call *rt.Call) error {
 			if _inputErr := _call.PrepareInput(_size); _inputErr != nil {
 				return _inputErr
 			}
-			_pointer0, _putErr := _call.PutBytes(_data0)
+			_pointer0, _putErr := putSliceF64(_call, _arg0, _part0)
 			if _putErr != nil {
 				return _putErr
 			}
-			_status := rt.Status(_guest.module.Xcocoon_sketch_add_many(int64(_handle), int32(_pointer0), int32(len(_data0))))
+			_status := rt.Status(_guest.module.Xcocoon_sketch_add_many(int64(_handle), int32(_pointer0), int32(_part0)))
 			_reply, _resultErr := _call.ResultView("add_many", _status)
 			if _resultErr != nil {
 				return _resultErr
@@ -703,4 +699,112 @@ func (r *Sketch) Close() error {
 		return &rt.HandleError{Op: "close", Reason: "nil resource"}
 	}
 	return r.owner.Close()
+}
+func putSliceI32(call *rt.Call, values []int32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], uint32(value))
+	}
+	return pointer, nil
+}
+func putSliceU32(call *rt.Call, values []uint32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], uint32(value))
+	}
+	return pointer, nil
+}
+func putSliceI64(call *rt.Call, values []int64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], uint64(value))
+	}
+	return pointer, nil
+}
+func putSliceU64(call *rt.Call, values []uint64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], uint64(value))
+	}
+	return pointer, nil
+}
+func putSliceF32(call *rt.Call, values []float32, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint32(data[index*4:], math.Float32bits(value))
+	}
+	return pointer, nil
+}
+func putSliceF64(call *rt.Call, values []float64, size uint64) (uint32, error) {
+	pointer, err := call.PutBytes(nil)
+	if err != nil {
+		return 0, err
+	}
+	data, err := call.Range(pointer, uint32(size))
+	if err != nil {
+		return 0, err
+	}
+	pointer, err = call.PutBytes(data)
+	if err != nil {
+		return 0, err
+	}
+	for index, value := range values {
+		binary.LittleEndian.PutUint64(data[index*8:], math.Float64bits(value))
+	}
+	return pointer, nil
 }
