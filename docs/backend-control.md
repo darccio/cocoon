@@ -26,6 +26,8 @@ Scalar cases cover repeated, increasing, negative-bin, and broad held-out
 values. Matched batches cover repeated 1024 and broad held-out 8192 points.
 Increasing scalar state can evolve beyond finite warmup; report any observed
 growth and retained-state effects instead of assuming it remains stationary.
+Different calibrated iteration counts traverse different increasing prefixes;
+this case is an evolving-state control, not a stationary backend ratio.
 SQL covers the original query and the retained holdout corpus; traces use the
 original 1000-span payload. SQL/trace output oracles compare complete bytes.
 Original workload controls remain separate from matched groups.
@@ -63,6 +65,13 @@ inlining/code placement. Record actual generated facade and Guest/Instance/
 Resource/full-facade layer controls separately; differences between separately
 timed layers are rough ceilings, not additive component shares. Raw guest cases
 omit host checks and have no public-operation latency claim.
+Their scope includes export dispatch and workload adapters: scalar/batch check
+status, while SQL/trace also reserve, copy inputs, and decode owned outputs.
+Stateless CheckedControl retains an unused home as well as its measured pool
+guest; `guest-B` describes the measured module, not total retained memory.
+The private wrapper does not replace a poisoned resource home. Old handles
+invalidate immediately, but it models fault-free warm work and containment,
+not the generated facade's recovery path. Production replacement is unchanged.
 
 The `rt.ABI` interface cannot return engine errors. The private wazero adapter
 must propagate an actual engine error into the existing `rt.Instance` recovery
@@ -107,6 +116,12 @@ Cache identity and timed boundaries are explicit.
 These independently measured scopes are not additive startup accounting.
 Go heap and linear memory exclude native executable mappings; report that
 limitation unless a separate-process footprint control measures them directly.
+The private guest constructor reads `Output` once more after `rt.NewInstance`
+has cached the descriptor privately. This is outside warm timing and included
+in both construction controls; they do not represent production startup.
+Both construction controls include private dispatch-adapter setup; wazero also
+caches export functions and signatures. Closing a guest runtime preserves
+code in its factory-owned cache, which is released after all guests close.
 
 Use Go 1.26.8, CGO disabled, `GOAMD64=v1`, explicit `-pgo=off`, default GC/memory,
 and recorded CPU affinity/governor. Freeze matching binaries and all harness,
