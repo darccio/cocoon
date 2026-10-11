@@ -1,5 +1,7 @@
 package rt
 
+//go:generate go run ../internal/gen/rtgen/cmd
+
 import (
 	"encoding/binary"
 	"errors"
@@ -106,9 +108,6 @@ type Instance struct {
 	alive  atomic.Bool
 	state  instanceState
 	output uint32
-	// errorBytes is batch-only accounting for a validated non-OK wire payload.
-	// checked resets it before every command; standalone calls never consult it.
-	errorBytes uint32
 }
 
 // NewInstance validates identity and contains traps during initialization.
@@ -153,58 +152,12 @@ func (i *Instance) Epoch() uint64 { return i.epoch.Load() }
 // Healthy reports whether resources may still be created on this instance.
 func (i *Instance) Healthy() bool { return i.alive.Load() }
 
+// BEGIN generated checked adapters
+
 // Call runs a callback while holding the instance's guest execution lock.
 func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
-	if i.stateFailed() {
-		return i.callState()
-	}
-	defer func() {
-		if value := recover(); value != nil {
-			err = i.recoveredCall(op, value)
-		}
-	}()
-	i.resetCall()
-	err = invoke(&i.call)
-	if i.memoryExceeded() {
-		return i.failMemory(op)
-	}
-	if protocolFault(err) {
-		i.poison()
-	}
-	return err
-}
-
-// checked shares the per-operation boundary with Call under a caller-held mu.
-// Its adapter omits locking and resets private batch reply accounting; all
-// checks, Call reset, recovery, and poisoning use the standalone helpers.
-func (i *Instance) checked(op string, invoke func(call *Call) error) (err error) {
-	if i.stateFailed() {
-		return i.callState()
-	}
-	defer func() {
-		if value := recover(); value != nil {
-			err = i.recoveredCall(op, value)
-		}
-	}()
-	i.errorBytes = 0
-	i.resetCall()
-	err = invoke(&i.call)
-	if i.memoryExceeded() {
-		return i.failMemory(op)
-	}
-	if protocolFault(err) {
-		i.poison()
-	}
-	return err
-}
-
-func (i *Instance) stateFailed() bool {
-	return i.state == instanceClosed || i.state == instancePoisoned
-}
-
-func (i *Instance) callState() error {
 	switch i.state {
 	case instanceClosed:
 		return ErrClosed
@@ -212,37 +165,66 @@ func (i *Instance) callState() error {
 		return ErrPoisoned
 	case instanceOpen:
 	}
-	return nil
-}
-
-// recoveredCall shares the fault path. recover itself must stay directly in
-// each deferred adapter; successful calls do not enter this helper.
-func (i *Instance) recoveredCall(op string, value any) error {
-	i.poison()
-	var message string
-	if i.host != nil {
-		message = i.host.takePanic()
-	}
-	return Classify(op, value, message)
-}
-
-func (i *Instance) resetCall() {
+	defer func() {
+		if value := recover(); value != nil {
+			i.poison()
+			var message string
+			if i.host != nil {
+				message = i.host.takePanic()
+			}
+			err = Classify(op, value, message)
+		}
+	}()
 	if i.host != nil {
 		i.host.takePanic()
 	}
 	i.call = Call{instance: i}
+	err = invoke(&i.call)
+	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
+		i.poison()
+		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+	}
+	if err != nil && errors.Is(err, ErrProtocol) {
+		i.poison()
+	}
+	return err
 }
 
-func (i *Instance) memoryExceeded() bool {
-	return uint64(len(i.module.Memory())) > i.limits.MaxMemory
+// checked runs the same per-operation boundary under a caller-held mu.
+func (i *Instance) checked(op string, invoke func(call *Call) error) (err error) {
+	switch i.state {
+	case instanceClosed:
+		return ErrClosed
+	case instancePoisoned:
+		return ErrPoisoned
+	case instanceOpen:
+	}
+	defer func() {
+		if value := recover(); value != nil {
+			i.poison()
+			var message string
+			if i.host != nil {
+				message = i.host.takePanic()
+			}
+			err = Classify(op, value, message)
+		}
+	}()
+	if i.host != nil {
+		i.host.takePanic()
+	}
+	i.call = Call{instance: i}
+	err = invoke(&i.call)
+	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
+		i.poison()
+		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+	}
+	if err != nil && errors.Is(err, ErrProtocol) {
+		i.poison()
+	}
+	return err
 }
 
-func protocolFault(err error) bool { return err != nil && errors.Is(err, ErrProtocol) }
-
-func (i *Instance) failMemory(op string) error {
-	i.poison()
-	return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
-}
+// END generated checked adapters
 
 func (i *Instance) poison() {
 	i.alive.Store(false)
@@ -380,7 +362,6 @@ func (c *Call) ResultView(op string, status Status) ([]byte, error) {
 		return nil, err
 	}
 	if status != OK {
-		c.instance.errorBytes = size
 		if err := FromStatus(op, status, view); err != nil {
 			return nil, err
 		}

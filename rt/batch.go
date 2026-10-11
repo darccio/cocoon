@@ -142,13 +142,19 @@ func (r *Resource[T]) Batch(ctx context.Context, life *Lifecycle, limits BatchLi
 					return batchArgument("reservation does not match declared input")
 				}
 				attempted = true
-				view, replyErr := call.ResultView(command.Op, command.Invoke(handle))
-				wireBytes := uint64(len(view))
-				if replyErr != nil && errors.Is(replyErr, ErrProtocol) {
+				status := command.Invoke(handle)
+				// Reuse structural validation before interpreting the actual status.
+				// Keep batch wire accounting out of standalone ResultView entirely.
+				view, replyErr := call.ResultView(command.Op, OK)
+				if replyErr != nil {
 					return replyErr
 				}
-				if replyErr != nil {
-					wireBytes = uint64(i.errorBytes)
+				wireBytes := uint64(len(view))
+				if status != OK {
+					replyErr = FromStatus(command.Op, status, view)
+				}
+				if replyErr != nil && errors.Is(replyErr, ErrProtocol) {
+					return replyErr
 				}
 				if replyErr == nil {
 					if decodeErr := command.Decode(view); decodeErr != nil {

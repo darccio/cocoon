@@ -33,11 +33,11 @@ type homeSlot struct {
 }
 type Library struct {
 	pool     *rt.Pool[guest]
-	homes    []homeSlot
 	options  Options
 	homeMu   sync.Mutex
-	nextHome int
 	life     rt.Lifecycle
+	homes    []homeSlot
+	nextHome int
 }
 
 func Open(options Options) (*Library, error) {

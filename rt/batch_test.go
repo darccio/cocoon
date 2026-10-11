@@ -311,6 +311,7 @@ func TestBatchReplyBudgetAndValidationPrecedence(t *testing.T) {
 		malformed bool
 		perCall   bool
 		poison    bool
+		badRange  bool
 	}{
 		{name: "success exceeds remaining", status: OK, want: ErrTooLarge},
 		{name: "application exceeds remaining", status: ErrApp, want: ErrTooLarge},
@@ -319,6 +320,9 @@ func TestBatchReplyBudgetAndValidationPrecedence(t *testing.T) {
 		{name: "guest limit exceeds remaining", status: ErrLimit, want: ErrTooLarge},
 		{name: "malformed typed exceeds remaining", status: OK, malformed: true, want: ErrProtocol, poison: true},
 		{name: "reserved exceeds remaining", status: Pending, want: ErrProtocol, poison: true},
+		{name: "unknown exceeds remaining", status: Status(99), want: ErrProtocol, poison: true},
+		{name: "negative status exceeds remaining", status: Status(-1), want: ErrProtocol, poison: true},
+		{name: "invalid expected error pointer precedes status", status: ErrArg, badRange: true, want: ErrProtocol, poison: true},
 		{name: "per operation max precedes status and range", status: Pending, perCall: true, want: ErrTooLarge},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -338,6 +342,13 @@ func TestBatchReplyBudgetAndValidationPrecedence(t *testing.T) {
 					m.writes++
 					binary.LittleEndian.PutUint32(m.memory, math.MaxUint32)
 					binary.LittleEndian.PutUint32(m.memory[4:], 16385)
+					return test.status
+				}
+			} else if test.badRange {
+				second.Invoke = func(uint64) Status {
+					m.writes++
+					binary.LittleEndian.PutUint32(m.memory, math.MaxUint32)
+					binary.LittleEndian.PutUint32(m.memory[4:], 6)
 					return test.status
 				}
 			}
@@ -382,7 +393,7 @@ func TestBatchReplyBudgetAndValidationPrecedence(t *testing.T) {
 	}
 }
 
-func TestBatchResetsStandaloneErrorAccounting(t *testing.T) {
+func TestBatchAccountsCurrentErrorAfterStandalone(t *testing.T) {
 	t.Parallel()
 	r, i, m, life := batchFixture(t)
 	standalone := batchReply(m, []byte("standalone error"), ErrApp)
@@ -391,16 +402,10 @@ func TestBatchResetsStandaloneErrorAccounting(t *testing.T) {
 		return replyErr
 	})
 	var app *AppError
-	if !errors.As(err, &app) || i.errorBytes != uint32(len("standalone error")) {
-		t.Fatal("missing standalone accounting", err, i.errorBytes)
+	if !errors.As(err, &app) || app.Message != "standalone error" {
+		t.Fatal("missing standalone error", err)
 	}
 	command := batchReply(m, nil, ErrApp)
-	command.Prepare = func(*Call) error {
-		if i.errorBytes != 0 {
-			t.Error("stale standalone error size")
-		}
-		return nil
-	}
 	n, err := r.Batch(t.Context(), life, BatchLimits{MaxOutputBytes: 1}, []BatchCommand{command})
 	failure := assertBatchFailure(t, n, err, 0, 0, true)
 	if !errors.As(failure, &app) || app.Status != ErrApp || app.Message != "" || !i.Healthy() {
@@ -424,12 +429,11 @@ func TestBatchResetGrowthAndOwnedReplies(t *testing.T) {
 	first.Decode = func(view []byte) error {
 		outputs = append(outputs, bytes.Clone(view))
 		i.host.lastPanic = "stale"
-		i.errorBytes = 19
 		return nil
 	}
 	second := batchReply(m, []byte("second"), OK)
 	second.Prepare = func(c *Call) error {
-		if c.pointer != 0 || c.used != 0 || c.capacity != 0 || i.errorBytes != 0 || i.host.lastPanic != "" {
+		if c.pointer != 0 || c.used != 0 || c.capacity != 0 || i.host.lastPanic != "" {
 			t.Error("per-command state leaked")
 		}
 		if err := c.PrepareInput(0); err != nil {

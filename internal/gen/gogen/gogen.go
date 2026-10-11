@@ -30,7 +30,7 @@ func Facade(m *manifest.Manifest) ([]byte, error) {
 	b.WriteString("type Options struct { Logger *slog.Logger; MaxInput,MaxOutput uint64; Instances,ResourceInstances int }\n")
 	b.WriteString("type guest struct { module *module; instance *rt.Instance }\nfunc (g *guest) close() { g.instance.Close(); g.module=nil }\n")
 	b.WriteString("type homeSlot struct { guest *guest; mu sync.Mutex }\n")
-	b.WriteString("type Library struct { pool *rt.Pool[guest]; homes []homeSlot; options Options; homeMu sync.Mutex; nextHome int; life rt.Lifecycle }\n")
+	b.WriteString("type Library struct { pool *rt.Pool[guest]; options Options; homeMu sync.Mutex; life rt.Lifecycle; homes []homeSlot; nextHome int }\n")
 	fmt.Fprintf(&b, "func Open(options Options) (*Library,error) { if options.MaxInput==0 { options.MaxInput=%d }; if options.MaxOutput==0 { options.MaxOutput=%d }; if options.MaxInput>%d || options.MaxOutput>%d || options.Instances<0 || options.ResourceInstances<0 || options.ResourceInstances>256 { return nil,rt.ErrTooLarge }; if options.ResourceInstances==0 { options.ResourceInstances=1 }; if options.Instances==0 { options.Instances=runtime.GOMAXPROCS(0);", input, output, input, output)
 	if m.Limits.Instances != "gomaxprocs" {
 		fmt.Fprintf(&b, "options.Instances=%s;", m.Limits.Instances)

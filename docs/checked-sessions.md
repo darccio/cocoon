@@ -288,6 +288,15 @@ Its standalone path retains the current lock and behavior. No safety check is
 moved to a single end-of-buffer validation. The additional input/output budgets
 are host errors and do not themselves poison a healthy instance.
 
+The implementation shares this core at generation time: one authored runtime
+template emits the standalone locked adapter and the private held-lock adapter.
+Only lock acquisition/release differs. Normal tests reproduce the committed
+generated region in authored instance.go and compare every checked statement
+after removing the lock prefix. Update the template and run go generate ./rt;
+the template, tool, and output move together. The runtime remains subject to
+all strict linters. This preserves one
+safety policy without adding a helper frame to standalone execution.
+
 ## Cancellation, partial completion, and re-entry
 
 After rejecting nil context, check cancellation before admission, after acquiring ownership
