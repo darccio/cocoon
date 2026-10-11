@@ -1,0 +1,1663 @@
+R11 REJECTED: negative-bin scalar +2.74%; Go1.26.8 CGO0 isolated frozen binaries.
+No accepted gains or equivalence. One source-shared template in separate runtime file.
+
+=== R11 TRACKED PATCH against HEAD26b32de ===
+diff --git a/docs/checked-sessions.md b/docs/checked-sessions.md
+index 9f0288c..8decc3e 100644
+--- a/docs/checked-sessions.md
++++ b/docs/checked-sessions.md
+@@ -288,6 +288,13 @@ Its standalone path retains the current lock and behavior. No safety check is
+ moved to a single end-of-buffer validation. The additional input/output budgets
+ are host errors and do not themselves poison a healthy instance.
+
++The implementation shares this core at generation time: one authored runtime
++template emits the standalone locked adapter and the private held-lock adapter.
++Only lock acquisition/release differs. Normal tests reproduce the committed
++output and compare every checked statement after removing the lock prefix.
++The runtime output remains subject to all strict linters. This preserves one
++safety policy without adding a helper frame to standalone execution.
++
+ ## Cancellation, partial completion, and re-entry
+
+ After rejecting nil context, check cancellation before admission, after acquiring ownership
+diff --git a/examples/datadog/cocoon.lock.json b/examples/datadog/cocoon.lock.json
+index 66dfff2..3c40f76 100644
+--- a/examples/datadog/cocoon.lock.json
++++ b/examples/datadog/cocoon.lock.json
+@@ -16,7 +16,7 @@
+   "shim_sha256": "ddbfb75d8bd83f6275f445a25747b61262657e0a3257dbdf0aa4f56f3af48732",
+   "wasm_sha256": "ae0119ca34206c2fcd8b69ae4e81421214417abb364d589c3afabcf16d8c6333",
+   "go_sha256": "f50d20e7fe091569353ac1ced7865a53cd23bc9add668c3aac0f5f3a0ac8eed4",
+-  "facade_sha256": "d5b5a3b89e740a9bfe85ed9928bdff8f92baa54fad7da7cdc4944c0f4007ab8a",
++  "facade_sha256": "82fe02613a80018928500e09edf8cd292d5830b05e70b9e2aaf87c7cfc8a7340",
+   "adapter_sha256": "1c8c8471f924e9f5b75dc3dcc6e421e112e2f5558827a320600660ae72ee962a",
+   "contract_tests_sha256": "e18ca0e532b09b24411d9c29a2c4f56f5c71f53b857cef56103f7d728addf01c",
+   "differential_tests_sha256": "7dd61b4bf689b24e6a4bfef809f32b9de4c86fad82f19f869f6e47a80842aed6",
+diff --git a/examples/datadog/go/dd/cocoon_gen.go b/examples/datadog/go/dd/cocoon_gen.go
+index d83378f..f4aa189 100644
+--- a/examples/datadog/go/dd/cocoon_gen.go
++++ b/examples/datadog/go/dd/cocoon_gen.go
+@@ -33,11 +33,11 @@ type homeSlot struct {
+ }
+ type Library struct {
+ 	pool     *rt.Pool[guest]
+-	homes    []homeSlot
+ 	options  Options
+ 	homeMu   sync.Mutex
+-	nextHome int
+ 	life     rt.Lifecycle
++	homes    []homeSlot
++	nextHome int
+ }
+
+ func Open(options Options) (*Library, error) {
+diff --git a/internal/gen/gogen/gogen.go b/internal/gen/gogen/gogen.go
+index 747e9d7..d83beca 100644
+--- a/internal/gen/gogen/gogen.go
++++ b/internal/gen/gogen/gogen.go
+@@ -30,7 +30,7 @@ func Facade(m *manifest.Manifest) ([]byte, error) {
+ 	b.WriteString("type Options struct { Logger *slog.Logger; MaxInput,MaxOutput uint64; Instances,ResourceInstances int }\n")
+ 	b.WriteString("type guest struct { module *module; instance *rt.Instance }\nfunc (g *guest) close() { g.instance.Close(); g.module=nil }\n")
+ 	b.WriteString("type homeSlot struct { guest *guest; mu sync.Mutex }\n")
+-	b.WriteString("type Library struct { pool *rt.Pool[guest]; homes []homeSlot; options Options; homeMu sync.Mutex; nextHome int; life rt.Lifecycle }\n")
++	b.WriteString("type Library struct { pool *rt.Pool[guest]; options Options; homeMu sync.Mutex; life rt.Lifecycle; homes []homeSlot; nextHome int }\n")
+ 	fmt.Fprintf(&b, "func Open(options Options) (*Library,error) { if options.MaxInput==0 { options.MaxInput=%d }; if options.MaxOutput==0 { options.MaxOutput=%d }; if options.MaxInput>%d || options.MaxOutput>%d || options.Instances<0 || options.ResourceInstances<0 || options.ResourceInstances>256 { return nil,rt.ErrTooLarge }; if options.ResourceInstances==0 { options.ResourceInstances=1 }; if options.Instances==0 { options.Instances=runtime.GOMAXPROCS(0);", input, output, input, output)
+ 	if m.Limits.Instances != "gomaxprocs" {
+ 		fmt.Fprintf(&b, "options.Instances=%s;", m.Limits.Instances)
+diff --git a/rt/batch.go b/rt/batch.go
+index 4aadaf0..1562938 100644
+--- a/rt/batch.go
++++ b/rt/batch.go
+@@ -142,14 +142,20 @@ func (r *Resource[T]) Batch(ctx context.Context, life *Lifecycle, limits BatchLi
+ 					return batchArgument("reservation does not match declared input")
+ 				}
+ 				attempted = true
+-				view, replyErr := call.ResultView(command.Op, command.Invoke(handle))
++				status := command.Invoke(handle)
++				// Reuse structural validation before interpreting the actual status.
++				// Keep batch wire accounting out of standalone ResultView entirely.
++				view, replyErr := call.ResultView(command.Op, OK)
++				if replyErr != nil {
++					return replyErr
++				}
+ 				wireBytes := uint64(len(view))
++				if status != OK {
++					replyErr = FromStatus(command.Op, status, view)
++				}
+ 				if replyErr != nil && errors.Is(replyErr, ErrProtocol) {
+ 					return replyErr
+ 				}
+-				if replyErr != nil {
+-					wireBytes = uint64(i.errorBytes)
+-				}
+ 				if replyErr == nil {
+ 					if decodeErr := command.Decode(view); decodeErr != nil {
+ 						return decodeErr
+diff --git a/rt/batch_test.go b/rt/batch_test.go
+index 3a324bd..ce04dee 100644
+--- a/rt/batch_test.go
++++ b/rt/batch_test.go
+@@ -311,6 +311,7 @@ func TestBatchReplyBudgetAndValidationPrecedence(t *testing.T) {
+ 		malformed bool
+ 		perCall   bool
+ 		poison    bool
++		badRange  bool
+ 	}{
+ 		{name: "success exceeds remaining", status: OK, want: ErrTooLarge},
+ 		{name: "application exceeds remaining", status: ErrApp, want: ErrTooLarge},
+@@ -319,6 +320,9 @@ func TestBatchReplyBudgetAndValidationPrecedence(t *testing.T) {
+ 		{name: "guest limit exceeds remaining", status: ErrLimit, want: ErrTooLarge},
+ 		{name: "malformed typed exceeds remaining", status: OK, malformed: true, want: ErrProtocol, poison: true},
+ 		{name: "reserved exceeds remaining", status: Pending, want: ErrProtocol, poison: true},
++		{name: "unknown exceeds remaining", status: Status(99), want: ErrProtocol, poison: true},
++		{name: "negative status exceeds remaining", status: Status(-1), want: ErrProtocol, poison: true},
++		{name: "invalid expected error pointer precedes status", status: ErrArg, badRange: true, want: ErrProtocol, poison: true},
+ 		{name: "per operation max precedes status and range", status: Pending, perCall: true, want: ErrTooLarge},
+ 	} {
+ 		t.Run(test.name, func(t *testing.T) {
+@@ -340,6 +344,13 @@ func TestBatchReplyBudgetAndValidationPrecedence(t *testing.T) {
+ 					binary.LittleEndian.PutUint32(m.memory[4:], 16385)
+ 					return test.status
+ 				}
++			} else if test.badRange {
++				second.Invoke = func(uint64) Status {
++					m.writes++
++					binary.LittleEndian.PutUint32(m.memory, math.MaxUint32)
++					binary.LittleEndian.PutUint32(m.memory[4:], 6)
++					return test.status
++				}
+ 			}
+ 			n, err := r.Batch(t.Context(), life, BatchLimits{MaxOutputBytes: 1}, []BatchCommand{batchReply(m, []byte{1}, OK), second, batchReply(m, nil, OK)})
+ 			failure := assertBatchFailure(t, n, err, 1, 1, true)
+@@ -382,7 +393,7 @@ func TestBatchReplyBudgetAndValidationPrecedence(t *testing.T) {
+ 	}
+ }
+
+-func TestBatchResetsStandaloneErrorAccounting(t *testing.T) {
++func TestBatchAccountsCurrentErrorAfterStandalone(t *testing.T) {
+ 	t.Parallel()
+ 	r, i, m, life := batchFixture(t)
+ 	standalone := batchReply(m, []byte("standalone error"), ErrApp)
+@@ -391,16 +402,10 @@ func TestBatchResetsStandaloneErrorAccounting(t *testing.T) {
+ 		return replyErr
+ 	})
+ 	var app *AppError
+-	if !errors.As(err, &app) || i.errorBytes != uint32(len("standalone error")) {
+-		t.Fatal("missing standalone accounting", err, i.errorBytes)
++	if !errors.As(err, &app) || app.Message != "standalone error" {
++		t.Fatal("missing standalone error", err)
+ 	}
+ 	command := batchReply(m, nil, ErrApp)
+-	command.Prepare = func(*Call) error {
+-		if i.errorBytes != 0 {
+-			t.Error("stale standalone error size")
+-		}
+-		return nil
+-	}
+ 	n, err := r.Batch(t.Context(), life, BatchLimits{MaxOutputBytes: 1}, []BatchCommand{command})
+ 	failure := assertBatchFailure(t, n, err, 0, 0, true)
+ 	if !errors.As(failure, &app) || app.Status != ErrApp || app.Message != "" || !i.Healthy() {
+@@ -424,12 +429,11 @@ func TestBatchResetGrowthAndOwnedReplies(t *testing.T) {
+ 	first.Decode = func(view []byte) error {
+ 		outputs = append(outputs, bytes.Clone(view))
+ 		i.host.lastPanic = "stale"
+-		i.errorBytes = 19
+ 		return nil
+ 	}
+ 	second := batchReply(m, []byte("second"), OK)
+ 	second.Prepare = func(c *Call) error {
+-		if c.pointer != 0 || c.used != 0 || c.capacity != 0 || i.errorBytes != 0 || i.host.lastPanic != "" {
++		if c.pointer != 0 || c.used != 0 || c.capacity != 0 || i.host.lastPanic != "" {
+ 			t.Error("per-command state leaked")
+ 		}
+ 		if err := c.PrepareInput(0); err != nil {
+diff --git a/rt/instance.go b/rt/instance.go
+index bc5b282..5fef48d 100644
+--- a/rt/instance.go
++++ b/rt/instance.go
+@@ -1,8 +1,9 @@
+ package rt
+
++//go:generate go run ../internal/gen/rtgen/cmd
++
+ import (
+ 	"encoding/binary"
+-	"errors"
+ 	"fmt"
+ 	"math"
+ 	"sync"
+@@ -106,9 +107,6 @@ type Instance struct {
+ 	alive  atomic.Bool
+ 	state  instanceState
+ 	output uint32
+-	// errorBytes is batch-only accounting for a validated non-OK wire payload.
+-	// checked resets it before every command; standalone calls never consult it.
+-	errorBytes uint32
+ }
+
+ // NewInstance validates identity and contains traps during initialization.
+@@ -153,97 +151,6 @@ func (i *Instance) Epoch() uint64 { return i.epoch.Load() }
+ // Healthy reports whether resources may still be created on this instance.
+ func (i *Instance) Healthy() bool { return i.alive.Load() }
+
+-// Call runs a callback while holding the instance's guest execution lock.
+-func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
+-	i.mu.Lock()
+-	defer i.mu.Unlock()
+-	if i.stateFailed() {
+-		return i.callState()
+-	}
+-	defer func() {
+-		if value := recover(); value != nil {
+-			err = i.recoveredCall(op, value)
+-		}
+-	}()
+-	i.resetCall()
+-	err = invoke(&i.call)
+-	if i.memoryExceeded() {
+-		return i.failMemory(op)
+-	}
+-	if protocolFault(err) {
+-		i.poison()
+-	}
+-	return err
+-}
+-
+-// checked shares the per-operation boundary with Call under a caller-held mu.
+-// Its adapter omits locking and resets private batch reply accounting; all
+-// checks, Call reset, recovery, and poisoning use the standalone helpers.
+-func (i *Instance) checked(op string, invoke func(call *Call) error) (err error) {
+-	if i.stateFailed() {
+-		return i.callState()
+-	}
+-	defer func() {
+-		if value := recover(); value != nil {
+-			err = i.recoveredCall(op, value)
+-		}
+-	}()
+-	i.errorBytes = 0
+-	i.resetCall()
+-	err = invoke(&i.call)
+-	if i.memoryExceeded() {
+-		return i.failMemory(op)
+-	}
+-	if protocolFault(err) {
+-		i.poison()
+-	}
+-	return err
+-}
+-
+-func (i *Instance) stateFailed() bool {
+-	return i.state == instanceClosed || i.state == instancePoisoned
+-}
+-
+-func (i *Instance) callState() error {
+-	switch i.state {
+-	case instanceClosed:
+-		return ErrClosed
+-	case instancePoisoned:
+-		return ErrPoisoned
+-	case instanceOpen:
+-	}
+-	return nil
+-}
+-
+-// recoveredCall shares the fault path. recover itself must stay directly in
+-// each deferred adapter; successful calls do not enter this helper.
+-func (i *Instance) recoveredCall(op string, value any) error {
+-	i.poison()
+-	var message string
+-	if i.host != nil {
+-		message = i.host.takePanic()
+-	}
+-	return Classify(op, value, message)
+-}
+-
+-func (i *Instance) resetCall() {
+-	if i.host != nil {
+-		i.host.takePanic()
+-	}
+-	i.call = Call{instance: i}
+-}
+-
+-func (i *Instance) memoryExceeded() bool {
+-	return uint64(len(i.module.Memory())) > i.limits.MaxMemory
+-}
+-
+-func protocolFault(err error) bool { return err != nil && errors.Is(err, ErrProtocol) }
+-
+-func (i *Instance) failMemory(op string) error {
+-	i.poison()
+-	return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+-}
+-
+ func (i *Instance) poison() {
+ 	i.alive.Store(false)
+ 	i.state = instancePoisoned
+@@ -380,7 +287,6 @@ func (c *Call) ResultView(op string, status Status) ([]byte, error) {
+ 		return nil, err
+ 	}
+ 	if status != OK {
+-		c.instance.errorBytes = size
+ 		if err := FromStatus(op, status, view); err != nil {
+ 			return nil, err
+ 		}
+diff --git a/testdata/compute/cocoon.lock.json b/testdata/compute/cocoon.lock.json
+index 24763e6..e6fb83d 100644
+--- a/testdata/compute/cocoon.lock.json
++++ b/testdata/compute/cocoon.lock.json
+@@ -16,7 +16,7 @@
+   "shim_sha256": "0abc5fac9468f9efc81599fe800fc28ada2c329f75cabbc1070c55fb8b94fab6",
+   "wasm_sha256": "ef0db188dad9a4c3cd4fc702b07cf0e5e5575905c7fb55b0c0ad3d92dcfe476c",
+   "go_sha256": "1712a7c5a8cedc766d11531efd47e178cb36be132b7e4408a97b5a857a210cac",
+-  "facade_sha256": "2e10f87d5629ad7b94a9c13a7b4a97d0fc60711211fbf97d9d5b06c747de3f47",
++  "facade_sha256": "f47f2a6e0d8d3f47f3ba2ccf38f735b9137389d66cf71c0b9949b071da3151f4",
+   "adapter_sha256": "3b6e4dcbb79d3cebef78ba3dbae36083637d1281bb725a9915fd5ea223c00fd4",
+   "contract_tests_sha256": "36ab948e0518dc69de3b915941d615a07e3bf26610567c10c40571a080d84b44",
+   "differential_tests_sha256": "a98c2798aa9b96079291886e61bb939316d5799dd563741e79d630c7a676e33d",
+diff --git a/testdata/compute/go/compute/cocoon_gen.go b/testdata/compute/go/compute/cocoon_gen.go
+index 065fab8..d896443 100644
+--- a/testdata/compute/go/compute/cocoon_gen.go
++++ b/testdata/compute/go/compute/cocoon_gen.go
+@@ -33,11 +33,11 @@ type homeSlot struct {
+ }
+ type Library struct {
+ 	pool     *rt.Pool[guest]
+-	homes    []homeSlot
+ 	options  Options
+ 	homeMu   sync.Mutex
+-	nextHome int
+ 	life     rt.Lifecycle
++	homes    []homeSlot
++	nextHome int
+ }
+
+ func Open(options Options) (*Library, error) {
+diff --git a/testdata/streaming/cocoon.lock.json b/testdata/streaming/cocoon.lock.json
+index a9eac48..5a61cdf 100644
+--- a/testdata/streaming/cocoon.lock.json
++++ b/testdata/streaming/cocoon.lock.json
+@@ -16,7 +16,7 @@
+   "shim_sha256": "9a90c061cdcc1802b476a2f7df77c9860a816c449c6b5bdac206d545a7d51bab",
+   "wasm_sha256": "9141023ca801ef1cb0825ea155dd42b4d83bcee9ce6c9a6ad453b40badb49955",
+   "go_sha256": "fcee3f230761309eada9d140a0b748dc487967971178d5ac96129c7d0fcc4c57",
+-  "facade_sha256": "f60eaea523ccf3829d92be9a06ff4ab6884355450dd8d73cd43daeed8ba904a5",
++  "facade_sha256": "dab59230bc43290ad019c0a0d3a4a5d0219b4156decbeb727023d5ce1fae1f42",
+   "adapter_sha256": "423353ba866d8f7c1d68a9dd6fc359dc654c71cd4e0ad60100a65c76ba7f93b9",
+   "contract_tests_sha256": "8ae065ef4478d9669e9397264c6e94ac2352dd83f458b00e9be2770b0d1b4825",
+   "differential_tests_sha256": "0b93cc3dc57c27127a30371ee96eb8eb4fcc81dc5f8497067845461623a78a27",
+diff --git a/testdata/streaming/go/streaming/cocoon_gen.go b/testdata/streaming/go/streaming/cocoon_gen.go
+index ef37869..57a0341 100644
+--- a/testdata/streaming/go/streaming/cocoon_gen.go
++++ b/testdata/streaming/go/streaming/cocoon_gen.go
+@@ -33,11 +33,11 @@ type homeSlot struct {
+ }
+ type Library struct {
+ 	pool     *rt.Pool[guest]
+-	homes    []homeSlot
+ 	options  Options
+ 	homeMu   sync.Mutex
+-	nextHome int
+ 	life     rt.Lifecycle
++	homes    []homeSlot
++	nextHome int
+ }
+
+ func Open(options Options) (*Library, error) {
+
+=== .cache/sessions-phase0/measure-r11-screen.py ===
+import os, subprocess, time, hashlib, datetime, re
+from pathlib import Path
+root=Path.cwd(); out=root/'.cache/sessions-phase0'
+env=dict(os.environ,CGO_ENABLED='0',GOTOOLCHAIN='local',GOAMD64='v1',GOMAXPROCS='16')
+start=time.monotonic()
+def sha(path): return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+print('UTC',datetime.datetime.now(datetime.timezone.utc).isoformat(),flush=True)
+print('qualification_base_commit',subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),flush=True)
+print('Go1.26.8 CGO0 GOAMD64v1 PGOoff defaultGOGC/GOMEMLIMIT; noaffinity; benchmark-isolated tools and agents idle',flush=True)
+for name in ['dd-baseline.test','dd-r11.test','stream-baseline-r11.test','stream-r11.test']:
+ print(name,sha(out/name),flush=True)
+for name in ['rt/checked_gen.go','internal/gen/rtgen/checked.go.tmpl','internal/gen/rtgen/rtgen.go','rt/instance.go','rt/batch.go','internal/gen/gogen/gogen.go','internal/gen/gogen/batch.go','testdata/streaming/go/streaming/standalone_bench_test.go','testdata/streaming/go/streaming/checked_bench_test.go','testdata/streaming/cocoon.lock.json','testdata/streaming/go/streaming/testdata/module.wasm']:
+ print(name,sha(root/name),flush=True)
+baseline=Path((out/'phase0-snapshot').read_text().strip())
+print('baseline_snapshot',baseline,flush=True)
+for name in ['rt/instance.go','internal/gen/gogen/gogen.go','testdata/streaming/cocoon.toml','testdata/streaming/cocoon.lock.json','testdata/streaming/go/streaming/testdata/module.wasm','testdata/streaming/go/streaming/standalone_bench_test.go']:
+ print('baseline/'+name,sha(baseline/name),flush=True)
+assert sha(baseline/'testdata/streaming/go/streaming/testdata/module.wasm')==sha(root/'testdata/streaming/go/streaming/testdata/module.wasm')
+assert sha(baseline/'testdata/streaming/go/streaming/standalone_bench_test.go')==sha(root/'testdata/streaming/go/streaming/standalone_bench_test.go')
+for key in ['GOGC','GOMEMLIMIT','GODEBUG']:
+ print(key,env.get(key,'<unset>'),flush=True)
+print('affinity',sorted(os.sched_getaffinity(0)),flush=True)
+def sample(binary,pattern,duration,name):
+ args=[str(out/binary),'-test.run=^$','-test.bench='+pattern,'-test.benchtime='+duration,'-test.count=1','-test.benchmem']
+ with (out/name).open('w') as log:
+  log.write('# UTC '+datetime.datetime.now(datetime.timezone.utc).isoformat()+'\n# '+' '.join(args)+'\n# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs\n');log.flush()
+  subprocess.run(args,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
+ measured_rows=0
+ for row in (out/name).read_text().splitlines():
+  fields=row.split()
+  if not fields or not fields[0].startswith('BenchmarkStream') or 'ns/op' not in fields: continue
+  measured_rows+=1
+  match=re.search(r'/P([0-9]+)/',fields[0])
+  expected=int(match[1]) if match else 16
+  assert 'actual-procs' in fields, 'missing actual-procs: '+row
+  actual=float(fields[fields.index('actual-procs')-1])
+  assert actual==expected, f'wrong actual-procs {actual}, expected {expected}: {row}'
+ assert not binary.startswith('stream') or measured_rows>0, 'no streaming rows: '+name
+ print(name+' complete elapsed '+str(round(time.monotonic()-start,1))+'s',flush=True)
+dd='^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$'
+stand='^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$'
+checked='^BenchmarkStreamChecked$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^N32$/^(StandaloneHomesP|BatchHomes1|BatchHomesP)$'
+length_stand='^BenchmarkStreamStandalone$/^Fixed$/^P16$/^Chunk(64|4096)$/^Retain(16|64|256)$'
+length_checked='^BenchmarkStreamChecked$/^Fixed$/^P16$/^Chunk(64|4096)$/^N(16|64|256)$/^(StandaloneHomesP|BatchHomes1|BatchHomesP)$'
+for rep in range(1,8):
+ for label in (['baseline','r11'] if rep%2 else ['r11','baseline']): sample('dd-'+label+'.test',dd,'500ms',f'r11-dd-{label}-{rep}.txt')
+print('SCALAR PAIRS COMPLETE',flush=True)
+for rep in range(1,8):
+ for label in (['baseline','r11'] if rep%2 else ['r11','baseline']): sample('stream-baseline-r11.test' if label=='baseline' else 'stream-r11.test',stand,'250ms',f'r11-stream-{label}-{rep}.txt')
+print('R11 GUARDRAIL SCREEN COMPLETE elapsed '+str(round(time.monotonic()-start,1))+'s',flush=True)
+
+=== .cache/sessions-phase0/r11-screen-measure.log ===
+UTC 2026-10-11T00:13:28.112500+00:00
+qualification_base_commit 26b32de244975d2c3bf8157190f6dc376a7874c0
+Go1.26.8 CGO0 GOAMD64v1 PGOoff defaultGOGC/GOMEMLIMIT; noaffinity; benchmark-isolated tools and agents idle
+dd-baseline.test aec965fbf86f67ceaf5a916a0df83dd306b4d27e580d8dd3d5b484f43bbb1c32
+dd-r11.test 3bc5cc39ed7c7ab3467c6cba1e7fca0048d36d29a491b7b82cc907dc1de2bfe5
+stream-baseline-r11.test feff2250c784a5452a9c1546b1f59b70ada239f06540ee35734a5950f2b9211a
+stream-r11.test 6a8dcb3389d3ef417515d6111be24abe5c0369b0a13844917327120b55a53aeb
+rt/checked_gen.go 418812ddc82ef6e98ba10a08151a4180fac990c5f1d1e6f0686dc683df694bf1
+internal/gen/rtgen/checked.go.tmpl f2008cdc342a999d6e70b545efe89b1201f06b729de78fb8d1c53ffc53b0bca4
+internal/gen/rtgen/rtgen.go e675b1c681cb63d282203e466663afb87cd097d8f0a02647d4a4d14efa226f24
+rt/instance.go 4991b05d91af9b1ed9418b225ec0a7e47a680be980b4debca4e1da45b76017b8
+rt/batch.go 558812fe6c9773cfaa17f46ec71cace2656ad99f9f159d6bb1dac43803abb0f6
+internal/gen/gogen/gogen.go 1857dee83b3beae82afdce2ef8e366f88ee894fdbc1813071889a8161b76aa45
+internal/gen/gogen/batch.go bc1a34747a65180162ca940158add16f6db656e4772947cbba3dc79903f8b1e3
+testdata/streaming/go/streaming/standalone_bench_test.go 4e98e93d5658fae33558b9af70d208031da25bd8cf0d9c59af13e2234ee86b59
+testdata/streaming/go/streaming/checked_bench_test.go dce9f6a3688684f82827a1f6756743a6528e301ed7d22896085e6098f3911b2b
+testdata/streaming/cocoon.lock.json a7b8eef3d3da36377e0c0dbde109f640f19031d828c4f985707e6f50993e14d5
+testdata/streaming/go/streaming/testdata/module.wasm 9141023ca801ef1cb0825ea155dd42b4d83bcee9ce6c9a6ad453b40badb49955
+baseline_snapshot /tmp/cocoon-sessions-phase0-sy_birrp
+baseline/rt/instance.go ca3eb2442dacc3f59121ef3e0fc8fb045a2cded270078cb41b257a428983bb4b
+baseline/internal/gen/gogen/gogen.go d7cb6f677021c3612ed467e5cff23793f5d9889a676d512825925ceb929dcfc5
+baseline/testdata/streaming/cocoon.toml 0fb15dae89d2e39c9fd8d6193da6ab948729b802f69c6adccd2015bcc10a7420
+baseline/testdata/streaming/cocoon.lock.json b104b1dc961e20d6a75015148bebed173fb03728ab98966eb9187e7a1907f6d8
+baseline/testdata/streaming/go/streaming/testdata/module.wasm 9141023ca801ef1cb0825ea155dd42b4d83bcee9ce6c9a6ad453b40badb49955
+baseline/testdata/streaming/go/streaming/standalone_bench_test.go 4e98e93d5658fae33558b9af70d208031da25bd8cf0d9c59af13e2234ee86b59
+GOGC <unset>
+GOMEMLIMIT <unset>
+GODEBUG <unset>
+affinity [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+r11-dd-baseline-1.txt complete elapsed 4.2s
+r11-dd-r11-1.txt complete elapsed 8.4s
+r11-dd-r11-2.txt complete elapsed 12.6s
+r11-dd-baseline-2.txt complete elapsed 16.7s
+r11-dd-baseline-3.txt complete elapsed 20.9s
+r11-dd-r11-3.txt complete elapsed 25.1s
+r11-dd-r11-4.txt complete elapsed 29.3s
+r11-dd-baseline-4.txt complete elapsed 33.5s
+r11-dd-baseline-5.txt complete elapsed 37.6s
+r11-dd-r11-5.txt complete elapsed 41.8s
+r11-dd-r11-6.txt complete elapsed 46.0s
+r11-dd-baseline-6.txt complete elapsed 50.1s
+r11-dd-baseline-7.txt complete elapsed 54.3s
+r11-dd-r11-7.txt complete elapsed 58.5s
+SCALAR PAIRS COMPLETE
+r11-stream-baseline-1.txt complete elapsed 65.7s
+r11-stream-r11-1.txt complete elapsed 72.1s
+r11-stream-r11-2.txt complete elapsed 78.9s
+r11-stream-baseline-2.txt complete elapsed 85.6s
+r11-stream-baseline-3.txt complete elapsed 92.4s
+r11-stream-r11-3.txt complete elapsed 99.6s
+r11-stream-r11-4.txt complete elapsed 106.5s
+r11-stream-baseline-4.txt complete elapsed 112.8s
+r11-stream-baseline-5.txt complete elapsed 119.6s
+r11-stream-r11-5.txt complete elapsed 127.2s
+r11-stream-r11-6.txt complete elapsed 133.6s
+r11-stream-baseline-6.txt complete elapsed 140.6s
+r11-stream-baseline-7.txt complete elapsed 147.9s
+r11-stream-r11-7.txt complete elapsed 154.2s
+R11 GUARDRAIL SCREEN COMPLETE elapsed 154.2s
+
+=== .cache/sessions-phase0/r11-dd-baseline-1.txt ===
+# UTC 2026-10-11T00:13:28.170306+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  272062	      2168 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6785383	        88.96 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13287	     45132 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     223	   2646175 ns/op	  254346 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6779445	        88.63 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6756715	        88.97 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  207481	      2811 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-baseline-2.txt ===
+# UTC 2026-10-11T00:13:40.680307+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  257803	      2179 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6786043	        88.60 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13317	     44998 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2599521 ns/op	  253797 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6740600	        89.16 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6708272	        89.22 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  204715	      2778 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-baseline-3.txt ===
+# UTC 2026-10-11T00:13:44.806437+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  274515	      2155 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6767352	        88.27 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13298	     45064 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2643344 ns/op	  253797 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6682746	        90.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6642920	        90.33 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213045	      2813 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-baseline-4.txt ===
+# UTC 2026-10-11T00:13:57.400959+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  276961	      2156 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6802990	        88.57 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13258	     45167 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     220	   2663626 ns/op	  254910 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6776349	        89.52 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6729117	        89.30 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  205089	      2806 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-baseline-5.txt ===
+# UTC 2026-10-11T00:14:01.577279+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  264717	      2158 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6715263	        88.72 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13452	     44684 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     225	   2643474 ns/op	  253978 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6768166	        88.94 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6663010	        89.83 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  206476	      2784 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-baseline-6.txt ===
+# UTC 2026-10-11T00:14:14.089173+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  255081	      2167 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6710608	        89.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13329	     44872 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2615492 ns/op	  253797 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6664124	        89.25 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6582278	        92.15 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  206581	      2806 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-baseline-7.txt ===
+# UTC 2026-10-11T00:14:18.219896+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  273043	      2163 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6711066	        89.30 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13292	     45122 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2631922 ns/op	  253797 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6778410	        88.49 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6627405	        89.13 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  207056	      2795 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-r11-1.txt ===
+# UTC 2026-10-11T00:13:32.347729+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-r11.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  272312	      2168 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6595914	        89.68 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13425	     44701 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2594336 ns/op	  253439 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6527532	        91.60 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6726307	        90.44 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  202544	      2831 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-r11-2.txt ===
+# UTC 2026-10-11T00:13:36.509434+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-r11.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  273673	      2195 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6675825	        88.51 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13353	     44806 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2603064 ns/op	  253262 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6294514	        93.75 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6743103	        89.04 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  209641	      2795 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-r11-3.txt ===
+# UTC 2026-10-11T00:13:49.007573+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-r11.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  275347	      2165 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6715874	        89.08 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13389	     44810 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     224	   2619031 ns/op	  254161 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6570663	        91.55 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6687037	        90.12 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213930	      2796 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-r11-4.txt ===
+# UTC 2026-10-11T00:13:53.199569+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-r11.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  271794	      2194 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6580177	        91.31 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13573	     44175 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2595528 ns/op	  253263 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6554425	        91.45 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6735770	        89.48 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213823	      2807 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-r11-5.txt ===
+# UTC 2026-10-11T00:14:05.724078+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-r11.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  271900	      2173 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6718459	        89.61 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13492	     44374 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2596968 ns/op	  253440 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6473678	        92.38 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6632694	        90.30 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  208294	      2834 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-r11-6.txt ===
+# UTC 2026-10-11T00:14:09.903866+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-r11.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  274612	      2169 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6818397	        88.31 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13339	     45177 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2581392 ns/op	  253263 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6538249	        92.37 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6640648	        90.07 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  209794	      2779 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-dd-r11-7.txt ===
+# UTC 2026-10-11T00:14:22.382517+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-r11.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  271581	      2214 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6679846	        89.24 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13404	     44759 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     224	   2615689 ns/op	  254162 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6540460	        91.38 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6665602	        89.25 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  215240	      2801 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-baseline-1.txt ===
+# UTC 2026-10-11T00:14:26.569852+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-baseline-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1890	    156217 ns/op	 104.88 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6401 streams/s	   1638745 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      52	   5071980 ns/op	 206.74 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       197.2 streams/s	     50473 writes/s	 1050444 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19695424 ns/op	 212.96 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.77 streams/s	     12998 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1700	    178478 ns/op	  91.80 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5603 streams/s	   1434348 writes/s	   17499 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      54	   5253876 ns/op	 199.58 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       190.3 streams/s	     48726 writes/s	 1050963 B/op	     270 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20470323 ns/op	 204.90 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.85 streams/s	     12506 writes/s	 4199654 B/op	     276 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1675	    177576 ns/op	  92.26 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5631 streams/s	   1441639 writes/s	   17518 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      54	   5391360 ns/op	 194.49 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       185.5 streams/s	     47483 writes/s	 1051687 B/op	     276 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20466907 ns/op	 204.93 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.86 streams/s	     12508 writes/s	 4200757 B/op	     283 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1479	    192500 ns/op	  85.11 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5195 streams/s	   1784415 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      55	   5362653 ns/op	 195.53 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       186.5 streams/s	     68294 writes/s	 1160526 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      12	  20959228 ns/op	 200.12 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.71 streams/s	     17474 writes/s	 4494745 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1425	    214808 ns/op	  76.27 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4655 streams/s	   1599101 writes/s	   19605 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      54	   5612456 ns/op	 186.83 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       178.2 streams/s	     65255 writes/s	 1160588 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21054062 ns/op	 199.22 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.50 streams/s	     17396 writes/s	 4495232 B/op	     308 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1389	    218606 ns/op	  74.95 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4574 streams/s	   1571322 writes/s	   19620 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      45	   5648294 ns/op	 185.64 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       177.0 streams/s	     64842 writes/s	 1160801 B/op	     305 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      13	  21738679 ns/op	 192.94 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.00 streams/s	     16847 writes/s	 4495941 B/op	     315 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-baseline-2.txt ===
+# UTC 2026-10-11T00:14:47.021584+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-baseline-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1953	    154444 ns/op	 106.08 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6475 streams/s	   1657555 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      54	   5105496 ns/op	 205.38 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       195.9 streams/s	     50142 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19947921 ns/op	 210.26 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.13 streams/s	     12833 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1647	    177132 ns/op	  92.50 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5645 streams/s	   1445246 writes/s	   17499 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      52	   5289148 ns/op	 198.25 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       189.1 streams/s	     48401 writes/s	 1050775 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20413074 ns/op	 205.47 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.99 streams/s	     12541 writes/s	 4200096 B/op	     281 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1650	    178806 ns/op	  91.63 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5593 streams/s	   1431718 writes/s	   17514 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      52	   5344328 ns/op	 196.20 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       187.1 streams/s	     47901 writes/s	 1051300 B/op	     273 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      13	  20859900 ns/op	 201.07 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        47.94 streams/s	     12272 writes/s	 4200299 B/op	     280 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1520	    195209 ns/op	  83.93 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5123 streams/s	   1759653 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      49	   5388078 ns/op	 194.61 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       185.6 streams/s	     67973 writes/s	 1160529 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      14	  20782298 ns/op	 201.82 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        48.12 streams/s	     17621 writes/s	 4494697 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1420	    215389 ns/op	  76.07 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4643 streams/s	   1594788 writes/s	   19605 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      50	   5642450 ns/op	 185.84 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       177.2 streams/s	     64912 writes/s	 1161040 B/op	     307 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  20938052 ns/op	 200.32 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.76 streams/s	     17492 writes/s	 4495204 B/op	     307 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1366	    219137 ns/op	  74.77 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4563 streams/s	   1567511 writes/s	   19624 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      46	   6067467 ns/op	 172.82 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       164.8 streams/s	     60361 writes/s	 1161490 B/op	     311 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21344406 ns/op	 196.51 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.85 streams/s	     17159 writes/s	 4495956 B/op	     315 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-baseline-3.txt ===
+# UTC 2026-10-11T00:14:53.727568+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-baseline-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1951	    156691 ns/op	 104.56 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6382 streams/s	   1633788 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      57	   4970298 ns/op	 210.97 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       201.2 streams/s	     51506 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19990179 ns/op	 209.82 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.02 streams/s	     12806 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1638	    176326 ns/op	  92.92 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5671 streams/s	   1451854 writes/s	   17498 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      56	   5239588 ns/op	 200.13 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       190.9 streams/s	     48859 writes/s	 1050825 B/op	     269 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20677178 ns/op	 202.85 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.36 streams/s	     12381 writes/s	 4199974 B/op	     279 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1657	    178864 ns/op	  91.60 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5591 streams/s	   1431255 writes/s	   17518 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      54	   5412358 ns/op	 193.74 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       184.8 streams/s	     47299 writes/s	 1051454 B/op	     274 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      13	  20507830 ns/op	 204.52 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.76 streams/s	     12483 writes/s	 4199080 B/op	     273 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1503	    196257 ns/op	  83.48 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5095 streams/s	   1750251 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      48	   5464461 ns/op	 191.89 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       183.0 streams/s	     67024 writes/s	 1160524 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      14	  21086347 ns/op	 198.91 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.42 streams/s	     17367 writes/s	 4494697 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1437	    212083 ns/op	  77.25 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4715 streams/s	   1619647 writes/s	   19605 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      46	   5533262 ns/op	 189.50 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       180.7 streams/s	     66193 writes/s	 1160926 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21526521 ns/op	 194.84 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194309 owned-B/stream	        46.45 streams/s	     17014 writes/s	 4495540 B/op	     310 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1406	    224441 ns/op	  73.00 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4456 streams/s	   1530468 writes/s	   19632 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      48	   5639042 ns/op	 185.95 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       177.3 streams/s	     64949 writes/s	 1161019 B/op	     308 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21334832 ns/op	 196.59 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.87 streams/s	     17167 writes/s	 4495760 B/op	     314 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-baseline-4.txt ===
+# UTC 2026-10-11T00:15:14.647148+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-baseline-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1950	    155477 ns/op	 105.38 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6432 streams/s	   1646548 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      52	   5079507 ns/op	 206.43 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       196.9 streams/s	     50399 writes/s	 1050444 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19797166 ns/op	 211.86 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.51 streams/s	     12931 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1652	    176247 ns/op	  92.96 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5674 streams/s	   1452505 writes/s	   17499 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      52	   5279271 ns/op	 198.62 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       189.4 streams/s	     48492 writes/s	 1050844 B/op	     269 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20286581 ns/op	 206.75 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        49.29 streams/s	     12619 writes/s	 4198790 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1617	    179550 ns/op	  91.25 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5569 streams/s	   1425785 writes/s	   17514 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      51	   5365777 ns/op	 195.42 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       186.4 streams/s	     47710 writes/s	 1051518 B/op	     274 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20387138 ns/op	 205.73 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        49.05 streams/s	     12557 writes/s	 4200652 B/op	     287 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1432	    194346 ns/op	  84.30 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5145 streams/s	   1767468 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      48	   5376880 ns/op	 195.02 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       186.0 streams/s	     68116 writes/s	 1160524 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      12	  20961323 ns/op	 200.10 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.71 streams/s	     17473 writes/s	 4494745 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1414	    216501 ns/op	  75.68 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4619 streams/s	   1586596 writes/s	   19605 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      48	   5524144 ns/op	 189.82 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       181.0 streams/s	     66304 writes/s	 1160808 B/op	     305 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21237865 ns/op	 197.49 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   4194310 owned-B/stream	        47.09 streams/s	     17249 writes/s	 4495656 B/op	     311 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1353	    214962 ns/op	  76.22 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4652 streams/s	   1597958 writes/s	   19621 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      48	   5599364 ns/op	 187.27 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       178.6 streams/s	     65413 writes/s	 1161269 B/op	     310 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21619625 ns/op	 194.00 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.25 streams/s	     16941 writes/s	 4496378 B/op	     315 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-baseline-5.txt ===
+# UTC 2026-10-11T00:15:20.918720+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-baseline-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1941	    158428 ns/op	 103.42 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6312 streams/s	   1615874 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      58	   4982167 ns/op	 210.47 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       200.7 streams/s	     51383 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19807118 ns/op	 211.76 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.49 streams/s	     12925 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1716	    175265 ns/op	  93.48 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5706 streams/s	   1460647 writes/s	   17499 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      54	   5302242 ns/op	 197.76 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       188.6 streams/s	     48281 writes/s	 1050890 B/op	     270 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20641133 ns/op	 203.20 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.45 streams/s	     12402 writes/s	 4199681 B/op	     276 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1654	    180162 ns/op	  90.94 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5551 streams/s	   1420941 writes/s	   17519 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      51	   5392188 ns/op	 194.46 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       185.5 streams/s	     47476 writes/s	 1051716 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      13	  20806123 ns/op	 201.59 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.06 streams/s	     12304 writes/s	 4199882 B/op	     280 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1512	    194446 ns/op	  84.26 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5143 streams/s	   1766560 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      49	   5433000 ns/op	 193.00 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       184.1 streams/s	     67411 writes/s	 1160529 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      14	  20930312 ns/op	 200.39 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.78 streams/s	     17497 writes/s	 4494697 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1423	    214639 ns/op	  76.33 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4659 streams/s	   1600358 writes/s	   19606 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      50	   5594157 ns/op	 187.44 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       178.8 streams/s	     65472 writes/s	 1160901 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21146884 ns/op	 198.34 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.29 streams/s	     17319 writes/s	 4494905 B/op	     305 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1360	    218191 ns/op	  75.09 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4583 streams/s	   1574310 writes/s	   19626 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      50	   5681969 ns/op	 184.54 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       176.0 streams/s	     64460 writes/s	 1160925 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21501318 ns/op	 195.07 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.51 streams/s	     17034 writes/s	 4495973 B/op	     310 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-baseline-6.txt ===
+# UTC 2026-10-11T00:15:41.703887+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-baseline-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1946	    154359 ns/op	 106.14 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6478 streams/s	   1658468 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      56	   4997066 ns/op	 209.84 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       200.1 streams/s	     51230 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19912925 ns/op	 210.63 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.22 streams/s	     12856 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1614	    178542 ns/op	  91.77 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5601 streams/s	   1433836 writes/s	   17499 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      51	   5224066 ns/op	 200.72 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       191.4 streams/s	     49004 writes/s	 1050817 B/op	     269 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20454763 ns/op	 205.05 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.89 streams/s	     12515 writes/s	 4199201 B/op	     272 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1615	    179734 ns/op	  91.16 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5564 streams/s	   1424328 writes/s	   17512 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      54	   5430259 ns/op	 193.10 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       184.2 streams/s	     47143 writes/s	 1051550 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      13	  20457312 ns/op	 205.03 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.88 streams/s	     12514 writes/s	 4199840 B/op	     278 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1524	    195963 ns/op	  83.61 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5103 streams/s	   1752879 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      55	   5401851 ns/op	 194.11 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       185.1 streams/s	     67798 writes/s	 1160526 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      14	  20998483 ns/op	 199.74 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.62 streams/s	     17440 writes/s	 4494697 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1394	    222473 ns/op	  73.64 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4495 streams/s	   1544003 writes/s	   19606 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      49	   5510102 ns/op	 190.30 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       181.5 streams/s	     66472 writes/s	 1160889 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21657896 ns/op	 193.66 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194309 owned-B/stream	        46.17 streams/s	     16911 writes/s	 4495250 B/op	     308 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1261	    218790 ns/op	  74.88 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4571 streams/s	   1569997 writes/s	   19617 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      48	   5629253 ns/op	 186.27 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       177.6 streams/s	     65058 writes/s	 1161291 B/op	     309 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21540653 ns/op	 194.72 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.42 streams/s	     17003 writes/s	 4495470 B/op	     311 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-baseline-7.txt ===
+# UTC 2026-10-11T00:15:48.700484+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-baseline-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1868	    156543 ns/op	 104.66 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6388 streams/s	   1635330 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      54	   4999144 ns/op	 209.75 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       200.0 streams/s	     51209 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19908035 ns/op	 210.68 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.23 streams/s	     12859 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1711	    177062 ns/op	  92.53 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5648 streams/s	   1445819 writes/s	   17498 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      52	   5258173 ns/op	 199.42 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       190.2 streams/s	     48686 writes/s	 1050852 B/op	     269 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20473012 ns/op	 204.87 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.84 streams/s	     12504 writes/s	 4199785 B/op	     277 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1635	    178848 ns/op	  91.61 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5591 streams/s	   1431380 writes/s	   17515 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      52	   5391514 ns/op	 194.49 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       185.5 streams/s	     47482 writes/s	 1051580 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20486456 ns/op	 204.74 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.81 streams/s	     12496 writes/s	 4199899 B/op	     279 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1556	    194065 ns/op	  84.43 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5153 streams/s	   1770026 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      55	   5386587 ns/op	 194.66 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       185.6 streams/s	     67990 writes/s	 1160526 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      14	  20975246 ns/op	 199.96 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.68 streams/s	     17459 writes/s	 4494697 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1436	    223250 ns/op	  73.39 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4479 streams/s	   1538634 writes/s	   19606 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      45	   5562920 ns/op	 188.49 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       179.8 streams/s	     65841 writes/s	 1160859 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21598192 ns/op	 194.20 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194309 owned-B/stream	        46.30 streams/s	     16957 writes/s	 4495197 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1419	    216649 ns/op	  75.62 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4616 streams/s	   1585509 writes/s	   19621 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      52	   5671218 ns/op	 184.89 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       176.3 streams/s	     64580 writes/s	 1161084 B/op	     307 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21676452 ns/op	 193.50 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.13 streams/s	     16896 writes/s	 4495342 B/op	     310 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-r11-1.txt ===
+# UTC 2026-10-11T00:14:33.807880+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1884	    158590 ns/op	 103.31 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6306 streams/s	   1614226 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      57	   5020419 ns/op	 208.86 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       199.2 streams/s	     50992 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19829930 ns/op	 211.51 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.43 streams/s	     12910 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1626	    174287 ns/op	  94.01 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5738 streams/s	   1468841 writes/s	   17498 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      54	   5236459 ns/op	 200.25 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       191.0 streams/s	     48888 writes/s	 1050754 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  21066721 ns/op	 199.10 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        47.47 streams/s	     12152 writes/s	 4199553 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1680	    176319 ns/op	  92.92 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5672 streams/s	   1451917 writes/s	   17513 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      52	   5424440 ns/op	 193.31 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       184.4 streams/s	     47194 writes/s	 1051590 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20666067 ns/op	 202.96 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.39 streams/s	     12387 writes/s	 4200524 B/op	     284 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1525	    195476 ns/op	  83.82 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5116 streams/s	   1757247 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      49	   5500887 ns/op	 190.62 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       181.8 streams/s	     66579 writes/s	 1160529 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      12	  21237087 ns/op	 197.50 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.09 streams/s	     17246 writes/s	 4494745 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1494	    209809 ns/op	  78.09 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4766 streams/s	   1637207 writes/s	   19605 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      48	   5539739 ns/op	 189.28 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       180.5 streams/s	     66113 writes/s	 1160993 B/op	     307 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21578816 ns/op	 194.37 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194309 owned-B/stream	        46.34 streams/s	     16973 writes/s	 4495334 B/op	     309 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1366	    211401 ns/op	  77.50 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4730 streams/s	   1624879 writes/s	   19622 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      45	   5699953 ns/op	 183.96 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       175.4 streams/s	     64258 writes/s	 1161430 B/op	     311 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21391089 ns/op	 196.08 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.75 streams/s	     17122 writes/s	 4495256 B/op	     309 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-r11-2.txt ===
+# UTC 2026-10-11T00:14:40.167153+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1910	    159175 ns/op	 102.93 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6282 streams/s	   1608292 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      57	   4983222 ns/op	 210.42 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       200.7 streams/s	     51372 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19993938 ns/op	 209.78 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.02 streams/s	     12804 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1652	    176023 ns/op	  93.08 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5681 streams/s	   1454358 writes/s	   17499 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      52	   5309643 ns/op	 197.49 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       188.3 streams/s	     48214 writes/s	 1050839 B/op	     269 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20262522 ns/op	 207.00 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        49.35 streams/s	     12634 writes/s	 4199385 B/op	     273 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1689	    174754 ns/op	  93.75 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5722 streams/s	   1464920 writes/s	   17512 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      55	   5334436 ns/op	 196.57 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       187.5 streams/s	     47990 writes/s	 1051234 B/op	     272 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      13	  20581186 ns/op	 203.79 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.59 streams/s	     12439 writes/s	 4199722 B/op	     274 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1461	    192561 ns/op	  85.08 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5193 streams/s	   1783848 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      55	   5445374 ns/op	 192.56 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       183.6 streams/s	     67256 writes/s	 1160526 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      12	  21031012 ns/op	 199.43 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.55 streams/s	     17415 writes/s	 4494745 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1384	    214722 ns/op	  76.30 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4657 streams/s	   1599746 writes/s	   19606 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      49	   5553069 ns/op	 188.83 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       180.1 streams/s	     65954 writes/s	 1160903 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21658722 ns/op	 193.65 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194309 owned-B/stream	        46.17 streams/s	     16910 writes/s	 4495010 B/op	     304 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1279	    211456 ns/op	  77.48 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4729 streams/s	   1624452 writes/s	   19632 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      45	   5602214 ns/op	 187.17 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       178.5 streams/s	     65367 writes/s	 1161196 B/op	     308 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21689091 ns/op	 193.38 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.11 streams/s	     16886 writes/s	 4496256 B/op	     315 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-r11-3.txt ===
+# UTC 2026-10-11T00:15:00.482283+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1899	    161828 ns/op	 101.24 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6179 streams/s	   1581930 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      52	   5164084 ns/op	 203.05 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       193.6 streams/s	     49573 writes/s	 1050444 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19949456 ns/op	 210.25 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.13 streams/s	     12832 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1734	    174519 ns/op	  93.88 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5730 streams/s	   1466886 writes/s	   17497 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      52	   5185424 ns/op	 202.22 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       192.8 streams/s	     49369 writes/s	 1050896 B/op	     270 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20449848 ns/op	 205.10 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.90 streams/s	     12518 writes/s	 4199665 B/op	     276 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1675	    176005 ns/op	  93.09 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5682 streams/s	   1454502 writes/s	   17515 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      52	   5298203 ns/op	 197.91 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       188.7 streams/s	     48318 writes/s	 1051570 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20923029 ns/op	 200.46 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        47.79 streams/s	     12235 writes/s	 4201664 B/op	     289 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1540	    192986 ns/op	  84.90 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5182 streams/s	   1779918 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      54	   5440356 ns/op	 192.74 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       183.8 streams/s	     67319 writes/s	 1160521 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      12	  20849280 ns/op	 201.17 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.96 streams/s	     17567 writes/s	 4494745 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1431	    215683 ns/op	  75.96 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4636 streams/s	   1592617 writes/s	   19606 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      54	   5652577 ns/op	 185.50 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       176.9 streams/s	     64792 writes/s	 1160577 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21127081 ns/op	 198.53 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.33 streams/s	     17332 writes/s	 4495162 B/op	     308 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1296	    215067 ns/op	  76.18 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4650 streams/s	   1597171 writes/s	   19614 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      52	   5596014 ns/op	 187.38 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       178.7 streams/s	     65448 writes/s	 1161374 B/op	     310 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21377053 ns/op	 196.21 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.78 streams/s	     17133 writes/s	 4496697 B/op	     319 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-r11-4.txt ===
+# UTC 2026-10-11T00:15:07.704770+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1778	    160396 ns/op	 102.15 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6235 streams/s	   1596051 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      57	   5022280 ns/op	 208.78 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       199.1 streams/s	     50973 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19912058 ns/op	 210.64 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.22 streams/s	     12857 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1698	    175424 ns/op	  93.40 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5700 streams/s	   1459318 writes/s	   17499 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      52	   5179816 ns/op	 202.43 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       193.1 streams/s	     49423 writes/s	 1050926 B/op	     270 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20417758 ns/op	 205.42 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.98 streams/s	     12538 writes/s	 4199296 B/op	     273 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1648	    175766 ns/op	  93.22 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5689 streams/s	   1456486 writes/s	   17513 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      54	   5382329 ns/op	 194.82 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       185.8 streams/s	     47563 writes/s	 1051581 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20642425 ns/op	 203.19 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.44 streams/s	     12402 writes/s	 4199286 B/op	     274 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1436	    192988 ns/op	  84.90 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5182 streams/s	   1779899 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      55	   5490645 ns/op	 190.97 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       182.1 streams/s	     66702 writes/s	 1160526 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      12	  20949667 ns/op	 200.21 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.73 streams/s	     17482 writes/s	 4494745 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1394	    209963 ns/op	  78.03 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4763 streams/s	   1636001 writes/s	   19606 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      45	   5595825 ns/op	 187.39 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       178.7 streams/s	     65450 writes/s	 1160959 B/op	     307 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21270118 ns/op	 197.19 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.01 streams/s	     17215 writes/s	 4495190 B/op	     308 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1423	    213063 ns/op	  76.90 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4693 streams/s	   1612194 writes/s	   19618 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      46	   5645590 ns/op	 185.73 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       177.1 streams/s	     64868 writes/s	 1161620 B/op	     311 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      13	  21714289 ns/op	 193.16 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.05 streams/s	     16866 writes/s	 4495347 B/op	     309 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-r11-5.txt ===
+# UTC 2026-10-11T00:15:27.688735+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1914	    158527 ns/op	 103.35 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6308 streams/s	   1614866 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      55	   5011082 ns/op	 209.25 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       199.6 streams/s	     51087 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  19845951 ns/op	 211.34 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        50.39 streams/s	     12899 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1652	    173647 ns/op	  94.35 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5759 streams/s	   1474254 writes/s	   17499 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      54	   5251506 ns/op	 199.67 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       190.4 streams/s	     48748 writes/s	 1050850 B/op	     269 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20805000 ns/op	 201.60 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.07 streams/s	     12305 writes/s	 4199846 B/op	     278 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1600	    176177 ns/op	  93.00 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5676 streams/s	   1453088 writes/s	   17519 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      51	   5365861 ns/op	 195.42 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       186.4 streams/s	     47709 writes/s	 1051555 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20675644 ns/op	 202.86 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.37 streams/s	     12382 writes/s	 4200216 B/op	     280 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1512	    194290 ns/op	  84.33 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5147 streams/s	   1767973 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      54	   5481737 ns/op	 191.29 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       182.4 streams/s	     66811 writes/s	 1160521 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      14	  20785757 ns/op	 201.79 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        48.11 streams/s	     17619 writes/s	 4494697 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1425	    214432 ns/op	  76.41 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4663 streams/s	   1601904 writes/s	   19605 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      45	   6153983 ns/op	 170.39 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       162.5 streams/s	     59517 writes/s	 1160987 B/op	     307 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21420672 ns/op	 195.81 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194309 owned-B/stream	        46.68 streams/s	     17098 writes/s	 4495654 B/op	     310 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1370	    213027 ns/op	  76.91 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4694 streams/s	   1612479 writes/s	   19624 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      52	   5632908 ns/op	 186.15 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       177.5 streams/s	     65020 writes/s	 1160738 B/op	     304 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21502439 ns/op	 195.06 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.51 streams/s	     17033 writes/s	 4496222 B/op	     313 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-r11-6.txt ===
+# UTC 2026-10-11T00:15:35.327375+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1867	    165298 ns/op	  99.12 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6050 streams/s	   1548719 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      55	   5044732 ns/op	 207.86 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       198.2 streams/s	     50746 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  20055703 ns/op	 209.13 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        49.86 streams/s	     12764 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1714	    172995 ns/op	  94.71 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5780 streams/s	   1479807 writes/s	   17498 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      54	   5210035 ns/op	 201.26 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       191.9 streams/s	     49136 writes/s	 1051147 B/op	     272 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20433355 ns/op	 205.27 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.94 streams/s	     12529 writes/s	 4198944 B/op	     270 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1719	    175679 ns/op	  93.26 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5692 streams/s	   1457202 writes/s	   17519 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      52	   5397710 ns/op	 194.26 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       185.3 streams/s	     47428 writes/s	 1051284 B/op	     273 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20409659 ns/op	 205.51 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        49.00 streams/s	     12543 writes/s	 4200089 B/op	     278 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1528	    195930 ns/op	  83.62 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5104 streams/s	   1753177 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      48	   5343907 ns/op	 196.22 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       187.1 streams/s	     68536 writes/s	 1160524 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      12	  20967958 ns/op	 200.03 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.69 streams/s	     17467 writes/s	 4494745 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1471	    211506 ns/op	  77.46 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4728 streams/s	   1624069 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      46	   5570925 ns/op	 188.22 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       179.5 streams/s	     65745 writes/s	 1160885 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21147624 ns/op	 198.33 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.29 streams/s	     17315 writes/s	 4495069 B/op	     307 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1404	    215336 ns/op	  76.09 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4644 streams/s	   1595181 writes/s	   19620 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      48	   5697137 ns/op	 184.05 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       175.5 streams/s	     64290 writes/s	 1161148 B/op	     309 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21959862 ns/op	 191.00 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        45.54 streams/s	     16678 writes/s	 4495413 B/op	     310 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-stream-r11-7.txt ===
+# UTC 2026-10-11T00:15:56.013530+00:00
+# /home/dario/Code/cocoon/.cache/sessions-phase0/stream-r11.test -test.run=^$ -test.bench=^BenchmarkStreamStandalone$/^(Fixed|Holdout)$/^P(1|4|16)$/^Chunk(64|4096|16384)$/^Retain32$ -test.benchtime=250ms -test.count=1 -test.benchmem
+# initialGOMAXPROCS=16; explicit P leaf sets actual runtime procs
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkStreamStandalone/Fixed/P1/Chunk64/Retain32-16         	    1881	    159665 ns/op	 102.61 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      6263 streams/s	   1603353 writes/s	   17496 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk4096/Retain32-16       	      54	   5017381 ns/op	 208.99 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       199.3 streams/s	     51023 writes/s	 1050443 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P1/Chunk16384/Retain32-16      	      14	  20131770 ns/op	 208.34 MB/s	         1.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        49.67 streams/s	     12716 writes/s	 4198486 B/op	     266 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk64/Retain32-16         	    1688	    172210 ns/op	  95.14 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5807 streams/s	   1486561 writes/s	   17498 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk4096/Retain32-16       	      52	   5229146 ns/op	 200.53 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       191.2 streams/s	     48956 writes/s	 1050973 B/op	     270 allocs/op
+BenchmarkStreamStandalone/Fixed/P4/Chunk16384/Retain32-16      	      14	  20641352 ns/op	 203.20 MB/s	         4.000 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.45 streams/s	     12402 writes/s	 4199894 B/op	     278 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk64/Retain32-16        	    1641	    177497 ns/op	  92.31 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	     16392 owned-B/stream	      5634 streams/s	   1442282 writes/s	   17511 B/op	     250 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk4096/Retain32-16      	      52	   5304366 ns/op	 197.68 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   1048584 owned-B/stream	       188.5 streams/s	     48262 writes/s	 1051587 B/op	     275 allocs/op
+BenchmarkStreamStandalone/Fixed/P16/Chunk16384/Retain32-16     	      14	  20505105 ns/op	 204.55 MB/s	        16.00 actual-procs	         9.000 groups/stream	       257.0 outputs/stream	   4194312 owned-B/stream	        48.77 streams/s	     12485 writes/s	 4199876 B/op	     280 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk64/Retain32-16       	    1537	    193285 ns/op	  84.77 MB/s	         1.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      5174 streams/s	   1777166 writes/s	   19604 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk4096/Retain32-16     	      50	   5472301 ns/op	 191.62 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       182.7 streams/s	     66926 writes/s	 1160521 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P1/Chunk16384/Retain32-16    	      12	  20994368 ns/op	 199.78 MB/s	         1.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        47.63 streams/s	     17445 writes/s	 4494745 B/op	     303 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk64/Retain32-16       	    1424	    215762 ns/op	  75.94 MB/s	         4.000 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4635 streams/s	   1592032 writes/s	   19606 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk4096/Retain32-16     	      46	   5533049 ns/op	 189.51 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.3 outputs/stream	   1048582 owned-B/stream	       180.7 streams/s	     66195 writes/s	 1160869 B/op	     306 allocs/op
+BenchmarkStreamStandalone/Holdout/P4/Chunk16384/Retain32-16    	      12	  21298753 ns/op	 196.93 MB/s	         4.000 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.95 streams/s	     17196 writes/s	 4495266 B/op	     310 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk64/Retain32-16      	    1384	    214122 ns/op	  76.52 MB/s	        16.00 actual-procs	        11.00 groups/stream	       344.5 outputs/stream	     16390 owned-B/stream	      4670 streams/s	   1604226 writes/s	   19623 B/op	     268 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk4096/Retain32-16    	      46	   5600808 ns/op	 187.22 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   1048582 owned-B/stream	       178.5 streams/s	     65387 writes/s	 1161189 B/op	     309 allocs/op
+BenchmarkStreamStandalone/Holdout/P16/Chunk16384/Retain32-16   	      12	  21317894 ns/op	 196.75 MB/s	        16.00 actual-procs	        12.00 groups/stream	       367.2 outputs/stream	   4194310 owned-B/stream	        46.91 streams/s	     17180 writes/s	 4496918 B/op	     318 allocs/op
+PASS
+
+=== .cache/sessions-phase0/r11-screen-dd-benchstat.txt ===
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+                         │ .cache/sessions-phase0/r11-screen-dd-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-dd-r11-combined.txt │
+                         │                           sec/op                           │             sec/op               vs base              │
+ObfuscateSQL-16                                                           2.163µ ± 1%                       2.173µ ± 2%  +0.46% (p=0.020 n=7)
+SketchAdd-16                                                              88.72n ± 1%                       89.24n ± 2%       ~ (p=0.259 n=7)
+SketchAddMany1k-16                                                        45.06µ ± 1%                       44.76µ ± 1%       ~ (p=0.097 n=7)
+ObfuscateTraces1k-16                                                      2.643m ± 2%                       2.597m ± 1%  -1.75% (p=0.011 n=7)
+SketchAddNegativeBins-16                                                  89.16n ± 2%                       91.60n ± 2%  +2.74% (p=0.001 n=7)
+SketchAddVaried-16                                                        89.30n ± 3%                       90.07n ± 1%       ~ (p=0.620 n=7)
+ObfuscateSQLVaried-16                                                     2.806µ ± 1%                       2.801µ ± 1%       ~ (p=0.640 n=7)
+geomean                                                                   2.437µ                            2.444µ       +0.28%
+
+                         │ .cache/sessions-phase0/r11-screen-dd-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-dd-r11-combined.txt │
+                         │                            B/op                            │             B/op               vs base                │
+ObfuscateSQL-16                                                          57.00 ± 0%                        57.00 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAdd-16                                                             0.000 ± 0%                        0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddMany1k-16                                                     8.000Ki ± 0%                      8.000Ki ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateTraces1k-16                                                   247.8Ki ± 0%                      247.5Ki ± 0%       ~ (p=0.062 n=7)
+SketchAddNegativeBins-16                                                 0.000 ± 0%                        0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddVaried-16                                                       0.000 ± 0%                        0.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateSQLVaried-16                                                    84.00 ± 1%                        84.00 ± 1%       ~ (p=0.559 n=7)
+geomean                                                                             ²                                  -0.02%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                         │ .cache/sessions-phase0/r11-screen-dd-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-dd-r11-combined.txt │
+                         │                         allocs/op                          │           allocs/op            vs base                │
+ObfuscateSQL-16                                                          1.000 ± 0%                        1.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAdd-16                                                             0.000 ± 0%                        0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddMany1k-16                                                       1.000 ± 0%                        1.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateTraces1k-16                                                     1.000 ± 0%                        1.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddNegativeBins-16                                                 0.000 ± 0%                        0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddVaried-16                                                       0.000 ± 0%                        0.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateSQLVaried-16                                                    1.000 ± 0%                        1.000 ± 0%       ~ (p=1.000 n=7) ¹
+geomean                                                                             ²                                  +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+=== .cache/sessions-phase0/r11-screen-stream-benchstat.txt ===
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/testdata/streaming/go/streaming
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                             sec/op                             │               sec/op                 vs base              │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                            156.2µ ± 1%                          159.7µ ±  4%  +2.21% (p=0.001 n=7)
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                          4.999m ± 2%                          5.020m ±  3%       ~ (p=0.620 n=7)
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                         19.91m ± 1%                          19.95m ±  1%       ~ (p=0.128 n=7)
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                            177.1µ ± 1%                          174.3µ ±  1%  -1.57% (p=0.002 n=7)
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                          5.258m ± 1%                          5.229m ±  2%       ~ (p=0.097 n=7)
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                         20.47m ± 1%                          20.45m ±  3%       ~ (p=0.902 n=7)
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                           178.9µ ± 1%                          176.0µ ±  1%  -1.60% (p=0.001 n=7)
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                         5.392m ± 1%                          5.366m ±  1%       ~ (p=0.259 n=7)
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                        20.49m ± 2%                          20.64m ±  1%       ~ (p=0.383 n=7)
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                          194.4µ ± 1%                          193.3µ ±  1%       ~ (p=0.318 n=7)
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                        5.388m ± 1%                          5.472m ±  2%       ~ (p=0.053 n=7)
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                       20.96m ± 1%                          20.97m ±  1%       ~ (p=0.902 n=7)
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                          215.4µ ± 4%                          214.4µ ±  2%       ~ (p=0.097 n=7)
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                        5.563m ± 1%                          5.571m ± 10%       ~ (p=0.456 n=7)
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                       21.24m ± 2%                          21.30m ±  2%       ~ (p=0.620 n=7)
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                         218.6µ ± 3%                          213.1µ ±  1%  -2.54% (p=0.002 n=7)
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                       5.648m ± 7%                          5.633m ±  1%       ~ (p=0.535 n=7)
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                      21.54m ± 1%                          21.50m ±  2%       ~ (p=0.902 n=7)
+geomean                                                                                                  2.761m                               2.757m        -0.16%
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                              B/s                               │                 B/s                  vs base              │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                          100.02Mi ± 1%                          97.86Mi ± 3%  -2.16% (p=0.001 n=7)
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                         200.0Mi ± 2%                          199.2Mi ± 3%       ~ (p=0.620 n=7)
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                        200.9Mi ± 1%                          200.5Mi ± 1%       ~ (p=0.128 n=7)
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                           88.24Mi ± 1%                          89.65Mi ± 1%  +1.60% (p=0.002 n=7)
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                         190.2Mi ± 1%                          191.2Mi ± 2%       ~ (p=0.097 n=7)
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                        195.4Mi ± 1%                          195.6Mi ± 3%       ~ (p=0.929 n=7)
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                          87.36Mi ± 1%                          88.78Mi ± 1%  +1.63% (p=0.001 n=7)
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                        185.5Mi ± 1%                          186.4Mi ± 1%       ~ (p=0.220 n=7)
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                       195.3Mi ± 2%                          193.8Mi ± 1%       ~ (p=0.383 n=7)
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                         80.36Mi ± 1%                          80.84Mi ± 1%       ~ (p=0.300 n=7)
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                       185.6Mi ± 1%                          182.7Mi ± 2%       ~ (p=0.053 n=7)
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                      190.8Mi ± 1%                          190.8Mi ± 1%       ~ (p=0.902 n=7)
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                         72.55Mi ± 4%                          72.87Mi ± 2%       ~ (p=0.097 n=7)
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                       179.8Mi ± 1%                          179.5Mi ± 9%       ~ (p=0.456 n=7)
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                      188.3Mi ± 2%                          187.8Mi ± 2%       ~ (p=0.620 n=7)
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                        71.48Mi ± 3%                          73.34Mi ± 1%  +2.60% (p=0.002 n=7)
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                      177.0Mi ± 7%                          177.5Mi ± 1%       ~ (p=0.535 n=7)
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                     185.7Mi ± 1%                          186.0Mi ± 2%       ~ (p=0.902 n=7)
+geomean                                                                                                 143.7Mi                               144.0Mi       +0.16%
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                          actual-procs                          │           actual-procs             vs base                │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                             1.000 ± 0%                          1.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                           1.000 ± 0%                          1.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                          1.000 ± 0%                          1.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                             4.000 ± 0%                          4.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                           4.000 ± 0%                          4.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                          4.000 ± 0%                          4.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                            16.00 ± 0%                          16.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                          16.00 ± 0%                          16.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                         16.00 ± 0%                          16.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                           1.000 ± 0%                          1.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                         1.000 ± 0%                          1.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                        1.000 ± 0%                          1.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                           4.000 ± 0%                          4.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                         4.000 ± 0%                          4.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                        4.000 ± 0%                          4.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                          16.00 ± 0%                          16.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                        16.00 ± 0%                          16.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                       16.00 ± 0%                          16.00 ± 0%       ~ (p=1.000 n=7) ¹
+geomean                                                                                                   4.000                               4.000       +0.00%
+¹ all samples are equal
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                         groups/stream                          │           groups/stream            vs base                │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                             9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                           9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                          9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                             9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                           9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                          9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                            9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                          9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                         9.000 ± 0%                          9.000 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                           11.00 ± 0%                          11.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                         12.00 ± 0%                          12.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                        12.00 ± 0%                          12.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                           11.00 ± 0%                          11.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                         12.00 ± 0%                          12.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                        12.00 ± 0%                          12.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                          11.00 ± 0%                          11.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                        12.00 ± 0%                          12.00 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                       12.00 ± 0%                          12.00 ± 0%       ~ (p=1.000 n=7) ¹
+geomean                                                                                                   10.24                               10.24       +0.00%
+¹ all samples are equal
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                         outputs/stream                         │          outputs/stream            vs base                │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                             257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                           257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                          257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                             257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                           257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                          257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                            257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                          257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                         257.0 ± 0%                          257.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                           344.5 ± 0%                          344.5 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                         367.2 ± 0%                          367.2 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                        367.2 ± 0%                          367.2 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                           344.5 ± 0%                          344.5 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                         367.3 ± 0%                          367.2 ± 0%       ~ (p=0.266 n=7)
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                        367.2 ± 0%                          367.2 ± 0%       ~ (p=1.000 n=7)
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                          344.5 ± 0%                          344.5 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                        367.2 ± 0%                          367.2 ± 0%       ~ (p=1.000 n=7)
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                       367.2 ± 0%                          367.2 ± 0%       ~ (p=1.000 n=7) ¹
+geomean                                                                                                   304.0                               303.9       -0.00%
+¹ all samples are equal
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                         owned-B/stream                         │          owned-B/stream            vs base                │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                           16.01Ki ± 0%                        16.01Ki ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                         1.000Mi ± 0%                        1.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                        4.000Mi ± 0%                        4.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                           16.01Ki ± 0%                        16.01Ki ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                         1.000Mi ± 0%                        1.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                        4.000Mi ± 0%                        4.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                          16.01Ki ± 0%                        16.01Ki ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                        1.000Mi ± 0%                        1.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                       4.000Mi ± 0%                        4.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                         16.01Ki ± 0%                        16.01Ki ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                       1.000Mi ± 0%                        1.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                      4.000Mi ± 0%                        4.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                         16.01Ki ± 0%                        16.01Ki ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                       1.000Mi ± 0%                        1.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                      4.000Mi ± 0%                        4.000Mi ± 0%       ~ (p=1.000 n=7)
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                        16.01Ki ± 0%                        16.01Ki ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                      1.000Mi ± 0%                        1.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                     4.000Mi ± 0%                        4.000Mi ± 0%       ~ (p=1.000 n=7) ¹
+geomean                                                                                                 406.4Ki                             406.4Ki       +0.00%
+¹ all samples are equal
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                           streams/s                            │              streams/s               vs base              │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                            6.401k ± 1%                           6.263k ± 3%  -2.16% (p=0.001 n=7)
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                           200.0 ± 2%                            199.2 ± 3%       ~ (p=0.646 n=7)
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                          50.23 ± 1%                            50.13 ± 1%       ~ (p=0.141 n=7)
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                            5.648k ± 1%                           5.738k ± 1%  +1.59% (p=0.002 n=7)
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                           190.2 ± 1%                            191.2 ± 2%       ~ (p=0.097 n=7)
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                          48.85 ± 1%                            48.90 ± 3%       ~ (p=0.929 n=7)
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                           5.591k ± 1%                           5.682k ± 1%  +1.63% (p=0.001 n=7)
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                          185.5 ± 1%                            186.4 ± 1%       ~ (p=0.220 n=7)
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                         48.81 ± 2%                            48.44 ± 1%       ~ (p=0.383 n=7)
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                          5.143k ± 1%                           5.174k ± 1%       ~ (p=0.300 n=7)
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                         185.6 ± 1%                            182.7 ± 2%  -1.56% (p=0.048 n=7)
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                        47.71 ± 1%                            47.69 ± 1%       ~ (p=0.876 n=7)
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                          4.643k ± 4%                           4.663k ± 2%       ~ (p=0.097 n=7)
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                         179.8 ± 1%                            179.5 ± 9%       ~ (p=0.402 n=7)
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                        47.09 ± 2%                            46.95 ± 2%       ~ (p=0.688 n=7)
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                         4.574k ± 3%                           4.693k ± 1%  +2.60% (p=0.002 n=7)
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                        177.0 ± 7%                            177.5 ± 1%       ~ (p=0.512 n=7)
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                       46.42 ± 1%                            46.51 ± 2%       ~ (p=0.927 n=7)
+geomean                                                                                                   362.2                                 362.7       +0.15%
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                            writes/s                            │              writes/s                vs base              │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                            1.639M ± 1%                           1.603M ± 3%  -2.16% (p=0.001 n=7)
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                          51.21k ± 2%                           50.99k ± 3%       ~ (p=0.620 n=7)
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                         12.86k ± 1%                           12.83k ± 1%       ~ (p=0.128 n=7)
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                            1.446M ± 1%                           1.469M ± 1%  +1.59% (p=0.002 n=7)
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                          48.69k ± 1%                           48.96k ± 2%       ~ (p=0.097 n=7)
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                         12.51k ± 1%                           12.52k ± 3%       ~ (p=0.929 n=7)
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                           1.431M ± 1%                           1.455M ± 1%  +1.62% (p=0.001 n=7)
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                         47.48k ± 1%                           47.71k ± 1%       ~ (p=0.259 n=7)
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                        12.50k ± 2%                           12.40k ± 1%       ~ (p=0.383 n=7)
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                          1.767M ± 1%                           1.777M ± 1%       ~ (p=0.318 n=7)
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                        67.97k ± 1%                           66.93k ± 2%       ~ (p=0.053 n=7)
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                       17.47k ± 1%                           17.47k ± 1%       ~ (p=0.902 n=7)
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                          1.595M ± 4%                           1.602M ± 2%       ~ (p=0.097 n=7)
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                        65.84k ± 1%                           65.75k ± 9%       ~ (p=0.456 n=7)
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                       17.25k ± 2%                           17.20k ± 2%       ~ (p=0.620 n=7)
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                         1.571M ± 3%                           1.612M ± 1%  +2.60% (p=0.002 n=7)
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                       64.84k ± 7%                           65.02k ± 1%       ~ (p=0.535 n=7)
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                      17.00k ± 1%                           17.03k ± 2%       ~ (p=0.902 n=7)
+geomean                                                                                                  109.7k                                109.9k       +0.15%
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                              B/op                              │               B/op                 vs base                │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                           17.09Ki ± 0%                        17.09Ki ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                         1.002Mi ± 0%                        1.002Mi ± 0%       ~ (p=1.000 n=7)
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                        4.004Mi ± 0%                        4.004Mi ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                           17.09Ki ± 0%                        17.09Ki ± 0%       ~ (p=0.429 n=7)
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                         1.002Mi ± 0%                        1.002Mi ± 0%       ~ (p=0.318 n=7)
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                        4.005Mi ± 0%                        4.005Mi ± 0%       ~ (p=0.620 n=7)
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                          17.10Ki ± 0%                        17.10Ki ± 0%       ~ (p=0.522 n=7)
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                        1.003Mi ± 0%                        1.003Mi ± 0%       ~ (p=0.902 n=7)
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                       4.005Mi ± 0%                        4.006Mi ± 0%       ~ (p=1.000 n=7)
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                         19.14Ki ± 0%                        19.14Ki ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                       1.107Mi ± 0%                        1.107Mi ± 0%       ~ (p=0.223 n=7)
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                      4.286Mi ± 0%                        4.287Mi ± 0%       ~ (p=0.103 n=7)
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                         19.15Ki ± 0%                        19.15Ki ± 0%       ~ (p=1.000 n=7)
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                       1.107Mi ± 0%                        1.107Mi ± 0%       ~ (p=0.620 n=7)
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                      4.287Mi ± 0%                        4.287Mi ± 0%       ~ (p=0.620 n=7)
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                        19.16Ki ± 0%                        19.16Ki ± 0%       ~ (p=0.732 n=7)
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                      1.107Mi ± 0%                        1.107Mi ± 0%       ~ (p=0.456 n=7)
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                     4.288Mi ± 0%                        4.288Mi ± 0%       ~ (p=0.710 n=7)
+geomean                                                                                                 435.9Ki                             435.9Ki       +0.00%
+¹ all samples are equal
+
+                                                    │ .cache/sessions-phase0/r11-screen-stream-baseline-combined.txt │ .cache/sessions-phase0/r11-screen-stream-r11-combined.txt │
+                                                    │                           allocs/op                            │             allocs/op              vs base                │
+StreamStandalone/Fixed/P1/Chunk64/Retain32-16                                                             250.0 ± 0%                          250.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk4096/Retain32-16                                                           266.0 ± 0%                          266.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P1/Chunk16384/Retain32-16                                                          266.0 ± 0%                          266.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk64/Retain32-16                                                             250.0 ± 0%                          250.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P4/Chunk4096/Retain32-16                                                           269.0 ± 0%                          270.0 ± 1%       ~ (p=0.452 n=7)
+StreamStandalone/Fixed/P4/Chunk16384/Retain32-16                                                          276.0 ± 3%                          275.0 ± 2%       ~ (p=0.596 n=7)
+StreamStandalone/Fixed/P16/Chunk64/Retain32-16                                                            250.0 ± 0%                          250.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Fixed/P16/Chunk4096/Retain32-16                                                          275.0 ± 1%                          275.0 ± 1%       ~ (p=0.902 n=7)
+StreamStandalone/Fixed/P16/Chunk16384/Retain32-16                                                         280.0 ± 3%                          280.0 ± 3%       ~ (p=1.000 n=7)
+StreamStandalone/Holdout/P1/Chunk64/Retain32-16                                                           268.0 ± 0%                          268.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk4096/Retain32-16                                                         303.0 ± 0%                          303.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P1/Chunk16384/Retain32-16                                                        303.0 ± 0%                          303.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk64/Retain32-16                                                           268.0 ± 0%                          268.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P4/Chunk4096/Retain32-16                                                         306.0 ± 1%                          306.0 ± 1%       ~ (p=0.469 n=7)
+StreamStandalone/Holdout/P4/Chunk16384/Retain32-16                                                        308.0 ± 1%                          308.0 ± 1%       ~ (p=0.812 n=7)
+StreamStandalone/Holdout/P16/Chunk64/Retain32-16                                                          268.0 ± 0%                          268.0 ± 0%       ~ (p=1.000 n=7) ¹
+StreamStandalone/Holdout/P16/Chunk4096/Retain32-16                                                        308.0 ± 1%                          309.0 ± 2%       ~ (p=0.435 n=7)
+StreamStandalone/Holdout/P16/Chunk16384/Retain32-16                                                       314.0 ± 1%                          313.0 ± 2%       ~ (p=0.939 n=7)
+geomean                                                                                                   278.5                               278.5       +0.00%
+¹ all samples are equal
+
+=== internal/gen/rtgen/checked.go.tmpl ===
+// Generated runtime adapters from internal/gen/rtgen/checked.go.tmpl.
+// Update the shared template and run go generate ./rt. This header deliberately
+// keeps these safety boundaries covered by the project's strict linters.
+package rt
+
+import (
+    "errors"
+    "fmt"
+)
+{{range .}}
+{{if .Locked}}// Call runs a callback while holding the instance's guest execution lock.
+{{else}}// checked runs the same per-operation boundary under a caller-held mu.
+{{end}}func (i *Instance) {{.Name}}(op string, invoke func(call *Call) error) (err error) {
+{{if .Locked}}	i.mu.Lock()
+	defer i.mu.Unlock()
+{{end}}	switch i.state {
+	case instanceClosed:
+		return ErrClosed
+	case instancePoisoned:
+		return ErrPoisoned
+	case instanceOpen:
+	}
+	defer func() {
+		if value := recover(); value != nil {
+			i.poison()
+			var message string
+			if i.host != nil {
+				message = i.host.takePanic()
+			}
+			err = Classify(op, value, message)
+		}
+	}()
+	if i.host != nil {
+		i.host.takePanic()
+	}
+	i.call = Call{instance: i}
+	err = invoke(&i.call)
+	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
+		i.poison()
+		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+	}
+	if err != nil && errors.Is(err, ErrProtocol) {
+		i.poison()
+	}
+	return err
+}
+{{end}}
+
+=== internal/gen/rtgen/cmd/main.go ===
+// Command rtgen reproduces the runtime's shared checked adapters.
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"dario.cat/cocoon/internal/gen/rtgen"
+)
+
+func main() {
+	err := generate()
+	if err != nil {
+		if _, writeErr := fmt.Fprintln(os.Stderr, "rtgen:", err); writeErr != nil {
+			os.Exit(1)
+		}
+		os.Exit(1)
+	}
+}
+
+func generate() error {
+	output, err := rtgen.Generate()
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile("checked_gen.go", output, 0o600); err != nil {
+		return fmt.Errorf("write checked boundary: %w", err)
+	}
+	return nil
+}
+
+=== internal/gen/rtgen/rtgen.go ===
+// Package rtgen renders the shared per-operation runtime safety boundary.
+package rtgen
+
+import (
+	_ "embed"
+	"fmt"
+	"go/format"
+	"strings"
+	"text/template"
+)
+
+//go:embed checked.go.tmpl
+var checkedTemplate string
+
+// Generate emits locked and caller-held-lock adapters from one safety body.
+func Generate() ([]byte, error) {
+	source, err := template.New("checked").Parse(checkedTemplate)
+	if err != nil {
+		return nil, fmt.Errorf("parse checked boundary: %w", err)
+	}
+	var output strings.Builder
+	adapters := []struct {
+		Name   string
+		Locked bool
+	}{{Name: "Call", Locked: true}, {Name: "checked"}}
+	if renderErr := source.Execute(&output, adapters); renderErr != nil {
+		return nil, fmt.Errorf("render checked boundary: %w", renderErr)
+	}
+	formatted, err := format.Source([]byte(output.String()))
+	if err != nil {
+		return nil, fmt.Errorf("format checked boundary: %w", err)
+	}
+	return formatted, nil
+}
+
+=== internal/gen/rtgen/rtgen_test.go ===
+package rtgen_test
+
+import (
+	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
+	"strings"
+	"testing"
+
+	"dario.cat/cocoon/internal/gen/rtgen"
+)
+
+func TestAdaptersShareEveryCheckedStatement(t *testing.T) {
+	t.Parallel()
+	source, err := rtgen.Generate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	file, err := parser.ParseFile(token.NewFileSet(), "checked_gen.go", source, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bodies := make(map[string]string)
+	for _, declaration := range file.Decls {
+		method, ok := declaration.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+		if method.Name.Name == "Call" {
+			if len(method.Body.List) < 2 {
+				t.Fatal("missing locked adapter prefix")
+			}
+			var prefix strings.Builder
+			for _, statement := range method.Body.List[:2] {
+				if err := format.Node(&prefix, token.NewFileSet(), statement); err != nil {
+					t.Fatal(err)
+				}
+				prefix.WriteByte('\n')
+			}
+			if prefix.String() != "i.mu.Lock()\ndefer i.mu.Unlock()\n" {
+				t.Fatal("locked adapter must acquire and defer release of execution mutex")
+			}
+			method.Body.List = method.Body.List[2:]
+		}
+		var body strings.Builder
+		if err := format.Node(&body, token.NewFileSet(), method.Body); err != nil {
+			t.Fatal(err)
+		}
+		bodies[method.Name.Name] = body.String()
+	}
+	if len(bodies) != 2 || bodies["Call"] == "" || bodies["Call"] != bodies["checked"] {
+		t.Fatal("adapters must differ only by the execution lock prefix")
+	}
+}
+
+=== rt/checked_gen.go ===
+// Generated runtime adapters from internal/gen/rtgen/checked.go.tmpl.
+// Update the shared template and run go generate ./rt. This header deliberately
+// keeps these safety boundaries covered by the project's strict linters.
+package rt
+
+import (
+	"errors"
+	"fmt"
+)
+
+// Call runs a callback while holding the instance's guest execution lock.
+func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	switch i.state {
+	case instanceClosed:
+		return ErrClosed
+	case instancePoisoned:
+		return ErrPoisoned
+	case instanceOpen:
+	}
+	defer func() {
+		if value := recover(); value != nil {
+			i.poison()
+			var message string
+			if i.host != nil {
+				message = i.host.takePanic()
+			}
+			err = Classify(op, value, message)
+		}
+	}()
+	if i.host != nil {
+		i.host.takePanic()
+	}
+	i.call = Call{instance: i}
+	err = invoke(&i.call)
+	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
+		i.poison()
+		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+	}
+	if err != nil && errors.Is(err, ErrProtocol) {
+		i.poison()
+	}
+	return err
+}
+
+// checked runs the same per-operation boundary under a caller-held mu.
+func (i *Instance) checked(op string, invoke func(call *Call) error) (err error) {
+	switch i.state {
+	case instanceClosed:
+		return ErrClosed
+	case instancePoisoned:
+		return ErrPoisoned
+	case instanceOpen:
+	}
+	defer func() {
+		if value := recover(); value != nil {
+			i.poison()
+			var message string
+			if i.host != nil {
+				message = i.host.takePanic()
+			}
+			err = Classify(op, value, message)
+		}
+	}()
+	if i.host != nil {
+		i.host.takePanic()
+	}
+	i.call = Call{instance: i}
+	err = invoke(&i.call)
+	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
+		i.poison()
+		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+	}
+	if err != nil && errors.Is(err, ErrProtocol) {
+		i.poison()
+	}
+	return err
+}
+
+=== rt/checked_gen_test.go ===
+package rt_test
+
+import (
+	"bytes"
+	"os"
+	"testing"
+
+	"dario.cat/cocoon/internal/gen/rtgen"
+)
+
+func TestCheckedBoundaryReproduces(t *testing.T) {
+	t.Parallel()
+	want, err := rtgen.Generate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual, err := os.ReadFile("checked_gen.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(actual, want) {
+		t.Fatal("checked adapters drifted: update their shared template and run go generate ./rt")
+	}
+}

@@ -2,13 +2,17 @@
 
 Status: explicitly approved by the operator, 2026-10-10 ("Approved and
 unlocked"). Phase 0 is complete. Approval covers the public Go and manifest
-contracts and the complete approval boundary below; Phase 2 may proceed after
-the signed review commits. The runtime bridge and lazy homes are implemented
+contracts and the complete approval boundary below. The signed specification
+commit precedes Phase 2. The runtime bridge and lazy homes are implemented
 and reviewed, with opt-in typed facade commands and compiled consumer proofs.
-The translated streaming proof is implemented with native, contract, wazero,
-bulk-memory, and stateful fuzz coverage. Final performance qualification remains pending.
-Runtime evidence and rejected shapes are recorded in the
-performance notes.
+The translated streaming proof has native, contract, wazero, bulk-memory, and
+stateful fuzz coverage. Independent paired throughput qualification is complete,
+and all requested quality gates pass. The retained scope is opt-in concurrent
+resource homes: typed Batch alone slows small writes, and the default single-home
+fixed 64-byte stream at one processor costs about 3% more. No scalar improvement,
+equivalence, or M1 performance acceptance is claimed. Final evidence, memory/fairness trade-offs,
+and rejected shapes are recorded in the
+[streaming qualification](performance.md#bounded-resource-streaming-qualification-2026-10-11).
 
 The evidence, raw samples, provenance, and negative results are in
 [performance notes](performance.md#bounded-checked-sessions-phase-0-2026-10-10)
@@ -181,9 +185,12 @@ Zero fields in BatchLimits select defaults: 32 calls, 1 MiB encoded input,
 and 1 MiB retained encoded output. Hard maxima are 256 calls and 16 MiB for
 each byte budget. Nonzero values may lower or raise defaults within those
 maxima. Validate limits and command count before allocating a command plan.
-The measured N=16/32 region is a useful starting point; N=64 did not improve
-the shared-home 64-byte ceiling at GOMAXPROCS 16. Limits bound call/byte work,
-not elapsed time or arbitrary guest CPU cost.
+The Phase 0 prototype suggested N=16/32 as a starting point; N=64 did not
+improve its shared-home 64-byte ceiling at GOMAXPROCS 16. Final typed-buffer
+measurements show workload-specific throughput/fairness trade-offs, including
+higher shared-home throughput at larger N and worse competing-call latency.
+Choose sizes from the final qualification, not the prototype alone. Limits
+bound call/byte work, not elapsed time or arbitrary guest CPU cost.
 
 Preflight sizes the complete buffer with overflow checks, including every
 variable argument, scalar array width, and record header. Aggregate encoded

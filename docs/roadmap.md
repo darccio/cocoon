@@ -1,7 +1,7 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-10. The synchronous M1 framework and Datadog proof were released privately
+2026-10-11. The synchronous M1 framework and Datadog proof were released privately
 as v0.1.0. The quality pass and five performance passes are complete, including
 the nine-round multi-agent loop, the PGO/resource-call follow-up, and exact
 numeric-lowering investigation.
@@ -16,8 +16,9 @@ environment variables are required.
 
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
-have passed locally. Rebuilding both proof packages reproduces their committed
-artifacts and lock hashes. The first private release was
+have passed locally. Rebuilding both original proof packages and the streaming
+fixture reproduces their committed artifacts and lock hashes. The first private
+release was
 [github.com/darccio/cocoon v0.1.0](https://github.com/darccio/cocoon/releases/tag/v0.1.0).
 All three [release qualification CI jobs](https://github.com/darccio/cocoon/actions/runs/37235658925)
 passed: native amd64 and arm64 Go quality gates and the fresh pinned end-to-end
@@ -28,8 +29,9 @@ and is retracted.
 [v0.2.0](https://github.com/darccio/cocoon/releases/tag/v0.2.0) publishes the
 module as `dario.cat/cocoon`; the GitHub repository remains the source host.
 
-Native linux/386 tests now pass outside the former sandbox. Current runtime
-coverage is 97.8 percent; the Rust and Go generators are 94.6 and 96.7 percent.
+Native linux/386 tests pass outside the former sandbox. Before the checked-command
+work, recorded runtime coverage was 97.8 percent; the Rust and Go generators
+were 94.6 and 96.7 percent.
 
 The installed-CLI smoke test passes with Go 1.26.8 and 1.27.1. It initializes,
 formats, builds, verifies, and deterministically rebuilds a separate author's
@@ -244,10 +246,10 @@ notes. No default PGO profile was added.
 
 ### Remaining performance work
 
-The six tracks below are planned experiments, not implemented features or
-measured improvements. Distinguish standalone `SketchAdd` latency from ingestion
-throughput: batching and sessions can improve throughput without making an
-individual `Add` faster.
+Track 3 now has an approved implementation and streaming qualification; the
+other tracks below remain planned experiments. Distinguish standalone
+`SketchAdd` latency from ingestion throughput: batching and sessions can improve
+throughput without making an individual `Add` faster.
 
 Start with a matched-input baseline matrix: scalar versus batch calls, repeated
 values, distinct nearby values, mostly unique values, and negative-bin values.
@@ -258,10 +260,10 @@ controlled speedup comparison. Record cache hit rates and estimated ceilings
 before committing to larger designs.
 
 Execution priority is low-copy batching first, with the bin-reuse viability
-study as the next scalar investigation. Sessions and typed returns need a
-compatibility decision before implementation. Translation analysis and the
-alternative-backend comparison are diagnostic tracks; use their results to
-decide whether larger compiler or runtime work is justified.
+study as the next scalar investigation. Typed returns still need a compatibility
+decision before implementation; the session decision is recorded in track 3.
+Translation analysis and the alternative-backend comparison are diagnostic
+tracks; use their results to decide whether larger compiler or runtime work is justified.
 
 #### 1. Low-copy batching
 
@@ -310,23 +312,73 @@ streaming gains. Raw samples, current scalar/SQL/batch/trace baselines, provenan
 and negative results are in [performance notes](performance.md).
 
 The operator approved the [Phase 1 specification](checked-sessions.md) on
-2026-10-10: typed finite command
-buffers, a bounded runtime adapter bridge, and optional lazy resource homes.
-It preserves per-command checks and exact instance/epoch ownership. It adds
-public Go and manifest contracts, with the explicit approval boundary recorded
-in the spec. The runtime bridge now preserves the standalone guardrails and
-executes bounded commands with one admission and shared ownership/execution.
-Its checked 64-byte ceiling at 16 processors is 7.40 Mcalls/s on one home
-versus 4.86 standalone; worker-private diagnostic batches reach 34.81.
-Rejected core shapes and all negative/retained samples are in the performance
-notes. Optional lazy homes now preserve independent initialization/replacement
-and exact handle ownership, with compiled concurrency and race proofs. Opt-in
-typed facade buffers now preserve whole-plan preflight and checked-prefix
-publication, proven through generated consumers and external command-type
-adversaries. The owned 1 KiB hold-back streaming fixture now has native,
-translated, contract, bulk-memory, and valid-handle stateful differential proofs.
-Resume with the independent paired throughput qualification plan.
-M1 performance acceptance remains unmet.
+2026-10-10: typed finite command buffers, a bounded runtime adapter bridge, and
+optional lazy resource homes. The implemented contract preserves per-command
+checks, whole-plan preflight, owned-prefix publication, immediate poisoning,
+and exact home/epoch ownership. Replacement never migrates old handles; sibling
+homes and the stateless pool survive a home fault. Cancellation, abandonment,
+aliases, and draining Close have compiled consumer and race proofs. The owned
+1 KiB hold-back streaming fixture has native, translated, contract, bulk-memory,
+and valid-handle stateful wazero/fuzz proofs.
+
+Independent paired qualification is complete on Go 1.26.8, CGO disabled. At
+16 processors, fixed 64-byte streams reach 1.429 Mwrites/s on the original
+single home, 11.162 with 16 homes and standalone methods (7.81×), and 10.362
+with 16 homes and Batch32 (7.25×). The independent holdout reaches 11.818 and
+11.604, respectively, versus 1.581 original/default. Placement supplies the
+gain; typed Batch alone slows small writes by roughly 15–20%. Larger chunks,
+buffer length, competing-call latency, mixed stateless traffic, and memory
+show workload-specific trade-offs. One-home default P1/64-byte fixed streams
+regress about 3% in both paired sets. No standalone scalar regression is
+detected; SQL medians rise about 0.5–1% without a detected difference, so a
+small cost is not excluded. No scalar improvement or equivalence is claimed.
+See [complete qualification and negatives](performance.md#bounded-resource-streaming-qualification-2026-10-11).
+
+Retained signed local commits, in dependency order:
+
+| Commit | Change |
+|---|---|
+| `36a8e6f` | Phase 0 component/contention measurements |
+| `bfc77f4` | Operator-approved specification before implementation |
+| `a3ebd59` | Bounded checked runtime bridge |
+| `2574186` | Separate bounded lazy resource homes |
+| `5269e40` | Differential status checks, including expected errors |
+| `287abf2` | Opt-in typed command buffers |
+| `884c03e` | Streaming fixture and generated/native/stateful proofs |
+| `26b32de` | Verified processor counts inside measured benchmark leaves |
+| `a3693c2` | Shared generated safety policy and restored standalone paths |
+
+R1–R4/R7, the pre-layout candidate, layout-only, and R9–R11 shapes were rejected
+for guardrail regressions or failed qualification. R5/R6 were intermediate
+screens, superseded by the retained R8/R12 implementations. Their patches,
+samples, and negative results remain in the performance notes. Streaming runs
+with parent-only processor setters and the stopped race-overlapping run are
+excluded; the corrected harness verifies actual processors for every timed
+leaf. No rejected shape is counted as a cumulative gain. No branches or tags
+were pushed.
+
+Retain this as opt-in concurrent resource throughput with the explicit default
+stream cost. Prefer sharded standalone methods for synthetic small writes;
+choose buffer size only after measuring payload costs, fairness, and memory.
+The general M1 scalar target remains unmet; M1 performance is not accepted.
+
+Final R12 gates pass: `make check` (tests/vet/49 strict linters, official
+golangci-lint 2.13.1), `make race`, `make rust`, `make cross`, `make smoke`,
+`make fuzz`, and `make integration`. Qualification uses Go 1.27.1, Rust 1.97.0,
+and Binaryen 133; benchmark binaries use Go 1.26.8 with CGO disabled. Cross
+checks compile linux/arm64 and 386, Darwin/arm64, Windows/amd64, and js/wasm;
+they do not execute those targets. Race runs actual generated consumer
+subprocesses with race instrumentation. Native shim tests and all-feature
+Clippy pass for all three fixtures. Two further builds of each proof and
+`go generate ./rt` reproduce all 54 committed proof/runtime files byte for
+byte, including both original locks and the new streaming lock. Darna and
+exact staged-snapshot tests pass before retained commits.
+
+Track 3 is complete under this scope. Resume other tracks with the same
+approval and measurement discipline; external injector ownership and demo
+integration remain separate work.
+
+The original entry requirements remain guardrails for future extensions:
 
 - First measure the admission/ownership/execution-lock share and a prototype's
   attainable ceiling. A bounded session could admit once and execute several

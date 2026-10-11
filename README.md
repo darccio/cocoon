@@ -220,6 +220,12 @@ Failures return the completed result prefix and an `rt.BatchError`; cancellation
 is checked between commands. See the [checked-command contract](docs/checked-sessions.md)
 for limits, ownership, cancellation, and shutdown semantics.
 
+Resource-home sharding improves concurrent streaming throughput at a memory
+cost. In the synthetic proof, typed batches alone slow small writes, and the
+default single-home fixed 64-byte stream at one processor costs about 3% more.
+Choose homes and buffer sizes from workload measurements; see the
+[streaming qualification](docs/performance.md#bounded-resource-streaming-qualification-2026-10-11).
+
 ## Documentation
 
 | Guide | Contents |

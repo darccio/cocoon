@@ -15,7 +15,7 @@ relabeling lower-P samples. Heap diagnostics have no P-labelled mismatch but
 are superseded too. The corrected harness sets/restores GOMAXPROCS inside each
 measured leaf, checks it before and after RunParallel, and reports actual-procs.
 The measurement runner must reject a missing or mismatched metric. Identical
-corrected standalone source will be used on both sides of the new comparison.
+corrected standalone source is used on both sides of the new comparison.
 
 The [historical raw archive](measurements/checked-sessions-streaming-before-layout.txt)
 preserves the original harness, hashes, samples, and stopped candidate (exit
@@ -30,10 +30,238 @@ about 26 seconds and all its samples were discarded before restarting in
 isolation. The same archive preserves that excluded attempt separately. No
 overlapping sample contributes to an accepted measurement.
 
+## Bounded resource streaming qualification (2026-10-11)
+
+The operator-approved [contract](checked-sessions.md) is implemented: finite
+opt-in typed command buffers share admission, ownership, and execution locking;
+resources can use a separate bounded set of lazy homes. Each command retains
+reset, memory checks, reply validation, owned publication, and immediate fault
+poisoning. Handles remain attached to their exact home/epoch after poisoned-slot
+replacement. Qualification supports **opt-in concurrent streaming**, with the
+negative default-path and Batch results below. **M1 performance is not accepted**.
+This is a synthetic exact-byte matching payload; performance of the real
+Injector and its dd-trace embedding remains separate follow-up work.
+
+### Conditions and comparisons
+
+Measurements use Go 1.26.8, CGO disabled, PGO off, GOAMD64=v1, Ryzen 5800HS,
+CPUs 0–15 without affinity, and default GC/memory settings. System Go 1.27.1
+and official golangci-lint 2.13.1 qualify code. Builds, checks, fuzzing, and
+reviewer tools stop before each measurement. Every stream row reports verified
+actual-procs; Go's initial `-16` name suffix is not the leaf's processor count.
+The corrected screen takes 155.4 seconds; the option/diagnostic sweep takes
+497.2 seconds, with a separate reversed-order standalone confirmation.
+
+The baseline is the Phase 0 snapshot (`36a8e6f`, production unchanged from
+`9623228`). Its original CLI builds the same authored streaming shim with the
+host-only checked_batches flag omitted. Baseline and candidate Wasm SHA-256:
+`9141023ca801ef1cb0825ea155dd42b4d83bcee9ce6c9a6ad453b40badb49955`.
+The corrected standalone benchmark is copied unchanged to the baseline:
+`4e98e93d5658fae33558b9af70d208031da25bd8cf0d9c59af13e2234ee86b59`.
+This compares complete facades around identical guest code.
+
+Seven alternating 500 ms DD pairs cover scalar, SQL, batch, trace, varied
+scalar/SQL, and negative bins; a second seven-pair set reverses the first order.
+Two seven-pair 250 ms stream sets cover fixed and independent holdout corpora
+at P=1/4/16, 64 B/4 KiB/16 KiB chunks. Seven option sets compare N32, then
+N=16/64/256 at P16. Options run in fixed within-process order. Three diagnostic
+rounds cover mixed stateless traffic (250 ms), competition (500 ms), and
+initialized memory (3 iterations). Short windows, GC, frequency effects,
+shared-machine conditions, fixed ordering, and repeated exploratory comparisons
+limit inference; p-values are unadjusted. Absence of a detected difference is
+not an equivalence proof.
+
+A timed operation is a complete stream: New, all writes, retained owned outputs,
+End, and Close. Open, lazy initialization, inputs/oracles, and full byte checks
+occur outside timing. Fixed input has 256 equal chunks. Holdouts rotate four
+corpora with no match, crossing/repeated matches, partial tails, binary bytes,
+and uneven/empty partitions; actual write counts vary. Paths retain one finite
+output group without history proportional to b.N. Input reaches 4 MiB at the
+largest size. Batch includes command construction, plans, decoding/boxing,
+and owned results, with MaxCalls=N and 16 MiB input/output budgets. Parallel
+ns/op is aggregate stream throughput, not individual caller latency.
+
+The [complete qualification log](measurements/checked-sessions-streaming.txt)
+contains every sample, source/binary hashes, exact drivers/commands, independent
+repeats, and summaries. The [historical archive](measurements/checked-sessions-streaming-before-layout.txt)
+retains invalid processor-labelled sets, earlier scalar negatives, and excluded
+procedural attempts. Those stream sets do not support qualification.
+
+### Standalone guardrails and rejected shapes
+
+The final R12 shape restores the original Call and ResultView bodies and
+Instance footprint. One authored template generates locked/held-lock adapters
+in the original Call region, with reproduction and statement-equivalence tests;
+strict lint still covers the authored runtime file. Batch snapshots validated
+wire length before status interpretation/typed decoding, keeping its accounting
+out of standalone ResultView. The private Library restores the original
+lifecycle offset and places new homes/cursor after it. Options offsets change;
+these are implementation choices, not proof of cache placement or the cause of
+earlier slowdowns.
+
+| Workload | First baseline → R12 | Independent baseline → R12 |
+|---|---:|---:|
+| SQL | 2169 → 2190 ns, p=0.066 | 2169 → 2180 ns, p=0.090 |
+| Scalar | 88.64 → 88.18 ns, p=0.002 | 88.77 → 88.70 ns, p=0.902 |
+| Batch 1k | 44.78 → 44.59 µs, p=0.011 | 44.75 → 44.65 µs, p=0.165 |
+| Trace 1k | 2.617 → 2.625 ms, p=0.902 | 2.623 → 2.607 ms, p=0.902 |
+| Negative bins | 89.31 → 89.02 ns, p=0.128 | 89.57 → 89.16 ns, p=0.535 |
+| Varied scalar | 89.28 → 89.36 ns, p=0.435 | 89.62 → 89.00 ns, p=0.128 |
+| Varied SQL | 2809 → 2786 ns, p=0.015 | 2806 → 2795 ns, p=0.247 |
+
+Neither set detects a scalar/SQL/batch regression. Allocation counts are
+unchanged. SQL medians remain roughly 0.5–1% higher, and the confirmation
+candidate includes a 21% SQL dispersion: a small cost is not excluded.
+No standalone scalar improvement or blanket no-regressions claim is made.
+
+Default P1/64 B fixed streams regress 155.7 → 160.4 µs (+3.00%, p=0.001),
+confirmed at 155.7 → 160.5 µs (+3.05%, p=0.002), with unchanged allocations.
+This negative remains part of the retained opt-in throughput trade-off.
+P1/16 KiB holdout is +0.67% (p=0.004) in the first set, but not repeated
+(21.00 → 20.95 ms, p=0.383). The option sweep's P1/64 B sharded-standalone
+holdout is +2.20% (p=0.011); it has no independent confirmation. Other held-out
+negative point estimates likewise are not independently confirmed. All point
+estimates and samples are retained. Sharding does not promise a
+single-stream/default latency improvement.
+
+Additional uncommitted shapes were rejected:
+
+| Shape | Reason | Evidence |
+|---|---|---|
+| Layout alone | P1/64 B holdout +1.56%, repeated +2.75%; fixed +2.23% in confirmation | [raw samples/patch](measurements/checked-sessions-streaming-layout-rejected.txt) |
+| R9, batch-local wire accounting with helper core | Multiple standalone stream regressions of 1–3%; not qualified | [raw samples/patch](measurements/checked-sessions-r9-rejected.txt) |
+| R10, cold state predicate and lifecycle prefix | Fixed P1/64 B +3.75%, repeated +4.72%; holdout +0.86% in second set | [raw samples/patch](measurements/checked-sessions-r10-rejected.txt) |
+| R11, shared template in separate runtime file | Negative-bin scalar +2.74%; fixed P1/64 B +2.21% | [raw samples/patch](measurements/checked-sessions-r11-rejected.txt) |
+
+R1–R7 and earlier R8 foundation/harness evidence remain below. Rejected designs
+are not retained commits or cumulative speedups.
+
+### Streaming ceilings
+
+Medians in **million writes/s**, N32. Old/default and new/default use one home.
+Sharded standalone and sharded Batch use P homes; the separate stateless pool
+is configured to one and stays unused. P1's final Batch column reuses BatchHomes1.
+
+| Corpus | P | Chunk | Old/default | New/default | Sharded standalone | Batch, one home | Batch, P homes |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Fixed | 1 | 64 B | 1.64420 | 1.59633 | 1.59950 | 1.34171 | 1.34171 |
+| Fixed | 1 | 4096 B | 0.05054 | 0.05061 | 0.05075 | 0.04977 | 0.04977 |
+| Fixed | 1 | 16384 B | 0.01295 | 0.01290 | 0.01278 | 0.01266 | 0.01266 |
+| Fixed | 4 | 64 B | 1.44998 | 1.46013 | 4.94357 | 1.23452 | 4.33661 |
+| Fixed | 4 | 4096 B | 0.04893 | 0.04916 | 0.19740 | 0.05012 | 0.19342 |
+| Fixed | 4 | 16384 B | 0.01253 | 0.01250 | 0.04905 | 0.01268 | 0.04879 |
+| Fixed | 16 | 64 B | 1.42854 | 1.44544 | 11.16153 | 1.22629 | 10.36181 |
+| Fixed | 16 | 4096 B | 0.04723 | 0.04784 | 0.46550 | 0.04995 | 0.46699 |
+| Fixed | 16 | 16384 B | 0.01249 | 0.01239 | 0.11478 | 0.01267 | 0.11729 |
+| Holdout | 1 | 64 B | 1.77818 | 1.77923 | 1.73991 | 1.43140 | 1.43140 |
+| Holdout | 1 | 4096 B | 0.06745 | 0.06787 | 0.06696 | 0.06572 | 0.06572 |
+| Holdout | 1 | 16384 B | 0.01759 | 0.01747 | 0.01753 | 0.01713 | 0.01713 |
+| Holdout | 4 | 64 B | 1.61222 | 1.60694 | 5.41892 | 1.38019 | 4.93383 |
+| Holdout | 4 | 4096 B | 0.06573 | 0.06511 | 0.25852 | 0.06667 | 0.25834 |
+| Holdout | 4 | 16384 B | 0.01713 | 0.01711 | 0.06492 | 0.01743 | 0.06327 |
+| Holdout | 16 | 64 B | 1.58146 | 1.60226 | 11.81841 | 1.34872 | 11.60406 |
+| Holdout | 16 | 4096 B | 0.06486 | 0.06466 | 0.59915 | 0.06696 | 0.59580 |
+| Holdout | 16 | 16384 B | 0.01713 | 0.01707 | 0.15436 | 0.01729 | 0.15277 |
+
+At P16/64 B, sharding raises 1.429 to 11.162 Mwrites/s (7.81×); sharded
+Batch32 reaches 10.362 (7.25×). The independent holdout reaches 11.818
+standalone and 11.604 batched versus 1.581 old/default. P16/4 KiB fixed
+sharded standalone/Batch reach 0.466/0.467 versus 0.0472 old/default.
+The gain is primarily placement: translated guest calls run concurrently.
+
+Typed Batch alone loses roughly 15–20% on 64-byte cases. Fixed 64 B/N32
+allocates 49.84 KB and 801 allocations per stream versus 17.50 KB and 250
+standalone. Reusing three adapter closures per buffer avoids three per command,
+but typed command/result boxing and plan creation remain real costs. Runtime
+admission ceilings do not establish a small-write facade gain. Prefer sharded
+standalone writes for this synthetic small-chunk workload.
+
+P1 batching also loses on larger chunks. Some larger shared-home P4/16 cases
+have only small point-estimate gains; P4 sharded Batch generally trails sharded
+standalone, including the 16 KiB holdout. At P16 fixed 4/16 KiB Batch is slightly
+higher, while holdouts are slightly lower. These are workload-specific choices,
+not a general Batch recommendation or per-byte translation improvement.
+The external inject-bench checkout is absent here; its supplied 1–2 µs/call
+facade cost and ~11× translation overhead are sanity references, not reproduced
+or directly comparable measurements. Phase 0 admission primitives in tens of
+nanoseconds are a small share of those payload costs.
+
+### Length, contention, and memory negatives
+
+N16/64/256 does not establish monotonic sharded gains. Full length samples are
+in the log; larger buffers cannot be chosen from the runtime ceiling alone.
+Mixed 4 KiB holdout traffic performs one owned stateless Echo per output group
+through a separately warmed P-slot pool. At P16/N32, sharded standalone reaches
+0.608 Mwrites/s and 19,925 Echo/s; sharded Batch reaches 0.589 and 19,294,
+versus one-home Batch 0.0681 and 2,231. These are coupled rates, not independent
+stateless latency. Echo/write is 0.03276 at N32 and 0.005461 at N256; raw
+rates must not hide the changed mix.
+
+A dedicated 64-byte standalone probe competes with buffered streams on 4 KiB
+holdouts. Timings include scheduling and the clock. Calls begun while workers
+are active enter a trailing 1024-sample ring, including a final slow waiter.
+Quantiles below are medians of three diagnostic runs, not whole-window
+latency distributions or guarantees; maxima are medians of each run's
+retained-sample maximum.
+
+| P16 homes | N | Probe p95 | Median of retained maxima | Retained samples |
+|---|---:|---:|---:|---:|
+| 1 | 16 | 3.99 ms | 4.74 ms | 540 |
+| 1 | 32 | 7.82 ms | 9.11 ms | 132 |
+| 1 | 64 | 14.72 ms | 15.82 ms | 163 |
+| 1 | 256 | 36.95 ms | 47.63 ms | 59 |
+| 16 | 16 | 1.49 µs | 4557.50 µs | 1024 |
+| 16 | 32 | 1.09 µs | 3.18 µs | 1024 |
+| 16 | 64 | 0.75 µs | 4.80 µs | 1024 |
+| 16 | 256 | 1.45 µs | 10.53 µs | 1024 |
+
+Larger shared buffers materially increase competing-call latency. Sharded tails
+are nonmonotonic, and a limited ring cannot prove fairness. P1 also has scheduler
+stalls measured in milliseconds. N32 bounds work, not latency; responsiveness
+requires smaller-buffer experiments and workload-specific measurement.
+
+Initialized-memory medians after GC, outputs released, live wrappers kept alive.
+The configured one-slot pool stays lazy/uninitialized. MB is decimal; heap
+observations are not process RSS or hard bounds.
+
+| Initialized homes | Live streams | Go heap delta | Logical guest memory |
+|---|---:|---:|---:|
+| 1 | 1 | 1.403 MB | 1.245 MB |
+| 1 | 256 | 1.810 MB | 1.704 MB |
+| 4 | 4 | 5.610 MB | 4.981 MB |
+| 4 | 256 | 5.663 MB | 5.243 MB |
+| 16 | 16 | 22.439 MB | 19.923 MB |
+| 16 | 256 | 22.489 MB | 19.923 MB |
+
+Sharding trades memory for concurrency. Bounded lazy homes are not one instance
+per stream; uneven lifetimes can overload a lane. Per-instance MaxMemory,
+temporarily retiring homes, inputs, typed metadata, and host decode overhead
+remain separate from wire-output budgets.
+
+### Proof and qualification
+
+The synthetic fixture retains at most 1 KiB between writes, injects once before
+the first exact `</head>`, flushes End, and exercises expected errors/traps.
+Write working buffers and linear memory exceed that retained window. Native
+whole-input oracles, partial-match splits, translated contract/typed tests, bulk-memory proofs, and
+valid-handle wazero sequences/fuzzing cover the stateful case. Middle failures
+prove Attempted and exact publication, including post-decode memory faults,
+exhausted budgets, cancellation, abandonment, aliases, replacement, sibling
+survival, and draining Close. Generated differential comparisons check status
+as well as reply bytes.
+
+Final gates and retained commits are recorded in the roadmap. Cross checks
+compile arm64/386/Darwin/Windows/js targets; they do not claim native execution.
+Race instruments actual compiled generated consumers. Both existing proofs and
+the streaming fixture rebuild from authored sources/locks; translated modules
+are never optimized alone. All requested gates pass on the final R12 tree;
+the approved contract is retained under the narrow throughput guidance above.
+
 ## Checked resource bridge qualification (2026-10-11)
 
-The [approved contract](checked-sessions.md) is being implemented after Phase 0.
-Qualification compares frozen binaries against the original standalone API;
+This section records the earlier runtime-foundation rounds, superseded by the
+complete translated-stream qualification above. The [approved contract](checked-sessions.md)
+followed Phase 0. Qualification compares frozen binaries against the original standalone API;
 the throughput feature must preserve its latency. These exploratory runtime
 ceilings do not accept M1 performance.
 
@@ -99,14 +327,17 @@ retain this rejected shape and its negative holdout.
 
 ### Retained runtime foundation (R8)
 
-R8 preserves the original Call layout and reset. Batch-only validated error
+The original R8 commit preserves Call layout and reset. Batch-only validated error
 wire bytes live privately on Instance and reset before each command, without
 adding standalone successful-call stores. Shared inlineable helpers own state,
 reset, memory, and protocol policy; the small locked/unlocked ordering adapters
 recover directly in deferred closures and share the cold fault classifier.
 Every command retains its memory check, reset, reply validation, and immediate
 poisoning. This is a runtime bridge; typed facade commands, optional lazy homes,
-and the translated streaming fixture still require implementation/proof.
+and the translated streaming fixture were not yet implemented at that stage.
+R12 replaces the helper/Instance-ledger implementation with the shared authored
+template and batch-local accounting described above. R8 timings remain evidence
+for that historical foundation, not the final typed streaming implementation.
 
 Seven alternating baseline/R8 pairs detect no standalone scalar regression
 (88.64 → 88.86 ns, p=0.330), SQL (2180 → 2176 ns, p=0.689), batch
@@ -373,7 +604,7 @@ Differences from historical sessions are not source improvements/regressions.
 
 SQL remains below its original 2215.4 ns limit in this run; scalar SketchAdd
 at 88.36 ns remains above 55.44 ns. No new same-machine reference is available,
-and M1 performance is not accepted. Phase 2 needs matched before/after scalar,
+and M1 performance is not accepted. At this stage Phase 2 needed matched before/after scalar,
 SQL, batch, trace, varied, negative-bin, streaming, and independent holdout
 samples, including fairness and live-instance memory under contention.
 
@@ -388,9 +619,9 @@ ceilings are retained as diagnostics; no production optimization is retained.
 
 The Phase 0 addition passes `make check` with official golangci-lint 2.13.1,
 `make race`, Go 1.26.8 runtime tests, darna, and exact staged-snapshot tests.
-The operator explicitly approved the specification on 2026-10-10. Phase 2 and its
-Rust, cross, integration/repeat proofs, smoke, and fuzz qualification remain
-pending; these notes do not claim a finished streaming feature.
+The operator explicitly approved the specification on 2026-10-10. Phase 2 was
+pending at this point; its final translated-stream evidence and quality gates
+are recorded above and in the roadmap.
 
 ## Current results
 
