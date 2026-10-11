@@ -247,8 +247,9 @@ notes. No default PGO profile was added.
 ### Remaining performance work
 
 Track 3 has an approved implementation and streaming qualification; track 1's
-host encoding stage is also qualified. Remaining stages below are planned
-experiments. Distinguish standalone
+host encoding stage and track 5's publication-tail pass are also qualified.
+Track 6 now has a negative private backend comparison. Further stages below
+remain experiments. Distinguish standalone
 `SketchAdd` latency from ingestion throughput: batching and sessions can improve
 throughput without making an individual `Add` faster.
 
@@ -259,9 +260,10 @@ adding only benchmark source reverses the full-stream comparison's sign;
 removing it rebuilds the frozen binaries byte for byte. This does not establish
 a cause or a fix. Retain the controls and the explicit streaming negative,
 with [samples and limits](performance.md#default-streaming-cost-investigation-2026-10-11).
-No production change or new contract follows from this investigation. The next
-round qualifies low-copy host encoding below with matched inputs and
-standalone/streaming holdouts, including a freshly rebuilt independent spike.
+No production change or new contract follows from that investigation. The
+subsequent low-copy host encoding round qualified matched inputs and
+standalone/streaming holdouts with a freshly rebuilt independent spike, as
+recorded in track 1. Current next work is track 5's matching-profile analysis.
 
 The entry baseline matrix compares scalar versus batch calls, repeated
 values, distinct nearby values, mostly unique values, and negative-bin values.
@@ -271,10 +273,12 @@ batch benchmarks use different inputs; their per-point timings are not a
 controlled speedup comparison. Record cache hit rates and estimated ceilings
 before committing to larger designs.
 
-The low-copy host encoding stage is qualified below. Exact-value bin reuse now
-has a phase-0 no-go for both measured defaults. Next decide whether a certified
-interval proof is credible or start translation analysis. Typed returns still
-need a compatibility
+The low-copy host encoding stage is qualified below. Exact-value bin reuse has
+a phase-0 no-go for both measured defaults. Translation analysis has produced
+the qualified publication-tail pass, while compiled wazero loses the private
+same-Wasm control. Next inspect matching profiles and compiler output for
+another exact translation pattern; do not broaden the retained pass without
+new proof and qualification. Typed returns still need a compatibility
 decision before implementation; the session decision is recorded in track 3.
 Translation analysis and the alternative-backend comparison are diagnostic
 tracks; use their results to decide whether larger compiler or runtime work is justified.
@@ -487,11 +491,12 @@ claim. M1 performance remains unaccepted. This adds no public contract.
 
 See [conditions, negatives, rates, and complete evidence](performance.md#publication-memory-views-production-qualification-2026-10-11)
 and [the private specification](translation-memory-views.md). Next: use matching
-profiles to choose another demonstrated translation pattern, or run track 6's
-same-Wasm backend control to locate the remaining guest-heavy gap. Treat either
-as a separate measured experiment; do not broaden the retained predicate based
-on this batch result or add screening gains together. Native arm64 performance
-still requires hardware; cross compilation is not execution evidence.
+profiles to choose another demonstrated translation pattern. Track 6's
+same-Wasm control is complete and negative for its measured configuration.
+Treat further work as a separate measured experiment; do not broaden the
+retained predicate based on this batch result or add screening gains together.
+Native arm64 performance still requires hardware; cross compilation is not
+execution evidence.
 
 - Inspect matching Go compiler SSA/assembly and guest profiles for repeated
   memory accesses or Wasm stack temporaries that provably do not escape. Scope
@@ -506,6 +511,32 @@ still requires hardware; cross compilation is not execution evidence.
   or code size outweighs the measured benefit.
 
 #### 6. Alternative-backend control
+
+The 2026-10-11 private control is complete. All 18 matched warm raw/checked
+compiled-wazero comparisons lose against translated Go in both rounds, including
+batch, SQL, trace, and holdouts. Retain the harness and full negative evidence;
+park a production backend switch for this measured configuration. No runtime,
+facade, generated module, public contract, or default PGO change is retained.
+Fresh production scalar and SQL both miss their original and fresh reference
+plus 10% limits, so M1 remains unaccepted.
+
+Warm execution and three fresh-process cold compound scopes are separate.
+Compiled calls use cached exports and reusable stack carriers. A separate
+profile attributes their 16 B/export allocation to the private adapter's
+`WithoutCancel` context boxing; no alternative context was timed. Increasing
+roles have different calibrated prefixes, logical guest sizes exclude native
+executable memory/RSS, and cold zero-growth is a placeholder. Layer differences
+are nonadditive diagnostics; the checked adapter is not a supported facade.
+All gates/integration, exact staged validation, three reviewer audits, and two
+identical 61-file proof/runtime reproductions pass. Existing P16 streaming
+controls refresh the observed one/sixteen-home throughput without a new source
+gain or default-stream acceptance claim.
+
+See [scope](backend-control.md) and
+[paired results, provenance, limits, and compressed evidence](performance.md#same-wasm-backend-control-diagnostic-no-go-2026-10-11).
+Next resume track 5's matching-profile analysis. A context/call-carrier control
+would be a separate private experiment; this result cannot predict its outcome.
+Any supported backend proposal still requires a public-contract decision.
 
 - Compare the same pinned Wasm in compiled wazero against translated Go using
   identical scalar and batch inputs and equivalent facade/safety work. Separate

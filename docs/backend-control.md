@@ -158,3 +158,26 @@ two proof/runtime reproductions; no generated-only changes are permitted.
 Archive complete evidence in a compressed file with byte hashes and a readable
 summary. Publication remains the operator's decision; do not push this round
 without a new publication request.
+
+## Qualification notes (2026-10-11)
+
+The control was implemented in `9ad3434` after the initial scope commit
+`5dee157`. All 1,064 planned samples succeed; all 18 primary warm engine pairs
+lose in both rounds. Retain the diagnostic harness and
+[complete negative evidence](performance.md#same-wasm-backend-control-diagnostic-no-go-2026-10-11).
+No production/backend change or M1 acceptance follows.
+
+Engine exports cache `context.WithoutCancel` contexts. A separate allocation
+profile on the frozen binary attributes the 16 B/export allocation to that
+context's Value receiver/interface conversion, reached by wazero's value
+lookup. This is an adapter contribution, not an inherent compiled-engine
+allocation claim. No alternative context was timed, and no subtraction or
+counterfactual speed estimate is qualified.
+
+Cold construction's zero-growth metric is a placeholder generated from final
+memory bytes twice; it does not measure construction-time growth. Warm growth
+is measured and zero in all 532 matched backend warm samples. Executable
+mappings/RSS remain unmeasured. Translated cold construction has wide sample
+dispersion, and all
+three cold scopes include different work. These limitations leave the private
+scope intact and require separate evidence for broader conclusions.

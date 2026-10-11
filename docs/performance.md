@@ -4,6 +4,301 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Same-Wasm backend control: diagnostic no-go (2026-10-11)
+
+Retain the private benchmark controls and their negative evidence. Compiled
+wazero loses every matched warm workload against translated Go in both rounds,
+including batch, SQL, and trace work. This configuration supplies no reason to
+change the production backend. Production source and generated artifacts remain
+unchanged. **M1 performance remains unaccepted:** refreshed scalar and SQL both
+exceed the original absolute limits and the fresh reference plus 10% limits.
+
+The [private scope](backend-control.md) was committed in `5dee157` before the
+controls in `9ad3434` and before qualification timing. The controls introduce
+no public contract, backend option, ABI change, or default PGO profile. Guest,
+host, and adversarial reviewers approve retention as diagnostic evidence.
+The [readable record](measurements/backend-control-2026-10-11.md) accompanies an
+[actual compressed archive](measurements/backend-control-2026-10-11.tar.gz) and
+[compressed SHA-256](measurements/backend-control-2026-10-11.tar.gz.sha256).
+The archive preserves all 1,064 raw process samples, custom metrics, exact
+commands/timestamps, summaries, benchstat intervals, fingerprints, build and
+reference provenance, gate logs, reviews, and procedural negatives. Member
+bytes have a SHA-256 manifest. No sample or outlier was discarded; the archive
+does not expand the evidence into a large text diff.
+
+### Conditions, identity, and comparable work
+
+Start from merged `e56bfa9`, with `main` and freshly fetched `origin/main` equal.
+Timing freezes the clean `9ad3434` tree. All 117 frozen input/binary fingerprints
+match through both rounds and the final audit before evidence documentation.
+Production Wasm is
+`ae0119ca34206c2fcd8b69ae4e81421214417abb364d589c3afabcf16d8c6333`;
+translated Go is
+`f92c5853385d9c4b3cfc3d164507def81beff36b9f7a8564c92f247c9a3ab948`.
+The freshly built timing binary is
+`59a3d4159f82a3f91dea9507b4cd24474f43efc19ceceb867400588e9de539cb`.
+These are the same production payload bytes used in the preceding round.
+
+Use Go 1.26.8, Linux/amd64, CGO disabled, `GOAMD64=v1`, explicit `-pgo=off`,
+default GC/memory settings, and unpinned CPUs 0–15 on Ryzen 7 5800HS (8 physical,
+16 logical cores). The recorded governor is powersave with boost enabled;
+neither policy nor affinity was changed. Rust 1.97.0, Binaryen 133,
+wasm2go 0.4.16, and wazero 1.12.0 are pinned. Exact environment, dynamic CPU
+frequencies, executable hashes, and build information are archived.
+
+Warm timing has 73 fresh process invocations per pass: seven alternating 500 ms
+passes, then seven one-second passes with leaf and role order reversed, yielding
+1,022 rows. Cold timing adds 42 fresh-process single-operation observations:
+seven per scope in each of two reversed-order rounds. Every process succeeds.
+New matched warm leaves report actual P1 (672 rows); streaming reports actual
+P16 (56 rows); all 42 cold leaves report actual P1. The 294 original/layer
+controls retain their existing processor policy and lack an in-window custom
+processor metric. Their initial P16 and `-16` framework suffix do not prove the
+timed count. Compilation, tests, lint, fuzzing, profiling, and reviewer tools
+do not overlap qualification timing. Process checks and the sequential driver
+cannot prove absence of unrelated system activity.
+
+The compiled control explicitly selects wazero's compiler, caches export
+functions and signatures, and reuses a `CallWithStack` carrier, refilling every
+argument and checking errors before reading results. Each guest owns its
+runtime, capability host, memory, and globals; the factory shares immutable
+compiled code. Engine calls use cached `context.WithoutCancel` contexts and
+`WithCloseOnContextDone(false)`. Stateless admission checks the caller's context;
+Lifecycle and standalone resource methods are context-free.
+There is no timed interpreter fallback or cross-module capability dispatcher.
+
+`CheckedControl` uses the real `rt.Lifecycle`, `Resource.Use`, `Instance.Call`,
+one-slot lazy pool, and recycling policy. Both engines preserve per-call memory
+checks/reset, ownership/epochs, canonical reply checks, immediate poisoning,
+and draining Close. Scalar calls do not reserve input; variable-input calls do.
+Functional oracles cover complete ordered Count/protobuf, SQL, and trace bytes,
+invalid late batch values without mutation, expected errors, retained outputs,
+growth/current views, alias Close, malformed replies, actual guest/host faults,
+canceled admission, and drain. Backend-specific fault kinds/messages differ;
+containment and causes are checked. This private adapter adds dispatch and
+omits poisoned-home replacement. It is not a generated facade or supported
+backend. Old handles never migrate, and no recovery event enters warm timing.
+
+`RawGuest` still includes export dispatch and workload adapters. SQL/trace
+reserve and copy inputs, check status/bounds, and decode owned output; they are
+not pure guest-body timings. Stateless checked setup retains an unused home
+alongside the measured pool guest. Increasing-scalar roles consume different
+calibrated prefixes of the same ordered corpus: Count is verified, but final
+states and prefix lengths differ. Those rows describe evolving state rather
+than stationary equal-state work.
+
+### Same-Wasm warm outcomes
+
+Entries are exact sample medians, screening → confirmation, with seven samples
+per role/round. Time change is compiled/translated minus one. All 18 primary
+engine pairs have exploratory, unadjusted **p=.001 in both rounds**. An
+undetected difference elsewhere does not establish equivalence. Complete
+intervals and every metric remain in the archive; these comparisons do not
+identify one intrinsic engine or guest-body cost.
+
+| RawGuest workload | Translated Go, screen → confirm | Compiled stack, screen → confirm | Time change, screen → confirm |
+| --- | ---: | ---: | ---: |
+| Repeated scalar | 56.32 → 56.06 ns | 141.6 → 143.3 ns | +151.42% → +155.62% |
+| Increasing scalar | 56.60 → 56.20 ns | 143.0 → 146.3 ns | +152.65% → +160.32% |
+| Negative bins | 56.26 → 56.07 ns | 140.6 → 144.5 ns | +149.91% → +157.71% |
+| Broad scalar holdout | 54.17 → 54.55 ns | 145.0 → 147.5 ns | +167.68% → +170.39% |
+| Repeated batch 1024 | 39.419 → 39.525 µs | 53.906 → 53.470 µs | +36.75% → +35.28% |
+| Broad batch 8192 | 319.876 → 320.114 µs | 401.430 → 401.739 µs | +25.50% → +25.50% |
+| Original SQL | 1.860 → 1.882 µs | 3.531 → 3.516 µs | +89.84% → +86.82% |
+| SQL holdout | 4.886 → 4.922 µs | 9.757 → 9.876 µs | +99.69% → +100.65% |
+| Trace 1k | 2.696649 → 2.679231 ms | 4.292910 → 4.291769 ms | +59.19% → +60.19% |
+
+| CheckedControl workload | Translated Go, screen → confirm | Compiled stack, screen → confirm | Time change, screen → confirm |
+| --- | ---: | ---: | ---: |
+| Repeated scalar | 96.64 → 97.03 ns | 198.6 → 203.1 ns | +105.50% → +109.32% |
+| Increasing scalar | 97.34 → 97.92 ns | 201.7 → 200.2 ns | +107.21% → +104.45% |
+| Negative bins | 96.32 → 96.34 ns | 197.1 → 200.7 ns | +104.63% → +108.32% |
+| Broad scalar holdout | 97.68 → 98.43 ns | 202.3 → 203.2 ns | +107.10% → +106.44% |
+| Repeated batch 1024 | 39.774 → 39.596 µs | 53.961 → 53.541 µs | +35.67% → +35.22% |
+| Broad batch 8192 | 319.179 → 321.049 µs | 404.893 → 403.439 µs | +26.85% → +25.66% |
+| Original SQL | 2.186 → 2.236 µs | 3.969 → 4.018 µs | +81.56% → +79.70% |
+| SQL holdout | 5.676 → 5.641 µs | 10.972 → 10.639 µs | +93.31% → +88.60% |
+| Trace 1k | 2.688565 → 2.675899 ms | 4.287272 → 4.280850 ms | +59.46% → +59.98% |
+
+Confirmation checked repeated-batch throughput is 25.861 versus 19.125 million
+points/s; broad batch is 25.516 versus 20.305 million points/s. Translated
+scalar/batch controls allocate zero. Compiled stack scalar allocates 16 B/one
+allocation; batch allocates 32 B/two allocations (reserve plus operation).
+Raw SQL uses 48/80 B and one/three allocations (Go/compiled); checked SQL
+48/96 B and one/four. Holdout SQL uses 72/104 B raw and 72/120 B checked.
+Trace uses 212,992/213,024 B raw and 212,992/213,040 B checked, with one/three
+and one/four allocations. These heap metrics include the adapter/context.
+
+The cached API `Call` control takes 178.3 → 176.9 ns on raw repeated scalar,
+32 B/two allocations, versus stack's 141.6 → 143.3 ns and 16 B/one allocation.
+Its penalty is +25.92%/+23.45%, p=.001 in both rounds. Repeated batch `Call`
+takes 53.685 → 53.348 µs, 64 B/four allocations, versus stack's
+53.906 → 53.470 µs and 32 B/two. Its −0.41%/−0.23% differences are undetected
+(p=.477/.209); reduced allocation does not establish a batch latency gain.
+
+A separate 100,000-operation allocation diagnostic on the frozen binary uses
+`memprofilerate=1`; its timings are excluded from the 1,064 samples. The profile
+attributes allocations to `context.withoutCancelCtx.Value`, Go 1.26 line 609
+(`return value(c, key)`), called by wazero's `callWithStack` value lookup.
+This matches the observed 16 B/export and is a context-adapter contribution,
+not evidence of unavoidable compiled-engine allocation. An existing Go 1.24
+pprof viewer reads the Go 1.26 profile after the 1.26/1.27 installations report
+no pprof tool. Commands, viewer hash, profile, list, and caller chain are
+archived. No alternative context was timed; subtracting allocation bytes or
+predicting its speed would not requalify these comparisons.
+
+Warm measured logical memory matches engines: 1,179,648 B for scalar/repeated
+batch/SQL, 1,441,792 B for broad batch, and 2,359,296 B for trace. All 532 matched
+backend warm samples report zero timed growth. Those observations exclude the
+unused home, cached code, test framework, and native executable mappings.
+No RSS or retained
+process-memory bound is established.
+
+### Current production layers and fresh independent reference
+
+Existing scalar layers are refreshed in the same current binary:
+
+| Layer | Screen → confirm ns/op |
+| --- | ---: |
+| Guest | 54.25 → 54.07 |
+| Checked Instance | 72.11 → 72.52 |
+| Resource ownership + Instance | 82.08 → 82.35 |
+| Generated facade | 90.06 → 89.84 |
+| Empty checked Instance callback | 15.73 → 15.81 |
+| Empty Resource callback | 24.87 → 25.07 |
+| Empty lifecycle admission | 7.377 → 7.272 |
+
+All allocate zero. Independently timed differences are rough attainable
+ceilings, not additive admission/ownership/reply/execution shares. In particular,
+the 35.77 ns confirmation facade-minus-guest gap does not prove a saving from
+removing one component. Private checked adapter timings are distinct from the
+supported facade and cannot replace this measurement.
+
+Rebuild the independent unversioned spike with its locked source, Rust 1.97
+std/panic_abort, Binaryen 133 metaDCE/O3, wasm2go 0.4.16 unsafe, and its own
+hardener. All ten journaled build/test commands and 48 one-iteration
+matched/corpus oracles succeed before timing. Wasm, translated module, and
+binary reproduce previous hashes:
+`8bda5ff7acff11fd64fd47a0a48165a71d610c28413665e4cc4d4034150d0651`,
+`5ff253143943f199c58a89849b478a1c6c46b75ee744ad69b5b3d66cbe1602ab`,
+and `f8846dd93bd22b1adcf3b7762f685c8e96199a9d77a62f7d8ad9f1639a48bbea`.
+Its ABI 2 borrowed-input facade, background context, four-instance topology,
+and differing original batch/trace inputs remain limits. Those original rows
+are reference context, not a safety-overhead decomposition. Matched corpora
+align inputs and Count checks. Reference source and build scripts are archived.
+
+| Workload | Current, screen → confirm | Fresh reference, screen → confirm |
+| --- | ---: | ---: |
+| Original scalar | 88.80 → 88.14 ns | 55.67 → 55.64 ns |
+| Original SQL | 2.260 → 2.237 µs | 1.976 → 1.966 µs |
+| Original batch 1k | 39.069 → 38.592 µs | 35.929 → 35.612 µs |
+| Original trace 1k | 2.736681 → 2.693541 ms | 2.117528 → 2.071231 ms |
+| Varied scalar | 88.80 → 89.36 ns | 56.72 → 55.74 ns |
+| Varied SQL | 2.903 → 2.826 µs | 2.524 → 2.532 µs |
+| Negative bins | 90.01 → 88.96 ns | 55.58 → 55.41 ns |
+| P1 SQL holdout | 5.727 → 5.695 µs | 5.252 → 5.058 µs |
+| P1 increasing scalar | 89.38 → 89.40 ns | 57.63 → 56.47 ns |
+| P1 broad scalar | 89.74 → 89.90 ns | 58.45 → 57.96 ns |
+| P1 repeated batch 1024 | 39.962 → 39.627 µs | 37.098 → 36.493 µs |
+| P1 broad batch 8192 | 322.857 → 320.430 µs | 299.922 → 298.509 µs |
+
+M1 original absolute limits remain scalar **55.44 ns** and SQL **2.2154 µs**.
+Fresh reference plus 10% gives 61.237 ns/2.1736 µs in screening and
+61.204 ns/2.1626 µs in confirmation. Both production workloads exceed both
+applicable limits in both rounds (original reference pairs p=.001 throughout).
+Confirmation current/reference overhead is +58.41% scalar and +13.78% SQL.
+The SQL holdout's margin moves from +9.04% to +12.59%; it is not an acceptance
+substitute. Scalar and matched batch retain zero allocations. Original SQL
+has one allocation on each side, current 57→52 B versus reference 79→64 B.
+Original trace heap bytes and allocations vary with calibration and differing
+inputs; every value is preserved, not treated as a new source change.
+
+These single-current-role refresh controls provide no production before/after
+candidate. Historical measurements and changed binary linking cannot establish
+source gains, regressions, or guard equivalence.
+
+### Cold compound scopes
+
+Each cell has seven fresh-process `1x` samples per round. Cache seeding is
+outside timing and remains alive; no disk cache is used. Uncached compilation
+uses neither shared nor disk cache and closes code/runtime inside timing.
+
+| Scope | Screen → confirm median | Go B/op | Allocations/op |
+| --- | ---: | ---: | ---: |
+| Translated construction + identity/init/close | 71.005 → 59.723 µs | 1,120,368 | 117 |
+| Fresh runtime + uncached compile + code/runtime close | 221.801677 → 221.121024 ms | 42,943,368 | 79,218 |
+| Cached compile + runtime/imports + instantiate + identity/init/close | 4.202519 → 4.302899 ms | 2,095,128 | 9,138 |
+
+Translated construction is dispersed: screening interval ±245%, range
+50.596–245.257 µs; confirmation ±72%, range 35.858–102.766 µs. Single observations
+do not provide a precise startup estimate. Uncached compilation does not
+instantiate a module. Both construction controls include private adapter setup
+and an extra Output export after `rt.NewInstance`; wazero also caches functions
+and signatures. Cached guest close preserves factory code until later cache
+disposal. These compound scopes cannot be added/subtracted as startup shares
+or reported as production construction cost.
+
+Final constructed logical memory is 1,114,112 B on both sides. The cold
+`guest-growth-B=0` metric passes final bytes as both before and after and is a
+placeholder, not measured construction-time growth. Go heap totals exclude
+native executable mappings; executable footprint/RSS remain unmeasured.
+
+### Streaming refresh and qualification
+
+Four existing P16 leaves process complete 16 KiB streams through standalone
+New/Write/End/Close, retaining owned outputs in groups of 32. Times include the
+complete resource lifetime, outputs, retention, and accounting; Open/warmup and
+full byte validation are outside timing. Sixteen-home leaves exercise the
+existing explicit home setting. N32 labels mean retention groups, not typed
+Batch execution. These are current observed throughput ceilings for the
+workload, not strict capacity bounds or a new checked-session speedup.
+
+| Corpus / homes | Screen → confirm µs/stream | Screen → confirm streams/s | Screen → confirm writes/s |
+| --- | ---: | ---: | ---: |
+| Fixed / one | 189.982 → 190.091 | 5,264 → 5,261 | 1,347,495 → 1,346,721 |
+| Fixed / sixteen | 25.972 → 28.161 | 38,504 → 35,510 | 9,856,901 → 9,090,607 |
+| Holdout / one | 226.624 → 230.585 | 4,413 → 4,337 | 1,515,727 → 1,489,689 |
+| Holdout / sixteen | 33.534 → 34.670 | 29,820 → 28,844 | 10,243,313 → 9,907,774 |
+
+Confirmation write-rate ratios are 6.750× fixed and 6.651× holdout. Fixed uses
+256 writes and 257 outputs/stream; holdout varies chunk widths, including empty
+writes, averaging 343.5 writes and 344.5 outputs. More writes/s therefore does
+not mean faster streams. Fixed owned bytes are 16,392/stream, holdout median
+16,390; Go allocations remain 250/268. Median one-home B/op is 17,515→17,508
+fixed and 19,622→19,618 holdout, with setup amortization retained. Metrics are
+independently rounded, so products/reciprocals of displayed medians can differ.
+No previous streaming gain or default-stream regression is newly accepted.
+
+All required gates pass: `make check` (tests, vet, pinned golangci-lint 2.13.1
+and 49 strict linters), `make race`, `make rust`, `make cross`, `make smoke`,
+`make fuzz`, and `make integration`. Quality uses Go 1.27.1. Final changed-proof
+checks also pass Go 1.26.8 amd64 and native 386; unsupported compiled-wazero
+platforms explicitly skip its private proofs, with no interpreter fallback.
+Native arm64 hardware is unavailable. Two final complete builds of compute,
+Datadog, streaming, and `go generate ./rt` reproduce all 61 recorded
+proof/runtime/harness files. Generated modules, locks, and facades remain
+unchanged. Darna and exact staged-snapshot tests, vet, formatting, and strict
+lint pass before retaining each commit.
+
+Procedural failures remain visible. Early proof-construction errors are
+recorded as notes where original tool stdout was not saved; they are not
+invented raw logs. A final staged lint run found one wasted initialization;
+changing it to a declaration corrected the lint. The initial reproduction
+guard then correctly caught that single authored test edit between builds;
+generated files were unchanged. Two whole reproduction passes ran again after
+the final source freeze and matched. A wasm2go version query initially used a
+read-only default cache and passed on retry with workspace GOCACHE. The fresh
+independent Rust shim retains its upstream unused-import warning. Functional
+one-step runs and allocation-profile timings are excluded from qualification.
+
+Park a backend switch for this measured configuration. The retained controls
+can test a separately specified context/call-carrier experiment, but do not
+predict its outcome. Resume track 5 with matching profiles and Go SSA/machine
+code to find another demonstrated, exact translation pattern before proposing
+an implementation. Scalar needs substantial progress; SQL's small original
+margin does not satisfy its stricter fresh limit. A typed-return or guest API
+proposal still needs explicit public-contract approval before implementation.
+
 ## Publication memory views: production qualification (2026-10-11)
 
 Retain the conservative hardener pass for batch throughput. Original batch time
