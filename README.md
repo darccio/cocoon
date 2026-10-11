@@ -195,8 +195,9 @@ pass `--manifest path/to/cocoon.toml` to select another project.
 ## Behavior and limits
 
 Reuse a library across calls and close it when finished. Stateless operations
-use a bounded instance pool; stateful resources belong to one serialized
-instance. Keep resource wrappers as pointers and close them before closing
+use a bounded instance pool; stateful resources default to one serialized
+home. `Options.ResourceInstances` selects up to 256 lazy resource homes;
+each resource stays on its assigned home. Keep wrappers as pointers and close them before closing
 their library. Library shutdown rejects new work and waits for admitted calls.
 
 Cocoon is intended for trusted, reviewed Rust payloads. Crates must build for
@@ -210,6 +211,20 @@ Fatal Go stack exhaustion and process out-of-memory failures cannot be
 recovered. Memory limits apply to each instance, not the entire process.
 See [ABI and lifecycle](docs/abi.md) and the
 [design review](docs/design-review.md) for the full contracts.
+
+Resources that opt into `checked_batches=true` in the manifest also expose
+typed command constructors and `Batch(ctx, commands, rt.BatchLimits{})`.
+The default buffer is bounded to 32 calls and 1 MiB of input/output; hard limits
+are 256 calls and 16 MiB each. Each command keeps the normal checked boundary.
+Failures return the completed result prefix and an `rt.BatchError`; cancellation
+is checked between commands. See the [checked-command contract](docs/checked-sessions.md)
+for limits, ownership, cancellation, and shutdown semantics.
+
+Resource-home sharding improves concurrent streaming throughput at a memory
+cost. In the synthetic proof, typed batches alone slow small writes, and the
+default single-home fixed 64-byte stream at one processor costs about 3% more.
+Choose homes and buffer sizes from workload measurements; see the
+[streaming qualification](docs/performance.md#bounded-resource-streaming-qualification-2026-10-11).
 
 ## Documentation
 

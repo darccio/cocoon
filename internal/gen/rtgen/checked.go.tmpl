@@ -1,0 +1,38 @@
+{{range .}}
+{{if .Locked}}// Call runs a callback while holding the instance's guest execution lock.
+{{else}}// checked runs the same per-operation boundary under a caller-held mu.
+{{end}}func (i *Instance) {{.Name}}(op string, invoke func(call *Call) error) (err error) {
+{{if .Locked}}	i.mu.Lock()
+	defer i.mu.Unlock()
+{{end}}	switch i.state {
+	case instanceClosed:
+		return ErrClosed
+	case instancePoisoned:
+		return ErrPoisoned
+	case instanceOpen:
+	}
+	defer func() {
+		if value := recover(); value != nil {
+			i.poison()
+			var message string
+			if i.host != nil {
+				message = i.host.takePanic()
+			}
+			err = Classify(op, value, message)
+		}
+	}()
+	if i.host != nil {
+		i.host.takePanic()
+	}
+	i.call = Call{instance: i}
+	err = invoke(&i.call)
+	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
+		i.poison()
+		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+	}
+	if err != nil && errors.Is(err, ErrProtocol) {
+		i.poison()
+	}
+	return err
+}
+{{end}}

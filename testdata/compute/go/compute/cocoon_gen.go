@@ -16,9 +16,9 @@ const schemaHash uint64 = 4076813288107292652
 const maximumMemory uint64 = 16777216
 
 type Options struct {
-	Logger              *slog.Logger
-	MaxInput, MaxOutput uint64
-	Instances           int
+	Logger                       *slog.Logger
+	MaxInput, MaxOutput          uint64
+	Instances, ResourceInstances int
 }
 type guest struct {
 	module   *module
@@ -27,12 +27,17 @@ type guest struct {
 
 func (g *guest) close() { g.instance.Close(); g.module = nil }
 
+type homeSlot struct {
+	guest *guest
+	mu    sync.Mutex
+}
 type Library struct {
-	pool    *rt.Pool[guest]
-	home    *guest
-	options Options
-	homeMu  sync.Mutex
-	life    rt.Lifecycle
+	pool     *rt.Pool[guest]
+	options  Options
+	homeMu   sync.Mutex
+	life     rt.Lifecycle
+	homes    []homeSlot
+	nextHome int
 }
 
 func Open(options Options) (*Library, error) {
@@ -42,14 +47,17 @@ func Open(options Options) (*Library, error) {
 	if options.MaxOutput == 0 {
 		options.MaxOutput = 65536
 	}
-	if options.MaxInput > 65536 || options.MaxOutput > 65536 || options.Instances < 0 {
+	if options.MaxInput > 65536 || options.MaxOutput > 65536 || options.Instances < 0 || options.ResourceInstances < 0 || options.ResourceInstances > 256 {
 		return nil, rt.ErrTooLarge
+	}
+	if options.ResourceInstances == 0 {
+		options.ResourceInstances = 1
 	}
 	if options.Instances == 0 {
 		options.Instances = runtime.GOMAXPROCS(0)
 		options.Instances = 1
 	}
-	l := &Library{options: options}
+	l := &Library{options: options, homes: make([]homeSlot, options.ResourceInstances)}
 	pool, err := rt.NewPool(options.Instances, l.newGuest, func(g *guest) bool { return g.instance.Recycle(65536, maximumMemory) }, func(g *guest) { g.close() })
 	if err != nil {
 		return nil, err
@@ -79,21 +87,31 @@ func (l *Library) admission(ctx context.Context) error {
 	}
 	return l.life.Enter()
 }
-func (l *Library) getHome() (*guest, error) {
+func (l *Library) selectHome() *homeSlot {
 	l.homeMu.Lock()
 	defer l.homeMu.Unlock()
-	if l.home != nil && !l.home.instance.Healthy() {
-		l.home.close()
-		l.home = nil
+	slot := &l.homes[l.nextHome]
+	l.nextHome++
+	if l.nextHome == len(l.homes) {
+		l.nextHome = 0
 	}
-	if l.home == nil {
+	return slot
+}
+func (l *Library) getHome(slot *homeSlot) (*guest, error) {
+	slot.mu.Lock()
+	defer slot.mu.Unlock()
+	if slot.guest != nil && !slot.guest.instance.Healthy() {
+		slot.guest.close()
+		slot.guest = nil
+	}
+	if slot.guest == nil {
 		home, err := l.newGuest()
 		if err != nil {
 			return nil, err
 		}
-		l.home = home
+		slot.guest = home
 	}
-	return l.home, nil
+	return slot.guest, nil
 }
 func (l *Library) Close() error {
 	if l == nil {
@@ -101,11 +119,14 @@ func (l *Library) Close() error {
 	}
 	return l.life.Close(func() error {
 		err := l.pool.Close()
-		l.homeMu.Lock()
-		defer l.homeMu.Unlock()
-		if l.home != nil {
-			l.home.close()
-			l.home = nil
+		for index := range l.homes {
+			slot := &l.homes[index]
+			slot.mu.Lock()
+			if slot.guest != nil {
+				slot.guest.close()
+				slot.guest = nil
+			}
+			slot.mu.Unlock()
 		}
 		return err
 	})
@@ -410,6 +431,24 @@ func decodeSliceF64(data []byte, limit uint64) ([]float64, error) {
 		values[index] = math.Float64frombits(binary.LittleEndian.Uint64(_part))
 	}
 	return values, nil
+}
+func _cocoonBatchFailure(index int, cause error) error {
+	return &rt.BatchError{Index: index, Cause: cause}
+}
+func _cocoonBatchLimits(limits rt.BatchLimits) (rt.BatchLimits, error) {
+	if limits.MaxCalls == 0 {
+		limits.MaxCalls = 32
+	}
+	if limits.MaxInputBytes == 0 {
+		limits.MaxInputBytes = 1 << 20
+	}
+	if limits.MaxOutputBytes == 0 {
+		limits.MaxOutputBytes = 1 << 20
+	}
+	if limits.MaxCalls > 256 || limits.MaxInputBytes > 16<<20 || limits.MaxOutputBytes > 16<<20 {
+		return limits, rt.ErrTooLarge
+	}
+	return limits, nil
 }
 
 type Numbers struct {
@@ -939,9 +978,10 @@ func (l *Library) NewCounter(_arg0 uint64) (*Counter, error) {
 		return nil, _err
 	}
 	defer l.life.Leave()
+	_home := l.selectHome()
 	var _err error
 	var _output uint64
-	_guest, _err := l.getHome()
+	_guest, _err := l.getHome(_home)
 	if _err != nil {
 		return nil, _err
 	}
@@ -1035,4 +1075,149 @@ func (r *Counter) Close() error {
 		return &rt.HandleError{Op: "close", Reason: "nil resource"}
 	}
 	return r.owner.Close()
+}
+
+// CounterCommand is a generated command for one Counter resource.
+type CounterCommand interface{ _cocoonCounterCommand() }
+
+// CounterResult is one successfully completed command's owned result.
+type CounterResult interface{ _cocoonCounterResult() }
+type _cocoonCounterAddCommand struct {
+	_arg0 uint64
+}
+
+func (_cocoonCounterAddCommand) _cocoonCounterCommand() {}
+
+// CounterAddCommand retains its input for execution by Batch.
+func CounterAddCommand(_arg0 uint64) CounterCommand { return _cocoonCounterAddCommand{_arg0: _arg0} }
+
+// CounterAddResult contains one completed add command.
+type CounterAddResult struct{ Value uint64 }
+
+func (CounterAddResult) _cocoonCounterResult() {}
+
+type _cocoonCounterCountCommand struct {
+}
+
+func (_cocoonCounterCountCommand) _cocoonCounterCommand() {}
+
+// CounterCountCommand retains its input for execution by Batch.
+func CounterCountCommand() CounterCommand { return _cocoonCounterCountCommand{} }
+
+// CounterCountResult contains one completed count command.
+type CounterCountResult struct{ Value uint64 }
+
+func (CounterCountResult) _cocoonCounterResult() {}
+func _cocoonCounterInputSize(command CounterCommand, limit uint64) (uint64, error) {
+	switch value := command.(type) {
+	case _cocoonCounterAddCommand:
+		_ = value
+		var size uint64
+		return size, nil
+	case _cocoonCounterCountCommand:
+		_ = value
+		var size uint64
+		return size, nil
+	default:
+		_ = value
+		return 0, &rt.AppError{Op: "batch", Status: rt.ErrArg, Message: "invalid command type"}
+	}
+}
+
+// Batch executes a finite ordered buffer under one admission and resource lock.
+// Inputs must remain stable until it returns. Cancellation is checked between
+// commands; guest execution and lock waits are synchronous. On failure only the
+// fully checked successful prefix is returned, with rt.BatchError identifying
+// the next or failing command. Close releases an abandoned stream's handle.
+func (r *Counter) Batch(ctx context.Context, commands []CounterCommand, limits rt.BatchLimits) ([]CounterResult, error) {
+	if ctx == nil {
+		return nil, _cocoonBatchFailure(-1, &rt.AppError{Op: "batch", Status: rt.ErrArg, Message: "nil context"})
+	}
+	limits, err := _cocoonBatchLimits(limits)
+	if err != nil {
+		return nil, _cocoonBatchFailure(-1, err)
+	}
+	if uint64(len(commands)) > uint64(limits.MaxCalls) {
+		return nil, _cocoonBatchFailure(-1, rt.ErrTooLarge)
+	}
+	if r == nil || r.library == nil || r.owner == nil {
+		return nil, _cocoonBatchFailure(-1, &rt.HandleError{Op: "batch", Reason: "nil resource"})
+	}
+	l := r.library
+	var total uint64
+	for index, command := range commands {
+		size, sizeErr := _cocoonCounterInputSize(command, l.options.MaxInput)
+		if sizeErr != nil {
+			return nil, _cocoonBatchFailure(index, sizeErr)
+		}
+		if size > limits.MaxInputBytes-total {
+			return nil, _cocoonBatchFailure(index, rt.ErrTooLarge)
+		}
+		total += size
+	}
+	plan := make([]rt.BatchCommand, len(commands))
+	results := make([]CounterResult, len(commands))
+	cursor := 0
+	prepare := func(call *rt.Call) error {
+		switch value := commands[cursor].(type) {
+		case _cocoonCounterAddCommand:
+			_ = value
+			return nil
+		case _cocoonCounterCountCommand:
+			_ = value
+			return nil
+		default:
+			_ = value
+			return &rt.AppError{Op: "batch", Status: rt.ErrArg, Message: "invalid command type"}
+		}
+	}
+	invoke := func(handle uint64) rt.Status {
+		switch value := commands[cursor].(type) {
+		case _cocoonCounterAddCommand:
+			_ = value
+			return rt.Status(r.guest.module.Xcocoon_counter_add(int64(handle), int64(value._arg0)))
+		case _cocoonCounterCountCommand:
+			_ = value
+			return rt.Status(r.guest.module.Xcocoon_counter_count(int64(handle)))
+		default:
+			_ = value
+			panic("invalid generated command")
+		}
+	}
+	decode := func(reply []byte) error {
+		switch commands[cursor].(type) {
+		case _cocoonCounterAddCommand:
+			value, err := decodeU64(reply, l.options.MaxOutput)
+			if err != nil {
+				return err
+			}
+			results[cursor] = CounterAddResult{Value: value}
+			cursor++
+			return nil
+		case _cocoonCounterCountCommand:
+			value, err := decodeU64(reply, l.options.MaxOutput)
+			if err != nil {
+				return err
+			}
+			results[cursor] = CounterCountResult{Value: value}
+			cursor++
+			return nil
+		default:
+			return rt.ErrProtocol
+		}
+	}
+	for index, command := range commands {
+		size, _ := _cocoonCounterInputSize(command, l.options.MaxInput)
+		var op string
+		switch command.(type) {
+		case _cocoonCounterAddCommand:
+			op = "add"
+		case _cocoonCounterCountCommand:
+			op = "count"
+		}
+		plan[index] = rt.BatchCommand{Op: op, InputBytes: size, Prepare: prepare, Invoke: invoke, Decode: decode}
+	}
+	completed, err := r.owner.Batch(ctx, &l.life, limits, plan)
+	clear(results[completed:])
+	return results[:completed:completed], err
 }

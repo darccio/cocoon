@@ -84,9 +84,13 @@ at the last generation retires rather than wrapping. Separate slabs belong to
 each resource type. Host ownership additionally binds the handle to its exact
 instance and epoch, preventing cross-instance use.
 
-Stateless operations use a lazy bounded pool. Resources use one serialized home
-instance. A poisoned home is replaced for new resources; old handles never
-migrate. Wrapper aliases share the ownership cell and destructor token. Cleanup
+Stateless operations use a lazy bounded pool. Resources default to one serialized
+home instance. Generated `Options.ResourceInstances` selects 1–256 lazy homes
+(zero selects one), independently of the stateless pool. Each admitted constructor
+attempt advances round-robin placement, including failed input checks; initialization
+is serialized per slot. Every resource remains bound to its exact home and epoch.
+A poisoned slot is replaced for later constructors; old handles never migrate,
+and sibling homes remain healthy. Wrapper aliases share the ownership cell and destructor token. Cleanup
 is attached to that cell, not a copyable wrapper; explicit Close is preferred.
 Destruction runs once and outside the cell lock.
 
@@ -96,6 +100,17 @@ wait for the same result; Close is terminal and idempotent. Synchronous calls
 cannot be preempted; Close has no forced-abort deadline. Pool factory/callback/
 recycler panics cannot lose capacity; callback panics discard the guest and
 are re-raised for the caller.
+
+The manifest's `checked_batches` resource flag is host policy and does not change
+ABI v3 or its schema hash. Opted-in facades execute finite typed command buffers
+on the resource's exact home with one library admission and shared ownership
+and execution locks. Every command resets call state and checks memory, reply
+shape, and typed output; a protocol fault immediately poisons the home and stops
+the buffer. Results expose only the fully checked successful prefix. Library
+Close drains admitted buffers; cancellation is checked between commands and
+cannot interrupt synchronous execution or mutex waits. Explicit resource Close
+releases an abandoned stream without implicitly ending it. The complete host
+contract is in [bounded checked resource commands](checked-sessions.md).
 
 ## Capabilities and future async work
 

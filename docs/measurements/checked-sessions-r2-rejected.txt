@@ -1,0 +1,288 @@
+# Benchmark output preserved except trailing whitespace normalization.
+# Rejected R2: R1 optional-lock core with original ResultView restored.
+# Only validated non-OK reply sizes stored in reset Call.errorBytes.
+# Same build/timing conditions as R1; 7 alternating Go1.26.8 CGO0 P16 pairs.
+# R2 rejected for standalone scalar and holdout regressions.
+dd-baseline.test aec965fbf86f67ceaf5a916a0df83dd306b4d27e580d8dd3d5b484f43bbb1c32
+dd-core2.test bcf866fc2ba322b48c9e9b77a006c814862fe56c41677de723cb339efecbc6f3
+core2-dd-baseline-1.txt complete
+core2-dd-core2-1.txt complete
+core2-dd-core2-2.txt complete
+core2-dd-baseline-2.txt complete
+core2-dd-baseline-3.txt complete
+core2-dd-core2-3.txt complete
+core2-dd-core2-4.txt complete
+core2-dd-baseline-4.txt complete
+core2-dd-baseline-5.txt complete
+core2-dd-core2-5.txt complete
+core2-dd-core2-6.txt complete
+core2-dd-baseline-6.txt complete
+core2-dd-baseline-7.txt complete
+core2-dd-core2-7.txt complete
+Elapsed 58.3s
+
+# FILE core2-dd-baseline-1.txt (original SHA256 5be25e5f7817a096d69fd6605727ec02e67965b716e4acb64c3b085b7679791b)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  275055	      2160 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6809902	        88.79 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13280	     45277 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     229	   2595145 ns/op	  253262 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6752660	        88.78 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6758066	        89.10 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  207595	      2823 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-core2-1.txt (original SHA256 3468d0f0f011d1984da0b6697f2a5a9a448aeeef60fe5948eb9b356c5e1372be)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core2.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  271904	      2184 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6460183	        90.72 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13414	     44760 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     223	   2630782 ns/op	  254346 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6622236	        90.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6642812	        90.40 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  207228	      2798 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-core2-2.txt (original SHA256 58f48991f16075b12771d38c1203cd16ac634781bb95460d9624738543fa21e1)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core2.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  273204	      2171 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6608008	        89.87 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13381	     44950 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2601161 ns/op	  253439 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6526761	        90.57 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6612878	        90.62 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  204921	      2899 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-baseline-2.txt (original SHA256 a17ad2eee6ee34993cecbb8c8e6641b1c54c9ab87e765a094439439f3b16c47d)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  271176	      2158 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6803280	        88.35 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13430	     44566 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     222	   2646018 ns/op	  254533 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6770881	        88.47 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6742597	        89.40 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  206288	      2810 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-baseline-3.txt (original SHA256 e5d01f63cd1503e9961518d63294a45d8f003b9aecf16079f050b493df5ad994)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  264674	      2155 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6680486	        88.43 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13411	     44653 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     223	   2630913 ns/op	  254346 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6741669	        88.68 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6733065	        89.60 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  208467	      2806 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-core2-3.txt (original SHA256 b1618020c2141f3eeda762cd2fb53ebcd5a41281ebadef0fc1183e8eddbdf081)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core2.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  257674	      2197 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6408255	        90.26 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13327	     44962 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2595252 ns/op	  253439 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6648518	        90.14 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6641697	        90.40 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  201309	      2808 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-core2-4.txt (original SHA256 e7329ff49b77af966854a28e6c2e3f1d0bd503d44a843b852282c3618e3b0256)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core2.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  272786	      2183 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6677864	        90.53 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13369	     44991 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2601393 ns/op	  253797 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6659212	        90.41 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6640402	        90.23 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  213698	      2791 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-baseline-4.txt (original SHA256 4e2142d40aa146660feff8d08529156f09f1e39ea436002520d515524c2731a8)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  271341	      2187 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6727228	        88.37 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13369	     44797 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     224	   2630798 ns/op	  254162 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6792265	        88.90 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6752376	        88.96 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  200643	      2821 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-baseline-5.txt (original SHA256 13628b4837e456e4c7c1c5668ea33a4d0332cafc80472a4fb6861324f2fb85fb)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  255782	      2178 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6739328	        88.74 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13306	     45049 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2614621 ns/op	  253797 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6768193	        88.81 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6596834	        89.60 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  210513	      2808 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-core2-5.txt (original SHA256 dae4e91195bbde1f9b5df9ea54db96eaa72998c8e97a8c555d3f6e2a7c1d58ca)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core2.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  260524	      2185 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6705618	        89.43 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13306	     45010 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2609139 ns/op	  253797 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6659376	        90.18 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6601939	        90.84 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  208292	      2792 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-core2-6.txt (original SHA256 22275d34265f31e5c2dd75bfe1d9b07514b6b88deaab4d1c3da18bef126da005)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core2.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  259696	      2174 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6698527	        89.64 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13215	     45310 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     226	   2608475 ns/op	  253798 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6654415	        90.27 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6625154	        91.11 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  212617	      2800 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-baseline-6.txt (original SHA256 dde95b791c3d22316d57d4df7df3f49675d522ff8bbd232c9b38e404b286eacc)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  274034	      2177 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6782574	        88.89 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13358	     44808 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     223	   2650910 ns/op	  254346 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6794900	        89.13 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6653566	        89.27 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  195720	      2863 ns/op	      84 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-baseline-7.txt (original SHA256 5fedbd629be7d210012b104dbc699e342f582ce61276653c598607a254bdb969)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-baseline.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  267722	      2171 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6755986	        88.70 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13402	     44762 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     230	   2587590 ns/op	  253088 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6756326	        89.08 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6563584	        89.62 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  214197	      2788 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# FILE core2-dd-core2-7.txt (original SHA256 6d586828b841b8ebe6a02b8745d41905103b91ea3d428a5676acf266e5019814)
+# /home/dario/Code/cocoon/.cache/sessions-phase0/dd-core2.test -test.run=^$ -test.bench=^Benchmark(ObfuscateSQL|SketchAdd|SketchAddMany1k|ObfuscateTraces1k|SketchAddVaried|ObfuscateSQLVaried|SketchAddNegativeBins)$ -test.benchtime=500ms -test.count=1 -test.benchmem
+# GOMAXPROCS=16
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+BenchmarkObfuscateSQL-16             	  270630	      2168 ns/op	      57 B/op	       1 allocs/op
+BenchmarkSketchAdd-16                	 6485365	        91.62 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddMany1k-16          	   13410	     44834 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkObfuscateTraces1k-16        	     228	   2616352 ns/op	  253439 B/op	       1 allocs/op
+BenchmarkSketchAddNegativeBins-16    	 6607075	        90.46 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSketchAddVaried-16          	 6532208	        91.82 ns/op	       0 B/op	       0 allocs/op
+BenchmarkObfuscateSQLVaried-16       	  212973	      2805 ns/op	      83 B/op	       1 allocs/op
+PASS
+
+# benchstat all 7 paired files
+goos: linux
+goarch: amd64
+pkg: dario.cat/cocoon/examples/datadog/go/dd
+cpu: AMD Ryzen 7 5800HS with Radeon Graphics
+                         │ .cache/sessions-phase0/core2-dd-baseline-combined.txt │ .cache/sessions-phase0/core2-dd-core2-combined.txt │
+                         │                        sec/op                         │            sec/op             vs base              │
+ObfuscateSQL-16                                                      2.171µ ± 1%                    2.183µ ± 1%       ~ (p=0.176 n=7)
+SketchAdd-16                                                         88.70n ± 0%                    90.26n ± 2%  +1.76% (p=0.001 n=7)
+SketchAddMany1k-16                                                   44.80µ ± 1%                    44.96µ ± 1%       ~ (p=0.259 n=7)
+ObfuscateTraces1k-16                                                 2.631m ± 2%                    2.608m ± 1%       ~ (p=0.318 n=7)
+SketchAddNegativeBins-16                                             88.81n ± 0%                    90.41n ± 0%  +1.80% (p=0.001 n=7)
+SketchAddVaried-16                                                   89.40n ± 0%                    90.62n ± 1%  +1.36% (p=0.001 n=7)
+ObfuscateSQLVaried-16                                                2.810µ ± 2%                    2.800µ ± 4%       ~ (p=0.220 n=7)
+geomean                                                              2.434µ                         2.450µ       +0.66%
+
+                         │ .cache/sessions-phase0/core2-dd-baseline-combined.txt │ .cache/sessions-phase0/core2-dd-core2-combined.txt │
+                         │                         B/op                          │            B/op             vs base                │
+ObfuscateSQL-16                                                     57.00 ± 0%                     57.00 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAdd-16                                                        0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddMany1k-16                                                8.000Ki ± 0%                   8.000Ki ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateTraces1k-16                                              248.2Ki ± 0%                   247.8Ki ± 0%       ~ (p=0.538 n=7)
+SketchAddNegativeBins-16                                            0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddVaried-16                                                  0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateSQLVaried-16                                               84.00 ± 1%                     84.00 ± 1%       ~ (p=1.000 n=7)
+geomean                                                                        ²                               -0.02%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                         │ .cache/sessions-phase0/core2-dd-baseline-combined.txt │ .cache/sessions-phase0/core2-dd-core2-combined.txt │
+                         │                       allocs/op                       │         allocs/op           vs base                │
+ObfuscateSQL-16                                                     1.000 ± 0%                     1.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAdd-16                                                        0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddMany1k-16                                                  1.000 ± 0%                     1.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateTraces1k-16                                                1.000 ± 0%                     1.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddNegativeBins-16                                            0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+SketchAddVaried-16                                                  0.000 ± 0%                     0.000 ± 0%       ~ (p=1.000 n=7) ¹
+ObfuscateSQLVaried-16                                               1.000 ± 0%                     1.000 ± 0%       ~ (p=1.000 n=7) ¹
+geomean                                                                        ²                               +0.00%               ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean

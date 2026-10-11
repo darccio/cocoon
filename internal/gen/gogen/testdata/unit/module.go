@@ -21,28 +21,44 @@ type module struct {
 	closeReply    fixtureReply
 	addReply      fixtureReply
 	unitReply     fixtureReply
+	newReply      fixtureReply
+	initHook      func()
 	addStarted    chan<- struct{}
 	addRelease    <-chan struct{}
 	nextHandle    uint64
 	lastAddHandle uint64
 	addCalls      int
 	unitCalls     int
+	newCalls      int
 }
 
-func newModule(_ Options) (*module, *rt.Host) {
+func newModule(options Options) (*module, *rt.Host) {
+	if options.Logger != nil {
+		if factory, ok := options.Logger.Handler().(interface{ fixtureModule() *module }); ok {
+			return factory.fixtureModule(), nil
+		}
+	}
+	return freshFixtureModule(), nil
+}
+
+func freshFixtureModule() *module {
 	return &module{
 		memory:     make([]byte, 64, 128),
 		closeCalls: make(map[uint64]int),
 		closeReply: fixtureReply{pointer: 16},
 		addReply:   fixtureReply{pointer: 16},
 		unitReply:  fixtureReply{pointer: 16},
-	}, nil
+	}
 }
 
-func (m *module) Memory() []byte        { return m.memory }
-func (*module) Version() uint32         { return rt.ABIVersion }
-func (*module) Schema() uint64          { return schemaHash }
-func (*module) Init()                   {}
+func (m *module) Memory() []byte { return m.memory }
+func (*module) Version() uint32  { return rt.ABIVersion }
+func (*module) Schema() uint64   { return schemaHash }
+func (m *module) Init() {
+	if m.initHook != nil {
+		m.initHook()
+	}
+}
 func (*module) Reserve(_ uint32) uint32 { return 32 }
 func (*module) Output() uint32          { return 0 }
 func (*module) Trim(_ uint32)           {}
@@ -58,6 +74,10 @@ func (m *module) publish(reply fixtureReply) int32 {
 }
 
 func (m *module) Xcocoon_item_new() int32 {
+	m.newCalls++
+	if m.newReply.status != rt.OK {
+		return m.publish(m.newReply)
+	}
 	m.nextHandle++
 	binary.LittleEndian.PutUint64(m.memory[16:], uint64(1)<<32|m.nextHandle)
 	return m.publish(fixtureReply{pointer: 16, size: 8})
@@ -68,9 +88,16 @@ func (m *module) Xcocoon_item_add(handle int64) int32 {
 	m.lastAddHandle = uint64(handle) // #nosec G115 -- Preserve the Wasm i64 handle's unsigned bits.
 	if m.addStarted != nil {
 		close(m.addStarted)
+		m.addStarted = nil
 		<-m.addRelease
 	}
 	return m.publish(m.addReply)
+}
+
+func (m *module) Xcocoon_named_new(_, _ int32) int32 { return m.Xcocoon_item_new() }
+
+func (m *module) Xcocoon_named_close(handle int64) int32 {
+	return m.Xcocoon_item_close(handle)
 }
 
 func (m *module) Xcocoon_item_close(handle int64) int32 {

@@ -1,5 +1,7 @@
 package rt
 
+//go:generate go run ../internal/gen/rtgen/cmd
+
 import (
 	"encoding/binary"
 	"errors"
@@ -150,6 +152,8 @@ func (i *Instance) Epoch() uint64 { return i.epoch.Load() }
 // Healthy reports whether resources may still be created on this instance.
 func (i *Instance) Healthy() bool { return i.alive.Load() }
 
+// BEGIN generated checked adapters
+
 // Call runs a callback while holding the instance's guest execution lock.
 func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
 	i.mu.Lock()
@@ -185,6 +189,42 @@ func (i *Instance) Call(op string, invoke func(call *Call) error) (err error) {
 	}
 	return err
 }
+
+// checked runs the same per-operation boundary under a caller-held mu.
+func (i *Instance) checked(op string, invoke func(call *Call) error) (err error) {
+	switch i.state {
+	case instanceClosed:
+		return ErrClosed
+	case instancePoisoned:
+		return ErrPoisoned
+	case instanceOpen:
+	}
+	defer func() {
+		if value := recover(); value != nil {
+			i.poison()
+			var message string
+			if i.host != nil {
+				message = i.host.takePanic()
+			}
+			err = Classify(op, value, message)
+		}
+	}()
+	if i.host != nil {
+		i.host.takePanic()
+	}
+	i.call = Call{instance: i}
+	err = invoke(&i.call)
+	if uint64(len(i.module.Memory())) > i.limits.MaxMemory {
+		i.poison()
+		return fmt.Errorf("%s: %w: linear memory exceeded maximum", op, ErrTooLarge)
+	}
+	if err != nil && errors.Is(err, ErrProtocol) {
+		i.poison()
+	}
+	return err
+}
+
+// END generated checked adapters
 
 func (i *Instance) poison() {
 	i.alive.Store(false)

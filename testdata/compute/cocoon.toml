@@ -38,6 +38,7 @@ params=[{name="kind",type="u32"}]
 [[resource]]
 name="Counter"
 copy="shared"
+checked_batches=true
 [[resource.method]]
 name="new"
 params=[{name="start",type="u64"}]

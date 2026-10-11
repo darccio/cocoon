@@ -44,16 +44,17 @@ jobs:
           git -C ../libdatadog checkout --detach FETCH_HEAD
           go mod download
           cargo fetch --locked --manifest-path examples/datadog/shim/Cargo.toml
-      - name: Rebuild and exercise both proof packages
+      - name: Rebuild and exercise all three proof packages
         run: make integration
       - name: Exercise the external author and Go-only consumer workflows
         run: make smoke
       - name: Verify generated artifacts are reproducible
         run: |
-          git diff --exit-code -- testdata/compute examples/datadog
+          git diff --exit-code -- testdata/compute examples/datadog testdata/streaming
           go run ./cmd/cocoon build --manifest testdata/compute/cocoon.toml
           go run ./cmd/cocoon build --manifest examples/datadog/cocoon.toml
-          git diff --exit-code -- testdata/compute examples/datadog
+          go run ./cmd/cocoon build --manifest testdata/streaming/cocoon.toml
+          git diff --exit-code -- testdata/compute examples/datadog testdata/streaming
           go generate ./rt/internal/trapfix ./cocoontest
           git diff --exit-code -- rt/internal/trapfix cocoontest/testdata
       - name: Preserve failed rebuild diagnostics
@@ -72,3 +73,7 @@ jobs:
             examples/datadog/.cocoon-build/target/wasm32-unknown-unknown/release/*.wasm
             examples/datadog/.cocoon-build/target/wasm32-unknown-unknown/release/.fingerprint/**/*.json
             examples/datadog/cocoon.lock.json
+            testdata/streaming/.cocoon-build/*.wasm
+            testdata/streaming/.cocoon-build/target/wasm32-unknown-unknown/release/*.wasm
+            testdata/streaming/.cocoon-build/target/wasm32-unknown-unknown/release/.fingerprint/**/*.json
+            testdata/streaming/cocoon.lock.json

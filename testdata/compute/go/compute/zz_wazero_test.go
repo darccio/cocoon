@@ -92,6 +92,11 @@ func compareOperation(t testing.TB, g *guest, reference *cocoontest.Guest, name 
 		}
 		return status, nil
 	}
+	// A valid reference reply exposes its status even when the operation failed.
+	// Compare it before converting errors: equal messages can hide distinct codes.
+	if referenceErr == nil && status != referenceStatus {
+		t.Fatalf("%s status mismatch: Go=%d reference=%d", name, status, referenceStatus)
+	}
 	if referenceErr == nil {
 		referenceErr = rt.FromStatus(name, referenceStatus, referenceOutput)
 	}
@@ -104,7 +109,7 @@ func compareOperation(t testing.TB, g *guest, reference *cocoontest.Guest, name 
 		}
 		return status, nil
 	}
-	if status != referenceStatus || !bytes.Equal(output, referenceOutput) {
+	if !bytes.Equal(output, referenceOutput) {
 		t.Fatalf("%s differs: Go=(%d,%x) reference=(%d,%x)", name, status, output, referenceStatus, referenceOutput)
 	}
 	return status, output

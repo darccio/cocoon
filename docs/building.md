@@ -232,9 +232,9 @@ Use the checks relevant to your change:
 | `make race` | Race detector for the runtime and generated consumers. |
 | `make rust` | Native guest/getrandom tests, formatting, and all-feature Clippy. |
 | `make cross` | Compile tests and vet for Linux arm64/386, Darwin arm64, Windows amd64, and js/wasm. |
-| `make integration` | Rebuild and verify both examples, then run Go and native Rust checks. |
+| `make integration` | Rebuild and verify compute, Datadog, and streaming proofs, then run Go and native Rust checks. |
 | `make smoke` | Installed CLI, separate author module, deterministic rebuilds, and a Go-only consumer. |
-| `make fuzz` | Manifest/Wasm parsers, hardener, and generated differential adapters. |
+| `make fuzz` | Manifest/Wasm parsers, hardener, generated differential adapters, and valid stateful streaming sequences. |
 | `make coverage` | Go coverage report. |
 | `make bench` | Datadog consumer benchmarks. |
 | `make licenses-check` | Dependency inventory and upstream notice evidence. |
