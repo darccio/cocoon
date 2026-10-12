@@ -1,7 +1,7 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-11. The synchronous M1 framework and Datadog proof were released privately
+2026-10-12. The synchronous M1 framework and Datadog proof were released privately
 as v0.1.0. The quality pass and five performance passes are complete, including
 the nine-round multi-agent loop, the PGO/resource-call follow-up, and exact
 numeric-lowering investigation.
@@ -263,7 +263,8 @@ with [samples and limits](performance.md#default-streaming-cost-investigation-20
 No production change or new contract follows from that investigation. The
 subsequent low-copy host encoding round qualified matched inputs and
 standalone/streaming holdouts with a freshly rebuilt independent spike, as
-recorded in track 1. Current next work is track 5's matching-profile analysis.
+recorded in track 1. Track 5 now also qualifies a conservative contained-load
+bounds pass; standalone scalar still prevents M1 performance acceptance.
 
 The entry baseline matrix compares scalar versus batch calls, repeated
 values, distinct nearby values, mostly unique values, and negative-bin values.
@@ -275,13 +276,22 @@ before committing to larger designs.
 
 The low-copy host encoding stage is qualified below. Exact-value bin reuse has
 a phase-0 no-go for both measured defaults. Translation analysis has produced
-the qualified publication-tail pass, while compiled wazero loses the private
+qualified publication-tail and contained-load passes, while compiled wazero loses the private
 same-Wasm control. Next inspect matching profiles and compiler output for
 another exact translation pattern; do not broaden the retained pass without
 new proof and qualification. Typed returns still need a compatibility
 decision before implementation; the session decision is recorded in track 3.
 Translation analysis and the alternative-backend comparison are diagnostic
 tracks; use their results to decide whether larger compiler or runtime work is justified.
+
+The next scalar phase-0 round parks adjacent numeric read/write guard reuse.
+Fresh profiles and a three-site pinned prototype remove exactly the duplicate
+store checks, but 826 paired rows establish only a 0.4–0.5% raw guest gain;
+standalone scalar remains undetected and the broad scalar holdout has adverse
+comparisons. Keep evidence only, without a production spec or broader predicate.
+Next measure the existing-ABI checked unit-reply call-shape/specialization
+ceiling before deciding whether larger typed-return work is justified. See
+[outcomes, controls and refreshed streaming rates](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12).
 
 #### 1. Low-copy batching
 
@@ -471,6 +481,54 @@ The original entry requirements remain guardrails for future extensions:
 
 #### 5. Translation optimizations
 
+The subsequent 2026-10-12 scalar read/write phase-0 probe is a no-go. Ordinary
+Go 1.26.8 profiles and matching SSA/assembly demonstrate three surviving adjacent
+load64/store64 guards. Pinned overlays preserve first checks, all accesses,
+rounding and endian/fallback semantics; native amd64/386 helper proofs pass and
+two semantic mutants fail runtime assertions. All 274 frozen fingerprints match
+through 826 rows.
+Raw guest improves about 0.4–0.5% against both controls, but default scalar
+87.69→87.51 / 87.64→87.43 ns has no detected gain versus either control.
+Broad scalar has a screening loss versus unchanged and a confirmation loss
+versus copied-check; these are different comparators. SQL/control effects do
+not rescue the declared scalar rule. Streaming uses identical binaries in both
+roles: fixed P16 one-home confirmation rates are about 1.35 million writes/s,
+versus 10.4 million with 16 homes, with no candidate effect claimed.
+No implementation/spec/public contract follows; M1 remains unaccepted.
+Preserve [the complete evidence and limits](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12)
+and keep the existing production predicates narrow. Next measure a checked
+unit-reply ceiling within ABI 3; a new ABI requires compatibility specification
+and explicit operator approval before implementation.
+
+The 2026-10-12 matching-profile round qualifies a conservative contained-load
+bounds hardener pass. The private predicate and phase-0 evidence are committed
+in `be8f6e0` before the authored candidate `22cdc0a`. Full binding/construction,
+type, effect and nonescape guards retain the first/new-maximum checks in place
+and every guest read. Generate 318 Datadog, 99 compute and 20 streaming selected
+reads, with all modules/locks regenerated; no hash/function/payload selector.
+
+Fresh 826-row qualification repeats varied SQL −6.76%/−4.56% and SQL holdout
+−3.93%/−3.97%, with all three measured batches repeating smaller gains versus
+baseline. Original SQL confirmation (.073) and original batch confirmation
+versus recheck (.053) are undetected. Trace improves about 4%, but the restored
+check control also improves about 1.5%; no per-check causal attribution follows.
+Standalone scalar gains/losses are undetected. One-home fixed streaming has
++1.88%/+1.68% medians (.165/.053), and the one-home holdout's detected screening
+loss does not confirm. These negatives do not establish streaming equivalence.
+
+All 167 frozen fingerprints match through timing; all six gates plus integration,
+native amd64/386 proofs/consumers, three runtime-rejected semantic mutants, two
+identical 61-artifact rebuilds and exact staged validation pass. Summed guest
+native text shrinks 9,012 B but the test executable grows 89,312 B in debug metadata.
+M1 remains unaccepted: SQL meets its absolute/fresh-reference limits while
+scalar 87.87/88.11 ns misses both. No public contract changes.
+See [paired outcomes and negatives](performance.md#contained-load-bounds-production-qualification-2026-10-12)
+and [the private predicate/proof](translation-contained-loads.md). Next inspect
+matching scalar profiles/compiler output for another exact pattern, or measure
+the typed-return share before a compatibility specification and operator approval.
+Keep this predicate narrow and retain streaming guards. Arm64 still needs native
+hardware; no earlier screening percentages are added to this qualification.
+
 The 2026-10-11 production round retains a conservative publication-tail hardener
 pass. Its private structural predicate was committed before implementation and
 new timing; it validates bound helpers/types, addresses, construction/ownership,
@@ -490,8 +548,8 @@ scalar loss occurs, but code placement/control effects prevent a scalar latency
 claim. M1 performance remains unaccepted. This adds no public contract.
 
 See [conditions, negatives, rates, and complete evidence](performance.md#publication-memory-views-production-qualification-2026-10-11)
-and [the private specification](translation-memory-views.md). Next: use matching
-profiles to choose another demonstrated translation pattern. Track 6's
+and [the private specification](translation-memory-views.md). The next matching
+profile analysis is recorded above; it does not broaden this retained predicate. Track 6's
 same-Wasm control is complete and negative for its measured configuration.
 Treat further work as a separate measured experiment; do not broaden the
 retained predicate based on this batch result or add screening gains together.

@@ -58,7 +58,7 @@ integration:
 	cargo clippy --manifest-path testdata/streaming/shim/Cargo.toml --all-features --all-targets --locked -- -D warnings
 	cargo test --manifest-path testdata/streaming/shim/Cargo.toml --all-features --locked
 smoke:
-	COCOON_SMOKE=1 CGO_ENABLED=0 go test ./internal/smoke -run '^Test(ExternalWorkflow|OptimizerSemantics|NumericLoweringSemantics|MemoryViewSemantics)$$' -count=1 -timeout=10m -v
+	COCOON_SMOKE=1 CGO_ENABLED=0 go test ./internal/smoke -run '^Test(ExternalWorkflow|OptimizerSemantics|NumericLoweringSemantics|MemoryViewSemantics|ContainedLoadSemantics)$$' -count=1 -timeout=10m -v
 fuzz:
 	go test ./internal/manifest -run '^$$' -fuzz FuzzParse -fuzztime=15s -parallel=2
 	go test ./internal/wasmbin -run '^$$' -fuzz FuzzRead -fuzztime=15s -parallel=2

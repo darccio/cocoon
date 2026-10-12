@@ -1266,7 +1266,7 @@ l0:
 				v10 = v8 & i32(0x1fffff)
 				t22 := int32(load32(m.memory, uint64(uint32(v0))+4))
 				v8 = t22
-				t23 := int32(load32(m.memory, uint32(v0)))
+				t23 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 				v0 = t23
 			l8:
 				{
@@ -2540,7 +2540,7 @@ func (m *Module) fn29(v0, v1, v2 int32) {
 				}
 				t8 := int32(load32(m.memory, uint64(uint32(v0))+8))
 				v3 = t8
-				t9 := int32(load32(m.memory, uint32(v0)))
+				t9 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 				if v3 == t9 {
 					m.fn7(v0)
 				}
@@ -2562,7 +2562,7 @@ func (m *Module) fn29(v0, v1, v2 int32) {
 			}
 			t15 := int32(load32(m.memory, uint64(uint32(v0))+8))
 			v3 = t15
-			t16 := int32(load32(m.memory, uint32(v0)))
+			t16 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			if v3 == t16 {
 				m.fn7(v0)
 			}
@@ -3007,7 +3007,7 @@ func (m *Module) fn36(v0, v1, v2 int32) {
 								m.fn76(v6+i32(8), v7, v5, v3)
 								t40 := int32(load32(m.memory, uint64(uint32(v6))+12))
 								v9 = t40
-								t41 := int32(load32(m.memory, uint64(uint32(v6))+8))
+								t41 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 								v4 = t41
 								if uint32(v4) < uint32(i32(128)) {
 									goto l9
@@ -3108,7 +3108,7 @@ func (m *Module) fn37(v0 int32) {
 		m.fn10(v0)
 		t3 := int32(load32(m.memory, uint64(uint32(v0))+16))
 		v1 = t3
-		t4 := int32(load32(m.memory, uint64(uint32(v0))+8))
+		t4 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+8))
 		if v1 == t4 {
 			m.fn3(v0+i32(8), v1, i32(1), i32(1), i32(1))
 		}
@@ -3733,7 +3733,7 @@ func (m *Module) fn43(v0 int64, v1 int32) {
 			m.fn3(v1, v2, i32(1), i32(1), i32(1))
 			t27 := int32(load32(m.memory, uint64(uint32(v1))+8))
 			v2 = t27
-			t28 := int32(load32(m.memory, uint32(v1)))
+			t28 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 			v4 = t28
 		}
 		t29 := v1
@@ -3748,7 +3748,7 @@ func (m *Module) fn43(v0 int64, v1 int32) {
 			v5 = t31
 			t32 := int32(load32(m.memory, uint64(uint32(v1))+8))
 			v3 = t32
-			t33 := int32(load32(m.memory, uint32(v1)))
+			t33 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 			v4 = t33
 		}
 		t34 := v1
@@ -4223,7 +4223,7 @@ func (m *Module) fn48(v0, v1, v2 int32) int32 {
 			v8 = v7 & i32(0x1fffff)
 			t27 := int32(load32(m.memory, uint64(uint32(v0))+4))
 			v7 = t27
-			t28 := int32(load32(m.memory, uint32(v0)))
+			t28 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			v0 = t28
 		l12:
 			if uint32(v4&i32(0xffff)) < uint32(v5&i32(0xffff)) {
@@ -4466,13 +4466,13 @@ func (m *Module) fn50(v0, v1 int32) int32 {
 					v8 = v7 + i32(24)
 					t37 := int32(load32(m.memory, uint64(uint32(v7))+76))
 					v5 = t37
-					t38 := int32(load32(m.memory, uint64(uint32(v7))+72))
+					t38 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+72))
 					v4 = t38
-					t39 := int32(load32(m.memory, uint64(uint32(v7))+68))
+					t39 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+68))
 					v3 = t39
-					t40 := int32(load32(m.memory, uint64(uint32(v7))+64))
+					t40 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+64))
 					v1 = t40
-					t41 := int32(load32(m.memory, uint64(uint32(v7))+52))
+					t41 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+52))
 					if t41 != i32(-1) {
 						m.fn195(v7+i32(4), v8, v1, v3, v4, v5, i32(0))
 						goto l10
@@ -5847,11 +5847,11 @@ func (m *Module) fn60(v0 int32) int32 {
 	var v1, v2, v3, v4, v5, v6 int32
 	t0 := int32(load32(m.memory, uint64(uint32(v0))+12))
 	v5 = t0
-	t1 := int32(load32(m.memory, uint64(uint32(v0))+8))
+	t1 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+8))
 	v1 = t1
-	t2 := int32(load32(m.memory, uint64(uint32(v0))+4))
+	t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+4))
 	v2 = t2
-	t3 := int32(load32(m.memory, uint32(v0)))
+	t3 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 	v0 = t3
 	t4 := int32(m.memory[uint32(i32(1101820))])
 	if t4 != i32(1) {
@@ -6123,7 +6123,7 @@ func (m *Module) fn65(v0, v1 int32) {
 	{
 		t1 := int32(load32(m.memory, uint64(uint32(v1))+16))
 		v8 = t1
-		t2 := int32(load32(m.memory, uint64(uint32(v1))+12))
+		t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+12))
 		t3 := v8
 		v5 = t2
 		if uint32(t3) < uint32(v5) {
@@ -6228,7 +6228,7 @@ func (m *Module) fn65(v0, v1 int32) {
 					m.fn56(v7+i32(8), v6, v4, v2)
 					t20 := int32(load32(m.memory, uint64(uint32(v7))+12))
 					v2 = t20
-					t21 := int32(load32(m.memory, uint64(uint32(v7))+8))
+					t21 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+8))
 					v3 = t21
 				}
 			l1:
@@ -6265,7 +6265,7 @@ func (m *Module) fn65(v0, v1 int32) {
 					m.fn56(v7, v6, v4, v2)
 					t25 := int32(load32(m.memory, uint64(uint32(v7))+4))
 					v2 = t25
-					t26 := int32(load32(m.memory, uint32(v7)))
+					t26 := int32(cocoonLoad32InRange(m.memory, uint32(v7)))
 					v3 = t26
 					goto l4
 				}
@@ -6388,7 +6388,7 @@ func (m *Module) fn66(v0 int32) {
 		{
 			t0 := int32(load32(m.memory, uint64(uint32(v0))+40))
 			v1 = t0
-			t1 := int32(load32(m.memory, uint64(uint32(v0))+32))
+			t1 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+32))
 			t2 := v1
 			v5 = t1
 			if uint32(t2) >= uint32(v5) {
@@ -6426,7 +6426,7 @@ func (m *Module) fn66(v0 int32) {
 		}
 		t8 := int32(load32(m.memory, uint64(uint32(v0))+24))
 		v4 = t8
-		t9 := int32(load32(m.memory, uint64(uint32(v0))+20))
+		t9 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+20))
 		v7 = t9
 		t10 := int32(load32(m.memory, uint64(uint32(v0))+28))
 		v9 = t10
@@ -6609,9 +6609,9 @@ func (m *Module) fn67(v0, v1, v2, v3 int32) {
 				m.fn140(t5, i32(8), p6)
 				t7 := int32(load32(m.memory, uint64(uint32(v10))+24))
 				v13 = t7
-				t8 := int32(load32(m.memory, uint64(uint32(v10))+20))
+				t8 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v10))+20))
 				v5 = t8
-				t9 := int32(load32(m.memory, uint64(uint32(v10))+16))
+				t9 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v10))+16))
 				v8 = t9
 				if v8 == 0 {
 					goto l0
@@ -6787,7 +6787,7 @@ func (m *Module) fn67(v0, v1, v2, v3 int32) {
 								v7 = int32(v16)
 								v5 = t45 & v7
 								v3 = v5
-								t46 := int32(load32(m.memory, uint32(v1)))
+								t46 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 								v4 = t46
 								t47 := int64(load64(m.memory, uint32(v4+v5)))
 								v16 = t47 & i64(-0x7f7f7f7f7f7f7f80)
@@ -6885,7 +6885,7 @@ func (m *Module) fn67(v0, v1, v2, v3 int32) {
 		m.fn49()
 		t71 := int32(load32(m.memory, uint64(uint32(v10))+4))
 		v13 = t71
-		t72 := int32(load32(m.memory, uint32(v10)))
+		t72 := int32(cocoonLoad32InRange(m.memory, uint32(v10)))
 		v5 = t72
 	}
 l0:
@@ -8573,7 +8573,7 @@ func (m *Module) fn83(v0, v1, v2 int32) int32 {
 	var v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13 int32
 	t0 := int32(load32(m.memory, uint64(uint32(v0))+4))
 	v9 = t0
-	t1 := int32(load32(m.memory, uint32(v0)))
+	t1 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 	v10 = t1
 	t2 := int32(load32(m.memory, uint64(uint32(v0))+8))
 	v11 = t2
@@ -9709,9 +9709,9 @@ func (m *Module) fn91(v0, v1, v2, v3, v4, v5, v6 int32) {
 						v20 = v11 + i32(8)
 						t81 := int32(load32(m.memory, uint64(uint32(v1))+20))
 						v21 = t81
-						t82 := int32(load32(m.memory, uint32(v1)))
+						t82 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 						v24 = t82
-						t83 := int32(load32(m.memory, uint64(uint32(v1))+4))
+						t83 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+4))
 						v25 = t83
 						v26 = v25 << 5
 					l77:
@@ -10337,7 +10337,7 @@ func (m *Module) fn91(v0, v1, v2, v3, v4, v5, v6 int32) {
 									}
 									t153 := int32(load32(m.memory, uint64(uint32(v15))+24))
 									v8 = t153
-									t154 := int32(load32(m.memory, uint64(uint32(v15))+20))
+									t154 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v15))+20))
 									v12 = t154
 									t155 := int32(load32(m.memory, uint64(uint32(v15))+28))
 									v1 = t155
@@ -10388,7 +10388,7 @@ func (m *Module) fn91(v0, v1, v2, v3, v4, v5, v6 int32) {
 							v9 = t171
 							v3 = v9 & int32(v27)
 							v29 = int64(uint64(v27)>>25) & i64(127) * i64(72340172838076673)
-							t172 := int32(load32(m.memory, uint32(v1)))
+							t172 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 							v1 = t172
 							v10 = i32(0)
 						l76:
@@ -10492,7 +10492,7 @@ func (m *Module) fn91(v0, v1, v2, v3, v4, v5, v6 int32) {
 								}
 								t188 := int32(load32(m.memory, uint64(uint32(v7))+240))
 								v4 = t188
-								t189 := int32(load32(m.memory, uint64(uint32(v7))+236))
+								t189 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+236))
 								p186 = t189
 								goto l81
 							}
@@ -10504,7 +10504,7 @@ func (m *Module) fn91(v0, v1, v2, v3, v4, v5, v6 int32) {
 							}
 							t192 := int32(load32(m.memory, uint64(uint32(v7))+336))
 							v4 = t192
-							t193 := int32(load32(m.memory, uint64(uint32(v7))+332))
+							t193 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+332))
 							p186 = t193
 						}
 					l81:
@@ -10690,7 +10690,7 @@ func (m *Module) fn91(v0, v1, v2, v3, v4, v5, v6 int32) {
 		store64(m.memory, uint64(uint32(v7))+80, uint64(i64(1)))
 		t217 := int32(load32(m.memory, uint64(uint32(v7))+20))
 		v0 = t217
-		t218 := int32(load32(m.memory, uint64(uint32(v7))+16))
+		t218 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+16))
 		v1 = t218
 		store64(m.memory, uint64(uint32(v7))+16, uint64(i64(0x200000001)))
 		{
@@ -10791,7 +10791,7 @@ func (m *Module) fn93(v0, v1 int32) {
 			v7 = t4
 			t5 := int32(load32(m.memory, uint64(uint32(v1))+52))
 			v4 = t5
-			t6 := int32(load32(m.memory, uint64(uint32(v1))+48))
+			t6 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+48))
 			v8 = t6
 			{
 				t7 := int32(load32(m.memory, uint64(uint32(v1))+4))
@@ -10899,13 +10899,13 @@ func (m *Module) fn93(v0, v1 int32) {
 		v6 = v1 + i32(8)
 		t21 := int32(load32(m.memory, uint64(uint32(v1))+60))
 		v5 = t21
-		t22 := int32(load32(m.memory, uint64(uint32(v1))+56))
+		t22 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+56))
 		v3 = t22
-		t23 := int32(load32(m.memory, uint64(uint32(v1))+52))
+		t23 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+52))
 		v2 = t23
-		t24 := int32(load32(m.memory, uint64(uint32(v1))+48))
+		t24 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+48))
 		v4 = t24
-		t25 := int32(load32(m.memory, uint64(uint32(v1))+36))
+		t25 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+36))
 		if t25 != i32(-1) {
 			m.fn143(v0, v6, v4, v2, v3, v5, i32(0))
 			return
@@ -11025,7 +11025,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 				{
 					t3 := int32(load32(m.memory, uint64(uint32(v6))+40))
 					v5 = t3
-					t4 := int32(load32(m.memory, uint64(uint32(v6))+32))
+					t4 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+32))
 					t5 := v5
 					v4 = t4
 					if uint32(t5) < uint32(v4) {
@@ -11116,7 +11116,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																						}
 																																						t1219 := int32(load32(m.memory, uint64(uint32(v6))+24))
 																																						v1 = t1219
-																																						t1220 := int32(load32(m.memory, uint64(uint32(v6))+20))
+																																						t1220 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 																																						v2 = t1220
 																																						if v8 == 0 {
 																																							goto l488
@@ -11266,7 +11266,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																		}
 																																		t1244 := int32(load32(m.memory, uint64(uint32(v9))+168))
 																																		v13 = t1244
-																																		t1245 := int32(load32(m.memory, uint64(uint32(v9))+164))
+																																		t1245 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+164))
 																																		v2 = t1245
 																																		goto l485
 																																	}
@@ -11399,7 +11399,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																				m.fn10(v6)
 																																				t1284 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																																				v1 = t1284
-																																				t1285 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																																				t1285 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																																				if v1 == t1285 {
 																																					m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																																				}
@@ -11540,7 +11540,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																		v8 = t1290
 																																		t1291 := int32(load32(m.memory, uint64(uint32(v9))+204))
 																																		v5 = t1291
-																																		t1292 := int32(load32(m.memory, uint64(uint32(v9))+196))
+																																		t1292 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+196))
 																																		p1287 = t1292
 																																	}
 																																l520:
@@ -11812,7 +11812,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																					m.fn54(v9+i32(196), v2, v4)
 																																					t481 := int32(load32(m.memory, uint64(uint32(v9))+204))
 																																					v4 = t481
-																																					t482 := int32(load32(m.memory, uint64(uint32(v9))+200))
+																																					t482 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+200))
 																																					v8 = t482
 																																				}
 																																			l209:
@@ -12480,7 +12480,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																						}
 																																						t38 := int32(load32(m.memory, uint64(uint32(v6))+24))
 																																						v1 = t38
-																																						t39 := int32(load32(m.memory, uint64(uint32(v6))+20))
+																																						t39 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 																																						v2 = t39
 																																						if v8 == 0 {
 																																							goto l44
@@ -12935,7 +12935,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																			m.fn10(v6)
 																																			t100 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																																			v1 = t100
-																																			t101 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																																			t101 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																																			if v1 == t101 {
 																																				m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																																			}
@@ -12948,7 +12948,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																		}
 																																		t103 := int32(load32(m.memory, uint64(uint32(v6))+24))
 																																		v2 = t103
-																																		t104 := int32(load32(m.memory, uint64(uint32(v6))+20))
+																																		t104 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 																																		v7 = t104
 																																		if uint32(v1) < uint32(v5) {
 																																			goto l75
@@ -13220,7 +13220,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																			m.fn10(v6)
 																																			t141 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																																			v1 = t141
-																																			t142 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																																			t142 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																																			if v1 == t142 {
 																																				m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																																			}
@@ -13306,7 +13306,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																			m.fn54(v9+i32(196), v2, v4)
 																																			t152 := int32(load32(m.memory, uint64(uint32(v9))+204))
 																																			v4 = t152
-																																			t153 := int32(load32(m.memory, uint64(uint32(v9))+200))
+																																			t153 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+200))
 																																			v8 = t153
 																																		}
 																																	l93:
@@ -13469,7 +13469,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																				m.fn10(v6)
 																																				t196 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																																				v1 = t196
-																																				t197 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																																				t197 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																																				if v1 == t197 {
 																																					m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																																				}
@@ -13627,7 +13627,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																	m.fn10(v6)
 																																	t207 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																																	v1 = t207
-																																	t208 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																																	t208 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																																	if v1 == t208 {
 																																		m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																																	}
@@ -13711,7 +13711,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																	m.fn10(v6)
 																																	t224 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																																	v1 = t224
-																																	t225 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																																	t225 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																																	if v1 == t225 {
 																																		m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																																	}
@@ -14420,7 +14420,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																			m.fn10(v6)
 																																			t388 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																																			v1 = t388
-																																			t389 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																																			t389 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																																			if v1 == t389 {
 																																				m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																																			}
@@ -14589,7 +14589,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																		m.fn54(v9+i32(196), v2, v4)
 																																		t362 := int32(load32(m.memory, uint64(uint32(v9))+204))
 																																		v4 = t362
-																																		t363 := int32(load32(m.memory, uint64(uint32(v9))+200))
+																																		t363 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+200))
 																																		v8 = t363
 																																	}
 																																l178:
@@ -14625,7 +14625,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																	{
 																																		t369 := int32(load32(m.memory, uint64(uint32(v6))+40))
 																																		v1 = t369
-																																		t370 := int32(load32(m.memory, uint64(uint32(v6))+32))
+																																		t370 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+32))
 																																		t371 := v1
 																																		v2 = t370
 																																		if uint32(t371) >= uint32(v2) {
@@ -14885,7 +14885,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																															m.fn10(v6)
 																															t525 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																															v1 = t525
-																															t526 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																															t526 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																															if v1 == t526 {
 																																m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																															}
@@ -14900,7 +14900,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																													m.memory[uint64(uint32(v6))+50] = byte(i32(0))
 																													t522 := int32(load32(m.memory, uint64(uint32(v6))+24))
 																													v2 = t522
-																													t523 := int32(load32(m.memory, uint64(uint32(v6))+20))
+																													t523 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 																													v7 = t523
 																													if uint32(v1) < uint32(v5) {
 																														goto l230
@@ -15096,7 +15096,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												m.fn10(v6)
 																												t701 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																												v1 = t701
-																												t702 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																												t702 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																												if v1 == t702 {
 																													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																												}
@@ -15144,7 +15144,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												m.fn10(v6)
 																												t680 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																												v1 = t680
-																												t681 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																												t681 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																												if v1 == t681 {
 																													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																												}
@@ -15192,7 +15192,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												m.fn10(v6)
 																												t768 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																												v1 = t768
-																												t769 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																												t769 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																												if v1 == t769 {
 																													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																												}
@@ -15303,7 +15303,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																			t860 := int32(load32(m.memory, uint64(uint32(v6))+40))
 																																			v5 = t860
 																																			v1 = v5 + i32(1)
-																																			t861 := int32(load32(m.memory, uint64(uint32(v6))+32))
+																																			t861 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+32))
 																																			v4 = t861
 																																			goto l377
 																																		}
@@ -15700,7 +15700,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												m.fn10(v6)
 																												t725 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																												v1 = t725
-																												t726 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																												t726 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																												if v1 == t726 {
 																													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																												}
@@ -15962,7 +15962,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												m.fn10(v6)
 																												t687 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																												v1 = t687
-																												t688 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																												t688 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																												if v1 == t688 {
 																													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																												}
@@ -16069,7 +16069,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												m.fn10(v6)
 																												t708 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																												v1 = t708
-																												t709 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																												t709 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																												if v1 == t709 {
 																													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																												}
@@ -16117,7 +16117,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												m.fn10(v6)
 																												t999 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																												v1 = t999
-																												t1000 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																												t1000 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																												if v1 == t1000 {
 																													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																												}
@@ -16223,7 +16223,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																}
 																																t642 := int32(load32(m.memory, uint64(uint32(v6))+24))
 																																v1 = t642
-																																t643 := int32(load32(m.memory, uint64(uint32(v6))+20))
+																																t643 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 																																v2 = t643
 																																if v5 == 0 {
 																																	goto l315
@@ -16238,7 +16238,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																															}
 																															t644 := int32(load32(m.memory, uint64(uint32(v6))+24))
 																															v2 = t644
-																															t645 := int32(load32(m.memory, uint64(uint32(v6))+20))
+																															t645 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 																															v7 = t645
 																															if v5 == 0 {
 																																goto l318
@@ -16262,7 +16262,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																													store32(m.memory, uint64(uint32(v9))+196, uint32(v2+v5))
 																													m.fn40(v9+i32(8), v9+i32(196))
 																													t647 := int32(load32(m.memory, uint64(uint32(v9))+12))
-																													t648 := int32(load32(m.memory, uint64(uint32(v9))+8))
+																													t648 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+8))
 																													p649 := i32(32)
 																													if t648&i32(1) != 0 {
 																														p649 = t647
@@ -16429,7 +16429,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												var p673 int32
 																												{
 																													t675 := int32(load32(m.memory, uint64(uint32(v9))+4))
-																													t676 := int32(load32(m.memory, uint32(v9)))
+																													t676 := int32(cocoonLoad32InRange(m.memory, uint32(v9)))
 																													p677 := i32(32)
 																													if t676&i32(1) != 0 {
 																														p677 = t675
@@ -16619,7 +16619,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																																}
 																																t781 := int32(load32(m.memory, uint64(uint32(v6))+24))
 																																v2 = t781
-																																t782 := int32(load32(m.memory, uint64(uint32(v6))+20))
+																																t782 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 																																v4 = t782
 																																if v1 == 0 {
 																																	goto l350
@@ -16802,7 +16802,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																												v2 = t809
 																												t810 := int32(load32(m.memory, uint64(uint32(v9))+204))
 																												v4 = t810
-																												t811 := int32(load32(m.memory, uint64(uint32(v9))+200))
+																												t811 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+200))
 																												v1 = t811
 																												t812 := int32(load32(m.memory, uint64(uint32(v6))+40))
 																												store32(m.memory, uint64(uint32(v6))+40, uint32(t812+v5))
@@ -17060,7 +17060,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																								m.fn10(v6)
 																								t842 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																								v1 = t842
-																								t843 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																								t843 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																								if v1 == t843 {
 																									m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																								}
@@ -17250,9 +17250,9 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																				m.fn87(v9+i32(196), v7, t933)
 																				t934 := int32(load32(m.memory, uint64(uint32(v9))+204))
 																				v13 = t934
-																				t935 := int32(load32(m.memory, uint64(uint32(v9))+200))
+																				t935 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+200))
 																				v5 = t935
-																				t936 := int32(load32(m.memory, uint64(uint32(v9))+196))
+																				t936 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+196))
 																				v10 = t936
 																				{
 																					t937 := m.fn21(v6)
@@ -17387,7 +17387,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																				t960 := int32(load32(m.memory, uint64(uint32(v6))+40))
 																				v5 = t960
 																				v2 = v5 + i32(1)
-																				t961 := int32(load32(m.memory, uint64(uint32(v6))+32))
+																				t961 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+32))
 																				v4 = t961
 																				goto l406
 																			}
@@ -17421,7 +17421,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																			}
 																			t967 := int32(load32(m.memory, uint64(uint32(v6))+24))
 																			v1 = t967
-																			t968 := int32(load32(m.memory, uint64(uint32(v6))+20))
+																			t968 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 																			v4 = t968
 																			{
 																				{
@@ -17514,9 +17514,9 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																					m.fn87(v9+i32(196), v7, t986)
 																					t987 := int32(load32(m.memory, uint64(uint32(v9))+204))
 																					v4 = t987
-																					t988 := int32(load32(m.memory, uint64(uint32(v9))+200))
+																					t988 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+200))
 																					v1 = t988
-																					t989 := int32(load32(m.memory, uint64(uint32(v9))+196))
+																					t989 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+196))
 																					v2 = t989
 																					t990 := m.fn21(v6)
 																					if t990 != 0 {
@@ -17583,7 +17583,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 																m.fn10(v6)
 																t1006 := int32(load32(m.memory, uint64(uint32(v6))+16))
 																v1 = t1006
-																t1007 := int32(load32(m.memory, uint64(uint32(v6))+8))
+																t1007 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 																if v1 == t1007 {
 																	m.fn3(v12, v1, i32(1), i32(1), i32(1))
 																}
@@ -17672,7 +17672,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 															m.fn10(v6)
 															t1016 := int32(load32(m.memory, uint64(uint32(v6))+16))
 															v1 = t1016
-															t1017 := int32(load32(m.memory, uint64(uint32(v6))+8))
+															t1017 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 															if v1 == t1017 {
 																m.fn3(v12, v1, i32(1), i32(1), i32(1))
 															}
@@ -18038,7 +18038,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 												m.fn10(v6)
 												t1068 := int32(load32(m.memory, uint64(uint32(v6))+16))
 												v1 = t1068
-												t1069 := int32(load32(m.memory, uint64(uint32(v6))+8))
+												t1069 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 												if v1 == t1069 {
 													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 												}
@@ -18183,7 +18183,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 													m.fn10(v6)
 													t1103 := int32(load32(m.memory, uint64(uint32(v6))+16))
 													v4 = t1103
-													t1104 := int32(load32(m.memory, uint64(uint32(v6))+8))
+													t1104 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 													if v4 == t1104 {
 														m.fn3(v12, v4, i32(1), i32(1), i32(1))
 													}
@@ -18211,7 +18211,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 												m.fn10(v6)
 												t1109 := int32(load32(m.memory, uint64(uint32(v6))+16))
 												v4 = t1109
-												t1110 := int32(load32(m.memory, uint64(uint32(v6))+8))
+												t1110 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 												if v4 == t1110 {
 													m.fn3(v12, v4, i32(1), i32(1), i32(1))
 												}
@@ -18694,7 +18694,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 										goto l23
 									}
 									t1187 := int32(load32(m.memory, uint64(uint32(v6))+40))
-									t1188 := int32(load32(m.memory, uint64(uint32(v6))+32))
+									t1188 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+32))
 									if uint32(t1187) >= uint32(t1188) {
 										goto l23
 									}
@@ -18796,7 +18796,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 												m.fn10(v6)
 												t1319 := int32(load32(m.memory, uint64(uint32(v6))+16))
 												v1 = t1319
-												t1320 := int32(load32(m.memory, uint64(uint32(v6))+8))
+												t1320 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+8))
 												if v1 == t1320 {
 													m.fn3(v12, v1, i32(1), i32(1), i32(1))
 												}
@@ -18811,7 +18811,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 										m.memory[uint64(uint32(v6))+50] = byte(i32(0))
 										t1309 := int32(load32(m.memory, uint64(uint32(v6))+24))
 										v2 = t1309
-										t1310 := int32(load32(m.memory, uint64(uint32(v6))+20))
+										t1310 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+20))
 										v7 = t1310
 										if uint32(v1) < uint32(v5) {
 											goto l529
@@ -19704,7 +19704,7 @@ func (m *Module) fn96(v0, v1, v2, v3, v4, v5 int32) {
 									}
 									t1463 := int32(load32(m.memory, uint64(uint32(v6))+72))
 									v5 = t1463
-									t1464 := int32(load32(m.memory, uint64(uint32(v6))+68))
+									t1464 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v6))+68))
 									v17 = t1464
 									if v9 != 0 {
 										goto l571
@@ -20087,7 +20087,7 @@ func (m *Module) fn97(v0 int32) {
 	{
 		t0 := int32(load32(m.memory, uint64(uint32(v0))+40))
 		v2 = t0
-		t1 := int32(load32(m.memory, uint64(uint32(v0))+32))
+		t1 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+32))
 		t2 := v2
 		v1 = t1
 		if uint32(t2) >= uint32(v1) {
@@ -20216,17 +20216,17 @@ func (m *Module) fn98(v0, v1 int32) {
 	v2 = t0
 	t1 := int32(load32(m.memory, uint64(uint32(v1))+24))
 	v4 = t1
-	t2 := int32(load32(m.memory, uint64(uint32(v1))+16))
+	t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+16))
 	v5 = t2
-	t3 := int32(load32(m.memory, uint64(uint32(v1))+4))
+	t3 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+4))
 	v7 = t3
 	t4 := int32(m.memory[uint64(uint32(v1))+28])
 	v11 = t4
 	t5 := int32(load32(m.memory, uint64(uint32(v1))+20))
 	v9 = t5
-	t6 := int32(load32(m.memory, uint64(uint32(v1))+8))
+	t6 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+8))
 	v12 = t6
-	t7 := int32(load32(m.memory, uint32(v1)))
+	t7 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 	v3 = t7
 l10:
 	v6 = v3
@@ -22359,7 +22359,7 @@ func (m *Module) fn116(v0 int32) int32 {
 						}
 						t132 := int32(load32(m.memory, uint64(uint32(v8))+12))
 						v7 = t132
-						t133 := int32(load32(m.memory, uint64(uint32(v8))+8))
+						t133 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v8))+8))
 						v4 = t133
 						t134 := int32(load32(m.memory, uint32(i32(1102308))))
 						v0 = v4 + t134
@@ -23030,7 +23030,7 @@ func (m *Module) fn118(v0, v1, v2 int32) {
 							}
 							t6 := int32(load32(m.memory, uint64(uint32(v4))+12))
 							v3 = t6
-							t7 := int32(load32(m.memory, uint64(uint32(v4))+8))
+							t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+8))
 							v1 = t7
 							v2 = i32(2)
 							goto l2
@@ -23182,7 +23182,7 @@ func (m *Module) fn119(v0, v1, v2 int32) {
 			{
 				t19 := int32(load32(m.memory, uint64(uint32(v1))+36))
 				v2 = t19
-				t20 := int32(load32(m.memory, uint64(uint32(v1))+32))
+				t20 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+32))
 				if uint32(v2) >= uint32(t20) {
 					goto l5
 				}
@@ -23582,7 +23582,7 @@ func (m *Module) fn121(v0 int32, v1 int64) {
 		if uint64(v1) > uint64(i64(-129)) {
 			t7 := int32(load32(m.memory, uint64(uint32(v0))+8))
 			v2 = t7
-			t8 := int32(load32(m.memory, uint32(v0)))
+			t8 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			if v2 == t8 {
 				m.fn7(v0)
 			}
@@ -23603,7 +23603,7 @@ func (m *Module) fn121(v0 int32, v1 int64) {
 		if uint64(v1+i64(0x8000)) < uint64(i64(32640)) {
 			t13 := int32(load32(m.memory, uint64(uint32(v0))+8))
 			v2 = t13
-			t14 := int32(load32(m.memory, uint32(v0)))
+			t14 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			if v2 == t14 {
 				m.fn7(v0)
 			}
@@ -23628,7 +23628,7 @@ func (m *Module) fn121(v0 int32, v1 int64) {
 		if uint64(v1+i64(0x80000000)) < uint64(i64(0x7fff8000)) {
 			t21 := int32(load32(m.memory, uint64(uint32(v0))+8))
 			v2 = t21
-			t22 := int32(load32(m.memory, uint32(v0)))
+			t22 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			if v2 == t22 {
 				m.fn7(v0)
 			}
@@ -23653,7 +23653,7 @@ func (m *Module) fn121(v0 int32, v1 int64) {
 		if v1 < i64(-0x80000000) {
 			t29 := int32(load32(m.memory, uint64(uint32(v0))+8))
 			v2 = t29
-			t30 := int32(load32(m.memory, uint32(v0)))
+			t30 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			if v2 == t30 {
 				m.fn7(v0)
 			}
@@ -23680,7 +23680,7 @@ func (m *Module) fn121(v0 int32, v1 int64) {
 			v4 = int32(v1)
 			t36 := int32(load32(m.memory, uint64(uint32(v0))+8))
 			v2 = t36
-			t37 := int32(load32(m.memory, uint32(v0)))
+			t37 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			if v2 == t37 {
 				m.fn7(v0)
 			}
@@ -23702,7 +23702,7 @@ func (m *Module) fn121(v0 int32, v1 int64) {
 			v3 = int32(v1)
 			t42 := int32(load32(m.memory, uint64(uint32(v0))+8))
 			v2 = t42
-			t43 := int32(load32(m.memory, uint32(v0)))
+			t43 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			if v2 == t43 {
 				m.fn7(v0)
 			}
@@ -23726,7 +23726,7 @@ func (m *Module) fn121(v0 int32, v1 int64) {
 			v3 = int32(v1)
 			t49 := int32(load32(m.memory, uint64(uint32(v0))+8))
 			v2 = t49
-			t50 := int32(load32(m.memory, uint32(v0)))
+			t50 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			if v2 == t50 {
 				m.fn7(v0)
 			}
@@ -23748,7 +23748,7 @@ func (m *Module) fn121(v0 int32, v1 int64) {
 		}
 		t0 := int32(load32(m.memory, uint64(uint32(v0))+8))
 		v2 = t0
-		t1 := int32(load32(m.memory, uint32(v0)))
+		t1 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 		if v2 == t1 {
 			m.fn7(v0)
 		}
@@ -24452,13 +24452,13 @@ func (m *Module) fn131(v0, v1 int32) {
 					if t10 == i32(1) {
 						t11 := int32(load32(m.memory, uint64(uint32(v1))+32))
 						v4 = t11
-						t12 := int32(load32(m.memory, uint64(uint32(v1))+28))
+						t12 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+28))
 						v3 = t12
 						goto l3
 					}
 					t13 := int32(load32(m.memory, uint64(uint32(v1))+32))
 					v4 = t13
-					t14 := int32(load32(m.memory, uint64(uint32(v1))+28))
+					t14 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+28))
 					t15 := v4
 					v3 = t14
 					if t15 == v3 {
@@ -24813,7 +24813,7 @@ func (m *Module) fn131(v0, v1 int32) {
 							{
 								t80 := int32(load32(m.memory, uint64(uint32(v2))+36))
 								v1 = t80
-								t81 := int32(load32(m.memory, uint64(uint32(v2))+12))
+								t81 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+12))
 								if uint32(v1) > uint32(t81-v3) {
 									m.fn25(v2+i32(12), v3, v1)
 									t82 := int32(load32(m.memory, uint64(uint32(v2))+20))
@@ -24887,7 +24887,7 @@ func (m *Module) fn131(v0, v1 int32) {
 			v4 = t93
 			t94 := int32(load32(m.memory, uint64(uint32(v9))+12))
 			v8 = v4 + t94
-			t95 := int32(load32(m.memory, uint64(uint32(v9))+4))
+			t95 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+4))
 			v2 = t95
 			v1 = v4
 		l27:
@@ -25031,7 +25031,7 @@ func (m *Module) fn132(v0, v1, v2 int32) {
 					m.fn131(v3+i32(8), v3+i32(96))
 					t16 := int32(load32(m.memory, uint64(uint32(v3))+12))
 					v6 = t16
-					t17 := int32(load32(m.memory, uint64(uint32(v3))+8))
+					t17 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+8))
 					v1 = t17
 					if v1 != 0 {
 						goto l2
@@ -25520,13 +25520,13 @@ func (m *Module) fn136(v0, v1, v2, v3 int32) {
 				{
 					t4 := int32(load32(m.memory, uint64(uint32(v4))+172))
 					v15 = t4
-					t5 := int32(load32(m.memory, uint64(uint32(v4))+168))
+					t5 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+168))
 					v16 = t5
-					t6 := int32(load32(m.memory, uint64(uint32(v4))+160))
+					t6 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+160))
 					v8 = t6
-					t7 := int32(load32(m.memory, uint64(uint32(v4))+156))
+					t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+156))
 					v13 = t7
-					t8 := int32(load32(m.memory, uint64(uint32(v4))+164))
+					t8 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+164))
 					v11 = t8
 				l37:
 					{
@@ -26106,7 +26106,7 @@ func (m *Module) fn136(v0, v1, v2, v3 int32) {
 		store64(m.memory, uint64(uint32(v4))+104, uint64(t93))
 		t94 := int32(load32(m.memory, uint64(uint32(v4))+64))
 		v1 = t94
-		t95 := int32(load32(m.memory, uint64(uint32(v4))+36))
+		t95 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+36))
 		store32(m.memory, uint64(uint32(v17))+8, uint32(t95))
 		t96 := int64(load64(m.memory, uint64(uint32(v4))+28))
 		store64(m.memory, uint32(v17), uint64(t96))
@@ -26900,7 +26900,7 @@ func (m *Module) fn140(v0, v1, v2 int32) {
 						m.fn49()
 						t12 := int32(load32(m.memory, uint64(uint32(v3))+12))
 						v2 = t12
-						t13 := int32(load32(m.memory, uint64(uint32(v3))+8))
+						t13 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+8))
 						p3 = t13
 						goto l6
 					}
@@ -26933,7 +26933,7 @@ func (m *Module) fn140(v0, v1, v2 int32) {
 			m.fn170(v2)
 			t18 := int32(load32(m.memory, uint64(uint32(v3))+20))
 			v2 = t18
-			t19 := int32(load32(m.memory, uint64(uint32(v3))+16))
+			t19 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+16))
 			p3 = t19
 		}
 	l6:
@@ -26951,7 +26951,7 @@ func (m *Module) fn141(v0 int32) {
 	m.g0 = v2
 	t1 := int32(load32(m.memory, uint64(uint32(v0))+4))
 	v1 = t1
-	t2 := int32(load32(m.memory, uint32(v0)))
+	t2 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 	v3 = t2
 	store64(m.memory, uint32(v0), uint64(i64(0x200000001)))
 	{
@@ -27300,7 +27300,7 @@ func (m *Module) fn144(v0, v1, v2 int32) int32 {
 		v7 = t4
 		v6 = v7 & int32(v3)
 		v5 = int64(uint64(v3)>>25) & i64(127) * i64(72340172838076673)
-		t5 := int32(load32(m.memory, uint32(v0)))
+		t5 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 		v0 = t5
 	l3:
 		{
@@ -27406,7 +27406,7 @@ func (m *Module) fn146(v0, v1, v2, v3 int32) {
 		}
 		t11 := int32(load32(m.memory, uint64(uint32(v1))+28))
 		v7 = t11
-		t12 := int32(load32(m.memory, uint64(uint32(v1))+20))
+		t12 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+20))
 		t13 := v7
 		v10 = t12
 		if uint32(t13) < uint32(v10) {
@@ -27597,7 +27597,7 @@ func (m *Module) fn146(v0, v1, v2, v3 int32) {
 							{
 								t65 := int32(load32(m.memory, uint64(uint32(v5))+36))
 								v4 = t65
-								t66 := int32(load32(m.memory, uint64(uint32(v5))+32))
+								t66 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v5))+32))
 								v2 = t66
 								if v2 == i32(-1) {
 									goto l2
@@ -27698,7 +27698,7 @@ func (m *Module) fn147(v0, v1, v2 int32) {
 		}
 		t11 := int32(load32(m.memory, uint64(uint32(v5))+16))
 		v11 = t11
-		t12 := int32(load32(m.memory, uint64(uint32(v5))+12))
+		t12 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v5))+12))
 		v12 = t12
 		t13 := int32(load32(m.memory, uint64(uint32(v1))+96))
 		v3 = t13
@@ -27712,7 +27712,7 @@ func (m *Module) fn147(v0, v1, v2 int32) {
 		}
 		t16 := int32(load32(m.memory, uint64(uint32(v2))+20))
 		v4 = t16
-		t17 := int32(load32(m.memory, uint64(uint32(v2))+12))
+		t17 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+12))
 		if uint32(v4) < uint32(t17) {
 			t18 := int32(m.memory[uint64(uint32(v3))+32])
 			if t18&i32(2) != 0 {
@@ -30122,7 +30122,7 @@ func (m *Module) fn150(v0, v1 int32) int32 {
 				m.fn167(v12, t374, t375, t376, i32(0), v12+i32(32))
 				t377 := int32(load32(m.memory, uint64(uint32(v12))+4))
 				v2 = t377
-				t378 := int32(load32(m.memory, uint32(v12)))
+				t378 := int32(cocoonLoad32InRange(m.memory, uint32(v12)))
 				p19 = t378
 				goto l38
 			}
@@ -31845,7 +31845,7 @@ func (m *Module) fn150(v0, v1 int32) int32 {
 				m.fn167(v11+i32(8), t659, t660, v0, v20, v11+i32(1040))
 				t661 := int32(load32(m.memory, uint64(uint32(v11))+12))
 				v0 = t661
-				t662 := int32(load32(m.memory, uint64(uint32(v11))+8))
+				t662 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v11))+8))
 				p399 = t662
 				goto l132
 			}
@@ -33623,7 +33623,7 @@ func (m *Module) fn166(v0, v1 int32) int32 {
 			v8 = v6 & i32(0x1fffff)
 			t29 := int32(load32(m.memory, uint64(uint32(v0))+4))
 			v5 = t29
-			t30 := int32(load32(m.memory, uint32(v0)))
+			t30 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			v7 = t30
 		l12:
 			if uint32(v1&i32(0xffff)) < uint32(v2&i32(0xffff)) {
@@ -35263,7 +35263,7 @@ func (m *Module) fn174(v0, v1, v2, v3 int32) {
 														v16 = t35
 														t36 := int32(load32(m.memory, uint64(uint32(v4))+68))
 														v13 = t36
-														t37 := int32(load32(m.memory, uint64(uint32(v4))+64))
+														t37 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+64))
 														v5 = t37
 														goto l11
 													}
@@ -35338,7 +35338,7 @@ func (m *Module) fn174(v0, v1, v2, v3 int32) {
 										v16 = t47
 										t48 := int32(load32(m.memory, uint64(uint32(v4))+68))
 										v6 = t48
-										t49 := int32(load32(m.memory, uint64(uint32(v4))+64))
+										t49 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+64))
 										v1 = t49
 										if v5 < i32(-0x7ffffffd) {
 											goto l12
@@ -35754,7 +35754,7 @@ func (m *Module) fn176(v0, v1 int32, v2 float64) {
 						{
 							t13 := int32(load32(m.memory, uint64(uint32(v11))+12))
 							v3 = t13
-							t14 := int32(load32(m.memory, uint64(uint32(v11))+8))
+							t14 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v11))+8))
 							p2 = t14
 							goto l2
 						}
@@ -35878,9 +35878,9 @@ func (m *Module) fn176(v0, v1 int32, v2 float64) {
 												if v12 > i32(0) {
 													t66 := int32(load32(m.memory, uint64(uint32(v3))+8))
 													v1 = t66
-													t67 := int32(load32(m.memory, uint64(uint32(v3))+4))
+													t67 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+4))
 													v8 = t67
-													t68 := int32(load32(m.memory, uint32(v3)))
+													t68 := int32(cocoonLoad32InRange(m.memory, uint32(v3)))
 													v5 = t68
 													if v4+v9 == v7 {
 														v4 = v6
@@ -35956,7 +35956,7 @@ func (m *Module) fn176(v0, v1 int32, v2 float64) {
 												}
 												t40 := int32(load32(m.memory, uint64(uint32(v3))+4))
 												v8 = t40
-												t41 := int32(load32(m.memory, uint32(v3)))
+												t41 := int32(cocoonLoad32InRange(m.memory, uint32(v3)))
 												v5 = t41
 												t42 := int32(load32(m.memory, uint64(uint32(v3))+8))
 												v1 = t42
@@ -35999,7 +35999,7 @@ func (m *Module) fn176(v0, v1 int32, v2 float64) {
 													t50 := v4
 													v6 = t49
 													v5 = t50 - v6
-													t51 := int32(load32(m.memory, uint32(v3)))
+													t51 := int32(cocoonLoad32InRange(m.memory, uint32(v3)))
 													p48 = t51
 												}
 												v1 = p48
@@ -36047,7 +36047,7 @@ func (m *Module) fn176(v0, v1 int32, v2 float64) {
 														m.fn88(v3)
 														t58 := int32(load32(m.memory, uint64(uint32(v3))+12))
 														v6 = t58
-														t59 := int32(load32(m.memory, uint32(v3)))
+														t59 := int32(cocoonLoad32InRange(m.memory, uint32(v3)))
 														v1 = t59
 													}
 													t60 := v3
@@ -36115,11 +36115,11 @@ func (m *Module) fn176(v0, v1 int32, v2 float64) {
 									v6 = t88 + i32(1)
 									t89 := int32(load32(m.memory, uint64(uint32(v3))+16))
 									v9 = t89
-									t90 := int32(load32(m.memory, uint64(uint32(v3))+4))
+									t90 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+4))
 									v8 = t90
-									t91 := int32(load32(m.memory, uint32(v3)))
+									t91 := int32(cocoonLoad32InRange(m.memory, uint32(v3)))
 									v5 = t91
-									t92 := int32(load32(m.memory, uint64(uint32(v3))+8))
+									t92 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+8))
 									v1 = t92
 								}
 								store32(m.memory, uint64(uint32(v3))+12, uint32(v6))
@@ -36200,7 +36200,7 @@ func (m *Module) fn176(v0, v1 int32, v2 float64) {
 				t111 := int32(load32(m.memory, uint64(uint32(v3))+4))
 				t112 := int32(load32(m.memory, uint64(uint32(v3))+8))
 				v1 = t112 + v1
-				t113 := int32(load32(m.memory, uint32(v3)))
+				t113 := int32(cocoonLoad32InRange(m.memory, uint32(v3)))
 				t114 := v1
 				v4 = t113
 				p115 := i32(0)
@@ -36362,7 +36362,7 @@ l0:
 				v3 = t23
 				t24 := int32(load32(m.memory, uint64(uint32(v2))+8))
 				v0 = t24
-				t25 := int32(load32(m.memory, uint32(v2)))
+				t25 := int32(cocoonLoad32InRange(m.memory, uint32(v2)))
 				if v0 == t25 {
 					m.fn3(v2, v0, i32(1), i32(1), i32(1))
 					t26 := int32(load32(m.memory, uint64(uint32(v2))+8))
@@ -36416,7 +36416,7 @@ l0:
 		v0 = t38
 		t39 := int32(load32(m.memory, uint64(uint32(v2))+8))
 		v3 = t39
-		t40 := int32(load32(m.memory, uint32(v2)))
+		t40 := int32(cocoonLoad32InRange(m.memory, uint32(v2)))
 		if v3 == t40 {
 			m.fn3(v2, v3, i32(1), i32(1), i32(1))
 			t41 := int32(load32(m.memory, uint64(uint32(v2))+8))
@@ -36458,7 +36458,7 @@ l0:
 	if v5 != 0 {
 		t50 := int32(load32(m.memory, uint64(uint32(v2))+8))
 		v0 = t50
-		t51 := int32(load32(m.memory, uint32(v2)))
+		t51 := int32(cocoonLoad32InRange(m.memory, uint32(v2)))
 		if v0 == t51 {
 			m.fn3(v2, v0, i32(1), i32(1), i32(1))
 			t52 := int32(load32(m.memory, uint64(uint32(v2))+8))
@@ -36795,14 +36795,14 @@ func (m *Module) fn180(v0, v1 int32) {
 	var v2, v3, v4 int32
 	t0 := int32(load32(m.memory, uint64(uint32(v1))+4))
 	v3 = t0
-	t1 := int32(load32(m.memory, uint32(v1)))
+	t1 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 	v4 = t1
 	{
 		t2 := int32(load32(m.memory, uint64(uint32(v1))+8))
 		v1 = t2
 		t3 := int32(load32(m.memory, uint64(uint32(v1))+4))
 		v2 = t3
-		t4 := int32(load32(m.memory, uint32(v1)))
+		t4 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 		t5 := v2
 		v1 = t4
 		if uint32(t5) < uint32(v1) {
@@ -36886,7 +36886,7 @@ func (m *Module) fn182(v0, v1 int32) {
 	var v6 int64
 	t0 := int32(load32(m.memory, uint64(uint32(v0))+8))
 	v2 = t0
-	t1 := int32(load32(m.memory, uint32(v0)))
+	t1 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 	if v2 == t1 {
 		m.fn7(v0)
 	}
@@ -37124,7 +37124,7 @@ func (m *Module) fn183(v0, v1 int32) {
 		v8 = v1 + i32(28)
 		t5 := int32(load32(m.memory, uint64(uint32(v8))+8))
 		v3 = t5
-		t6 := int32(load32(m.memory, uint64(uint32(v8))+4))
+		t6 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v8))+4))
 		t7 := v3
 		v5 = t6
 		if uint32(t7) >= uint32(v5) {
@@ -37157,7 +37157,7 @@ func (m *Module) fn183(v0, v1 int32) {
 						m.fn76(v16+i32(8), v14, v5, v3)
 						t19 := int32(load32(m.memory, uint64(uint32(v16))+12))
 						v4 = t19
-						t20 := int32(load32(m.memory, uint64(uint32(v16))+8))
+						t20 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v16))+8))
 						v7 = t20
 						if uint32(v7) < uint32(i32(128)) {
 							t29 := int32(m.memory[uint32(v7+v12)])
@@ -37331,7 +37331,7 @@ l4:
 				{
 					t47 := int32(load32(m.memory, uint64(uint32(v1))+36))
 					v4 = t47
-					t48 := int32(load32(m.memory, uint64(uint32(v1))+32))
+					t48 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+32))
 					t49 := v4
 					v9 = t48
 					if uint32(t49) < uint32(v9) {
@@ -37540,7 +37540,7 @@ l4:
 			store32(m.memory, uint64(uint32(v2))+60, uint32(i32(0)))
 			m.fn120(v2+i32(24), v2+i32(52))
 			t93 := int32(load32(m.memory, uint64(uint32(v2))+60))
-			t94 := int32(load32(m.memory, uint64(uint32(v2))+56))
+			t94 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+56))
 			p95 := i32(0)
 			if uint32(t93) < uint32(t94) {
 				p95 = i32(3)
@@ -37585,7 +37585,7 @@ func (m *Module) fn184(v0, v1 int32) {
 			{
 				t1 := int32(load32(m.memory, uint64(uint32(v1))+8))
 				v12 = t1
-				t2 := int32(load32(m.memory, uint64(uint32(v1))+4))
+				t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+4))
 				t3 := v12
 				v8 = t2
 				if uint32(t3) <= uint32(v8) {
@@ -37967,7 +37967,7 @@ func (m *Module) fn185(v0, v1, v2 int32) {
 			t9 := v1
 			v5 = t8 + v4<<3
 			t10 := int32(load32(m.memory, uint64(uint32(v5))+4))
-			t11 := int32(load32(m.memory, uint32(v5)))
+			t11 := int32(cocoonLoad32InRange(m.memory, uint32(v5)))
 			v5 = t11
 			if uint32(t9) > uint32(int32(uint32(t10-v5)>>1)) {
 				return
@@ -38004,7 +38004,7 @@ func (m *Module) fn185(v0, v1, v2 int32) {
 		}
 		t18 := int32(load32(m.memory, uint64(uint32(v0))+8))
 		v1 = t18
-		t19 := int32(load32(m.memory, uint64(uint32(v0))+4))
+		t19 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+4))
 		v4 = t19
 		v0 = v5 - i32(1)
 		t20 := v0
@@ -38084,7 +38084,7 @@ func (m *Module) fn186(v0 int32) {
 	v2 = t1
 	t2 := int32(load32(m.memory, uint64(uint32(v2))+8))
 	v0 = t2
-	t3 := int32(load32(m.memory, uint32(v2)))
+	t3 := int32(cocoonLoad32InRange(m.memory, uint32(v2)))
 	v3 = t3
 	if v3 != 0 {
 		m.t0[cocoon_table_index(uint64(uint(v3)), len(m.t0))].(func(int32))(v1 + (v0-i32(1))&i32(-8) + i32(8))
@@ -38149,7 +38149,7 @@ func (m *Module) fn188(v0, v1, v2, v3, v4 int32) {
 			if p3 != 0 {
 				t4 := int32(load32(m.memory, uint64(uint32(v1))+20))
 				v3 = t4
-				t5 := int32(load32(m.memory, uint64(uint32(v1))+16))
+				t5 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+16))
 				t6 := v3
 				v4 = t5
 				if uint32(t6) >= uint32(v4) {
@@ -38201,7 +38201,7 @@ func (m *Module) fn189(v0, v1, v2 int32, v3 int64, v4 int32) {
 		{
 			t1 := int32(load32(m.memory, uint64(uint32(v1))+20))
 			v5 = t1
-			t2 := int32(load32(m.memory, uint64(uint32(v1))+16))
+			t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+16))
 			t3 := v5
 			v7 = t2
 			if uint32(t3) >= uint32(v7) {
@@ -38362,7 +38362,7 @@ l14:
 						{
 							t6 := int32(load32(m.memory, uint64(uint32(v1))+8))
 							v3 = t6
-							t7 := int32(load32(m.memory, uint64(uint32(v1))+4))
+							t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+4))
 							t8 := v3
 							v5 = t7
 							if uint32(t8) >= uint32(v5) {
@@ -38581,7 +38581,7 @@ func (m *Module) fn194(v0, v1, v2 int32) int32 {
 	{
 		t2 := int32(load32(m.memory, uint64(uint32(v0))+8))
 		v6 = t2
-		t3 := int32(load32(m.memory, uint64(uint32(v0))+4))
+		t3 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+4))
 		if uint32(v6) < uint32(t3) {
 			store32(m.memory, uint64(uint32(v0))+8, uint32(v6+i32(1)))
 			t4 := int32(load32(m.memory, uint32(v0)))
@@ -38878,7 +38878,7 @@ l0:
 										if uint32(v0&i32(0xffff)) < uint32(i32(128)) {
 											t81 := int32(load32(m.memory, uint64(uint32(v4))+8))
 											v1 = t81
-											t82 := int32(load32(m.memory, uint32(v4)))
+											t82 := int32(cocoonLoad32InRange(m.memory, uint32(v4)))
 											if v1 == t82 {
 												m.fn7(v4)
 											}
@@ -39040,7 +39040,7 @@ func (m *Module) fn195(v0, v1, v2, v3, v4, v5, v6 int32) {
 		v18 = i32(0) - v9
 		t4 := int32(load32(m.memory, uint64(uint32(v1))+32))
 		v12 = t4
-		t5 := int32(load32(m.memory, uint64(uint32(v1))+16))
+		t5 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+16))
 		v16 = t5
 		t6 := int64(load64(m.memory, uint32(v1)))
 		v19 = t6
@@ -39307,7 +39307,7 @@ func (m *Module) fn198(v0, v1, v2, v3 int32) {
 				v6 = int32(v16)
 				v10 = t18 & v6
 				v7 = v10
-				t19 := int32(load32(m.memory, uint32(v0)))
+				t19 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 				v9 = t19
 				t20 := int64(load64(m.memory, uint32(v9+v10)))
 				v16 = t20 & i64(-0x7f7f7f7f7f7f7f80)
@@ -39345,7 +39345,7 @@ func (m *Module) fn198(v0, v1, v2, v3 int32) {
 					if t26 == i32(255) {
 						t29 := int32(load32(m.memory, uint64(uint32(v0))+4))
 						v4 = t29
-						t30 := int32(load32(m.memory, uint32(v0)))
+						t30 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 						m.memory[uint32(t30+v8)] = byte(i32(255))
 						t31 := int32(load32(m.memory, uint32(v0)))
 						m.memory[uint32(t31+v4&(v8-i32(8))+i32(8))] = byte(i32(255))
@@ -39563,7 +39563,7 @@ func (m *Module) fn199(v0, v1, v2 int32) {
 						m.fn49()
 						t12 := int32(load32(m.memory, uint64(uint32(v3))+12))
 						v2 = t12
-						t13 := int32(load32(m.memory, uint64(uint32(v3))+8))
+						t13 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+8))
 						p3 = t13
 						goto l6
 					}
@@ -39596,7 +39596,7 @@ func (m *Module) fn199(v0, v1, v2 int32) {
 			m.fn170(v2)
 			t18 := int32(load32(m.memory, uint64(uint32(v3))+20))
 			v2 = t18
-			t19 := int32(load32(m.memory, uint64(uint32(v3))+16))
+			t19 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+16))
 			p3 = t19
 		}
 	l6:
@@ -39864,7 +39864,7 @@ func (m *Module) fn201(v0, v1, v2 int32) {
 	m.fn71(v4, v1, v2, i32(1058092), i32(2))
 	m.fn93(v3+i32(20), v4)
 	t1 := int32(load32(m.memory, uint64(uint32(v3))+24))
-	t2 := int32(load32(m.memory, uint64(uint32(v3))+20))
+	t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+20))
 	t4 := v3 + i32(8)
 	t5 := v1
 	p3 := v2
@@ -39934,7 +39934,7 @@ func (m *Module) fn202(v0, v1, v2 int32) {
 			m.fn3(v3+i32(92), i32(0), v0, i32(1), i32(1))
 			t4 := int32(load32(m.memory, uint64(uint32(v3))+100))
 			v6 = t4
-			t5 := int32(load32(m.memory, uint64(uint32(v3))+96))
+			t5 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+96))
 			t6 := v6
 			v5 = t5
 			memory_copy(m.memory, uint32(t6+v5), uint32(v4), uint32(v0))
@@ -40203,7 +40203,7 @@ func (m *Module) fn202(v0, v1, v2 int32) {
 			{
 				if v1 == i32(1) {
 					t69 := int32(load32(m.memory, uint64(uint32(v3))+56))
-					t70 := int32(load32(m.memory, uint64(uint32(v3))+52))
+					t70 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+52))
 					v0 = t70
 					p71 := i32(0)
 					if v0 != 0 {
@@ -41575,7 +41575,7 @@ l1:
 						v2 = v5 - i32(-64)
 						t256 := int32(load32(m.memory, uint64(uint32(v2))+4))
 						v6 = t256
-						t257 := int32(load32(m.memory, uint32(v2)))
+						t257 := int32(cocoonLoad32InRange(m.memory, uint32(v2)))
 						v7 = t257
 						store64(m.memory, uint32(v2), uint64(i64(0x400000004)))
 						t258 := int32(load32(m.memory, uint64(uint32(v2))+16))
@@ -41587,7 +41587,7 @@ l1:
 								}
 								t259 := int32(load32(m.memory, uint64(uint32(v2))+12))
 								v7 = t259
-								t260 := int32(load32(m.memory, uint64(uint32(v2))+8))
+								t260 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+8))
 								t261 := v7
 								v2 = t260
 								t262 := int32(load32(m.memory, uint64(uint32(v2))+8))
@@ -41609,7 +41609,7 @@ l1:
 							}
 							t263 := int32(load32(m.memory, uint64(uint32(v2))+12))
 							v7 = t263
-							t264 := int32(load32(m.memory, uint64(uint32(v2))+8))
+							t264 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+8))
 							t265 := v7
 							v2 = t264
 							t266 := int32(load32(m.memory, uint64(uint32(v2))+8))
@@ -41696,7 +41696,7 @@ l1:
 		m.fn142(v5-i32(-64), t281, t282, i32(1057992))
 		t283 := int32(load32(m.memory, uint64(uint32(v5))+68))
 		v3 = t283
-		t284 := int32(load32(m.memory, uint64(uint32(v5))+64))
+		t284 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v5))+64))
 		v6 = t284
 		{
 			t285 := int32(load32(m.memory, uint64(uint32(v5))+72))
@@ -41790,7 +41790,7 @@ l29:
 				if t6 == i32(1) {
 					t7 := int32(load32(m.memory, uint64(uint32(v5))+8))
 					v4 = t7
-					t8 := int32(load32(m.memory, uint64(uint32(v5))+4))
+					t8 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v5))+4))
 					t9 := v4
 					v6 = t8
 					if uint32(t9) >= uint32(v6) {
@@ -41821,7 +41821,7 @@ l29:
 				{
 					t13 := int32(load32(m.memory, uint64(uint32(v5))+8))
 					v4 = t13
-					t14 := int32(load32(m.memory, uint64(uint32(v5))+4))
+					t14 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v5))+4))
 					t15 := v4
 					v6 = t14
 					if uint32(t15) >= uint32(v6) {
@@ -42015,12 +42015,12 @@ l29:
 		store32(m.memory, uint32(v3), uint32(v4))
 		t33 := int32(load32(m.memory, uint64(uint32(v3))+24))
 		v1 = t33
-		t34 := int32(load32(m.memory, uint64(uint32(v3))+20))
+		t34 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+20))
 		v6 = t34
 		{
 			t35 := int32(load32(m.memory, uint64(uint32(v3))+4))
 			v4 = t35
-			t36 := int32(load32(m.memory, uint32(v3)))
+			t36 := int32(cocoonLoad32InRange(m.memory, uint32(v3)))
 			t37 := v4
 			v2 = t36
 			if uint32(t37) < uint32(v2) {
@@ -42103,7 +42103,7 @@ l29:
 			store64(m.memory, uint64(uint32(v3))+48, uint64(t49))
 			t50 := int32(load32(m.memory, uint64(uint32(v3))+44))
 			v0 = t50
-			t51 := int32(load32(m.memory, uint64(uint32(v3))+36))
+			t51 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+36))
 			if v0 == t51 {
 				m.fn3(v4, v0, i32(1), i32(1), i32(1))
 			}
@@ -42394,13 +42394,13 @@ func (m *Module) fn206(v0, v1, v2 int32) {
 										if t11 == i32(1) {
 											t12 := int32(load32(m.memory, uint64(uint32(v3))+64))
 											v2 = t12
-											t13 := int32(load32(m.memory, uint64(uint32(v3))+60))
+											t13 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+60))
 											v4 = t13
 											goto l2
 										}
 										t14 := int32(load32(m.memory, uint64(uint32(v3))+64))
 										v2 = t14
-										t15 := int32(load32(m.memory, uint64(uint32(v3))+60))
+										t15 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+60))
 										t16 := v2
 										v4 = t15
 										if t16 == v4 {
@@ -42458,7 +42458,7 @@ func (m *Module) fn206(v0, v1, v2 int32) {
 												m.fn56(v3, i32(32), v5, v4)
 												t22 := int32(load32(m.memory, uint64(uint32(v3))+4))
 												v4 = t22
-												t23 := int32(load32(m.memory, uint32(v3)))
+												t23 := int32(cocoonLoad32InRange(m.memory, uint32(v3)))
 												v1 = t23
 												goto l6
 											}
@@ -42790,13 +42790,13 @@ func (m *Module) fn206(v0, v1, v2 int32) {
 														if t81 == i32(1) {
 															t82 := int32(load32(m.memory, uint64(uint32(v3))+104))
 															v0 = t82
-															t83 := int32(load32(m.memory, uint64(uint32(v3))+100))
+															t83 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+100))
 															v4 = t83
 															goto l26
 														}
 														t84 := int32(load32(m.memory, uint64(uint32(v3))+104))
 														v0 = t84
-														t85 := int32(load32(m.memory, uint64(uint32(v3))+100))
+														t85 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+100))
 														t86 := v0
 														v4 = t85
 														if t86 == v4 {
@@ -43019,7 +43019,7 @@ func (m *Module) fn206(v0, v1, v2 int32) {
 				v2 = v4 - v5
 				t123 := int32(load32(m.memory, uint64(uint32(v3))+72))
 				v1 = t123
-				t124 := int32(load32(m.memory, uint64(uint32(v3))+28))
+				t124 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+28))
 				p1 = t124
 			}
 		l31:
@@ -43841,7 +43841,7 @@ func (m *Module) fn211(v0, v1, v2 int32) {
 		{
 			t1 := int32(load32(m.memory, uint64(uint32(v1))+20))
 			v5 = t1
-			t2 := int32(load32(m.memory, uint64(uint32(v1))+16))
+			t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+16))
 			t3 := v5
 			v3 = t2
 			if uint32(t3) < uint32(v3) {
@@ -44410,7 +44410,7 @@ func (m *Module) fn213(v0, v1, v2 int32, v3 int64) {
 					{
 						t1 := int32(load32(m.memory, uint64(uint32(v1))+20))
 						v6 = t1
-						t2 := int32(load32(m.memory, uint64(uint32(v1))+16))
+						t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+16))
 						t3 := v6
 						v7 = t2
 						if uint32(t3) < uint32(v7) {
@@ -44806,7 +44806,7 @@ func (m *Module) fn215(v0, v1, v2 int32) {
 							v8 = v9 + i32(40)
 							t25 := int32(load32(m.memory, uint64(uint32(v8))+20))
 							v12 = t25
-							t26 := int32(load32(m.memory, uint64(uint32(v8))+16))
+							t26 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v8))+16))
 							t27 := v12
 							v7 = t26
 							if uint32(t27) < uint32(v7) {
@@ -44829,7 +44829,7 @@ func (m *Module) fn215(v0, v1, v2 int32) {
 										m.fn191(v13+i32(16), v3, v8)
 										t30 := int32(load32(m.memory, uint64(uint32(v13))+20))
 										v3 = t30
-										t31 := int32(load32(m.memory, uint64(uint32(v13))+16))
+										t31 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v13))+16))
 										v2 = t31
 										if v2 != i32(-1) {
 											goto l14
@@ -44870,7 +44870,7 @@ func (m *Module) fn215(v0, v1, v2 int32) {
 										{
 											t38 := int32(load32(m.memory, uint64(uint32(v8))+20))
 											v16 = t38
-											t39 := int32(load32(m.memory, uint64(uint32(v8))+16))
+											t39 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v8))+16))
 											t40 := v16
 											v15 = t39
 											if uint32(t40) < uint32(v15) {
@@ -45210,7 +45210,7 @@ func (m *Module) fn215(v0, v1, v2 int32) {
 							{
 								t118 := int32(load32(m.memory, uint64(uint32(v9))+60))
 								v4 = t118
-								t119 := int32(load32(m.memory, uint64(uint32(v9))+56))
+								t119 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+56))
 								t120 := v4
 								v10 = t119
 								if uint32(t120) < uint32(v10) {
@@ -45393,7 +45393,7 @@ func (m *Module) fn215(v0, v1, v2 int32) {
 		v6 = t155
 		t156 := int32(load32(m.memory, uint64(uint32(v6))+8))
 		v1 = t156
-		t157 := int32(load32(m.memory, uint32(v6)))
+		t157 := int32(cocoonLoad32InRange(m.memory, uint32(v6)))
 		if v1 == t157 {
 			m.fn3(v6, v1, i32(1), i32(1), i32(1))
 		}
@@ -45857,7 +45857,7 @@ l1:
 			}
 			t38 := int32(load32(m.memory, uint64(uint32(v1))+20))
 			v7 = t38
-			t39 := int32(load32(m.memory, uint64(uint32(v1))+16))
+			t39 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+16))
 			v8 = t39
 			{
 				t40 := int32(load32(m.memory, uint64(uint32(v1))+32))
@@ -46228,7 +46228,7 @@ func (m *Module) fn221(v0 int32) {
 	{
 		t0 := int32(load32(m.memory, uint64(uint32(v0))+40))
 		v1 = t0
-		t1 := int32(load32(m.memory, uint64(uint32(v0))+32))
+		t1 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+32))
 		t2 := v1
 		v4 = t1
 		if uint32(t2) >= uint32(v4) {
@@ -46730,7 +46730,7 @@ func (m *Module) Xcocoon_sketch_encode(v0 int64) int32 {
 				v16 = v15 + i32(4)
 				t5 := int32(load32(m.memory, uint64(uint32(v15))+20))
 				v13 = t5
-				t6 := int32(load32(m.memory, uint64(uint32(v15))+16))
+				t6 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v15))+16))
 				v19 = t6
 				if v19 == i32(-1) {
 					goto l0
@@ -47192,7 +47192,7 @@ func (m *Module) Xcocoon_sketch_encode(v0 int64) int32 {
 				{
 					t87 := int32(load32(m.memory, uint64(uint32(v8))+8))
 					v1 = t87
-					t88 := int32(load32(m.memory, uint32(v8)))
+					t88 := int32(cocoonLoad32InRange(m.memory, uint32(v8)))
 					t89 := v1
 					v10 = t88
 					t90 := int32(load32(m.memory, uint64(uint32(v8))+12))
@@ -47654,7 +47654,7 @@ func (m *Module) Xcocoon_sketch_encode(v0 int64) int32 {
 							}
 							t179 := int32(load32(m.memory, uint64(uint32(v3))+156))
 							v1 = t179
-							t180 := int32(load32(m.memory, uint64(uint32(v3))+148))
+							t180 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+148))
 							if v1 == t180 {
 								m.fn3(v3+i32(148), v1, i32(1), i32(1), i32(1))
 								t181 := int32(load32(m.memory, uint64(uint32(v3))+156))
@@ -47682,7 +47682,7 @@ func (m *Module) Xcocoon_sketch_encode(v0 int64) int32 {
 								m.fn3(v3+i32(148), v4, i32(1), i32(1), i32(1))
 								t186 := int32(load32(m.memory, uint64(uint32(v3))+156))
 								v4 = t186
-								t187 := int32(load32(m.memory, uint64(uint32(v3))+148))
+								t187 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+148))
 								v1 = t187
 							}
 							t188 := int32(load32(m.memory, uint64(uint32(v3))+152))
@@ -47816,7 +47816,7 @@ func (m *Module) Xcocoon_sketch_count(v0 int64) int32 {
 				if v9 != i32(-1) {
 					t7 := int32(load32(m.memory, uint64(uint32(v4))+12))
 					v2 = t7
-					t8 := int32(load32(m.memory, uint64(uint32(v4))+8))
+					t8 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+8))
 					v5 = t8
 					goto l0
 				}
@@ -48081,7 +48081,7 @@ func (m *Module) Xcocoon_sketch_close(v0 int64) int32 {
 							m.fn42(v1 + i32(16))
 							t23 := int32(load32(m.memory, uint64(uint32(v1))+20))
 							v3 = t23
-							t24 := int32(load32(m.memory, uint64(uint32(v1))+16))
+							t24 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v1))+16))
 							v2 = t24
 							t25 := int64(load64(m.memory, uint64(uint32(v1))+24))
 							p6 = t25
@@ -48150,11 +48150,11 @@ func (m *Module) Xcocoon_sketch_add_many(v0 int64, v1, v2 int32) int32 {
 				m.fn118(v3+i32(4), v1, v2)
 				t5 := int32(load32(m.memory, uint64(uint32(v3))+16))
 				v2 = t5
-				t6 := int32(load32(m.memory, uint64(uint32(v3))+8))
+				t6 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+8))
 				v8 = t6
-				t7 := int32(load32(m.memory, uint64(uint32(v3))+12))
+				t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+12))
 				v9 = t7
-				t8 := int32(load32(m.memory, uint64(uint32(v3))+4))
+				t8 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+4))
 				t9 := v9
 				v1 = t8
 				if v1 != i32(-1) {
@@ -48228,7 +48228,7 @@ func (m *Module) Xcocoon_sketch_add_many(v0 int64, v1, v2 int32) int32 {
 						}
 						t20 := int32(load32(m.memory, uint64(uint32(v3))+8))
 						v5 = t20
-						t21 := int32(load32(m.memory, uint64(uint32(v3))+4))
+						t21 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+4))
 						v7 = t21
 						p13 = v2 + i32(2)
 					}
@@ -48239,12 +48239,12 @@ func (m *Module) Xcocoon_sketch_add_many(v0 int64, v1, v2 int32) int32 {
 					m.fn84(v3+i32(4), t22, t23, v0)
 					t24 := int32(load32(m.memory, uint64(uint32(v3))+8))
 					v4 = t24
-					t25 := int32(load32(m.memory, uint64(uint32(v3))+4))
+					t25 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+4))
 					v1 = t25
 					if v1 != i32(-1) {
 						t26 := int32(load32(m.memory, uint64(uint32(v3))+16))
 						v2 = t26
-						t27 := int32(load32(m.memory, uint64(uint32(v3))+12))
+						t27 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+12))
 						v6 = t27
 						if v7 == 0 {
 							goto l2
@@ -48402,9 +48402,9 @@ func (m *Module) Xcocoon_sketch_add_many(v0 int64, v1, v2 int32) int32 {
 					if v1 != i32(-1) {
 						t61 := int32(load32(m.memory, uint64(uint32(v3))+16))
 						v2 = t61
-						t62 := int32(load32(m.memory, uint64(uint32(v3))+12))
+						t62 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+12))
 						v6 = t62
-						t63 := int32(load32(m.memory, uint64(uint32(v3))+8))
+						t63 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+8))
 						v4 = t63
 						goto l2
 					}
@@ -49140,11 +49140,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																m.fn16(v2+i32(536), v9)
 																t66 := int32(load32(m.memory, uint64(uint32(v2))+548))
 																v10 = t66
-																t67 := int32(load32(m.memory, uint64(uint32(v2))+544))
+																t67 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+544))
 																v3 = t67
-																t68 := int32(load32(m.memory, uint64(uint32(v2))+540))
+																t68 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+540))
 																v0 = t68
-																t69 := int32(load32(m.memory, uint64(uint32(v2))+536))
+																t69 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+536))
 																v5 = t69
 																if v5 != i32(-1) {
 																	goto l36
@@ -49293,7 +49293,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																if v6 != i32(-1) {
 																	t99 := int32(load32(m.memory, uint64(uint32(v2))+496))
 																	v10 = t99
-																	t100 := int32(load32(m.memory, uint64(uint32(v2))+492))
+																	t100 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+492))
 																	v7 = t100
 																	v5 = i32(2)
 																	if uint32(v0-i32(1)) > uint32(i32(-3)) {
@@ -49472,11 +49472,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																							m.fn16(v2+i32(624), v9)
 																																							t762 := int32(load32(m.memory, uint64(uint32(v2))+636))
 																																							v10 = t762
-																																							t763 := int32(load32(m.memory, uint64(uint32(v2))+632))
+																																							t763 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+632))
 																																							v3 = t763
-																																							t764 := int32(load32(m.memory, uint64(uint32(v2))+628))
+																																							t764 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+628))
 																																							v16 = t764
-																																							t765 := int32(load32(m.memory, uint64(uint32(v2))+624))
+																																							t765 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+624))
 																																							v5 = t765
 																																							if v5 != i32(-1) {
 																																								v27 = int32(uint32(v16) >> 8)
@@ -49573,7 +49573,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																								v27 = t783 | t784<<16
 																																								t785 := int32(load32(m.memory, uint64(uint32(v2))+300))
 																																								v10 = t785
-																																								t786 := int32(load32(m.memory, uint64(uint32(v2))+296))
+																																								t786 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+296))
 																																								v6 = t786
 																																								goto l241
 																																							}
@@ -49743,11 +49743,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																												m.fn16(v2+i32(288), v9)
 																																												t833 := int32(load32(m.memory, uint64(uint32(v2))+300))
 																																												v10 = t833
-																																												t834 := int32(load32(m.memory, uint64(uint32(v2))+296))
+																																												t834 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+296))
 																																												v6 = t834
-																																												t835 := int32(load32(m.memory, uint64(uint32(v2))+292))
+																																												t835 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+292))
 																																												v36 = t835
-																																												t836 := int32(load32(m.memory, uint64(uint32(v2))+288))
+																																												t836 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+288))
 																																												t837 := v36
 																																												v5 = t836
 																																												if v5 != i32(-1) {
@@ -49774,11 +49774,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																													m.fn16(v2+i32(288), v9)
 																																													t841 := int32(load32(m.memory, uint64(uint32(v2))+300))
 																																													v21 = t841
-																																													t842 := int32(load32(m.memory, uint64(uint32(v2))+296))
+																																													t842 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+296))
 																																													v24 = t842
-																																													t843 := int32(load32(m.memory, uint64(uint32(v2))+292))
+																																													t843 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+292))
 																																													v43 = t843
-																																													t844 := int32(load32(m.memory, uint64(uint32(v2))+288))
+																																													t844 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+288))
 																																													v5 = t844
 																																													if v5 == i32(-1) {
 																																														store32(m.memory, uint64(uint32(v2))+400, uint32(v10))
@@ -49820,9 +49820,9 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																		m.fn199(t854, i32(24), p855)
 																																																		t856 := int32(load32(m.memory, uint64(uint32(v23))+24))
 																																																		v35 = t856
-																																																		t857 := int32(load32(m.memory, uint64(uint32(v23))+20))
+																																																		t857 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v23))+20))
 																																																		v22 = t857
-																																																		t858 := int32(load32(m.memory, uint64(uint32(v23))+16))
+																																																		t858 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v23))+16))
 																																																		v33 = t858
 																																																		if v33 == 0 {
 																																																			goto l262
@@ -49928,7 +49928,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																m.fn49()
 																																																t881 := int32(load32(m.memory, uint64(uint32(v23))+4))
 																																																v35 = t881
-																																																t882 := int32(load32(m.memory, uint32(v23)))
+																																																t882 := int32(cocoonLoad32InRange(m.memory, uint32(v23)))
 																																																v22 = t882
 																																															}
 																																														l262:
@@ -49942,7 +49942,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																														v84 = int64(uint64(v84) >> 25)
 																																														v86 = v84 & i64(127) * i64(72340172838076673)
 																																														v22 = i32(0)
-																																														t884 := int32(load32(m.memory, uint64(uint32(v2))+624))
+																																														t884 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+624))
 																																														v0 = t884
 																																														v23 = i32(0)
 																																													l270:
@@ -50058,11 +50058,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																										store32(m.memory, uint64(uint32(v2))+368, uint32(t903))
 																																										t904 := int32(load32(m.memory, uint64(uint32(v2))+636))
 																																										v6 = t904
-																																										t905 := int32(load32(m.memory, uint64(uint32(v2))+632))
+																																										t905 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+632))
 																																										v0 = t905
-																																										t906 := int32(load32(m.memory, uint64(uint32(v2))+628))
+																																										t906 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+628))
 																																										v5 = t906
-																																										t907 := int32(load32(m.memory, uint64(uint32(v2))+624))
+																																										t907 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+624))
 																																										v7 = t907
 																																										if v7 == 0 {
 																																											goto l255
@@ -50221,11 +50221,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																						store32(m.memory, uint64(uint32(v2))+480, uint32(t942))
 																																						t943 := int32(load32(m.memory, uint64(uint32(v2))+548))
 																																						v10 = t943
-																																						t944 := int32(load32(m.memory, uint64(uint32(v2))+544))
+																																						t944 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+544))
 																																						v3 = t944
-																																						t945 := int32(load32(m.memory, uint64(uint32(v2))+540))
+																																						t945 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+540))
 																																						v16 = t945
-																																						t946 := int32(load32(m.memory, uint64(uint32(v2))+536))
+																																						t946 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+536))
 																																						v5 = t946
 																																						if v17 != i32(-2) {
 																																							t947 := int64(load64(m.memory, uint64(uint32(v2))+600))
@@ -50272,7 +50272,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																				store64(m.memory, uint64(uint32(v2))+488, uint64(t960))
 																																				t961 := int32(load32(m.memory, uint64(uint32(v2))+436))
 																																				v6 = t961
-																																				t962 := int32(load32(m.memory, uint64(uint32(v2))+428))
+																																				t962 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+428))
 																																				if v6 == t962 {
 																																					m.fn264(v2 + i32(428))
 																																				}
@@ -50306,7 +50306,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																			}
 																																			t971 := int32(load32(m.memory, uint64(uint32(v2))+432))
 																																			v3 = t971
-																																			t972 := int32(load32(m.memory, uint64(uint32(v2))+428))
+																																			t972 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+428))
 																																			v0 = t972
 																																			goto l228
 																																		}
@@ -50337,7 +50337,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																														v27 = int32(uint32(v0) >> 8)
 																														t974 := int32(load32(m.memory, uint64(uint32(v2))+260))
 																														v10 = t974
-																														t975 := int32(load32(m.memory, uint64(uint32(v2))+256))
+																														t975 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+256))
 																														v6 = t975
 																													}
 																												l241:
@@ -50567,11 +50567,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																										m.fn16(v2+i32(488), v9)
 																																										t401 := int32(load32(m.memory, uint64(uint32(v2))+500))
 																																										v10 = t401
-																																										t402 := int32(load32(m.memory, uint64(uint32(v2))+496))
+																																										t402 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+496))
 																																										v3 = t402
-																																										t403 := int32(load32(m.memory, uint64(uint32(v2))+492))
+																																										t403 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+492))
 																																										v16 = t403
-																																										t404 := int32(load32(m.memory, uint64(uint32(v2))+488))
+																																										t404 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+488))
 																																										v5 = t404
 																																										if v5 != i32(-1) {
 																																											v27 = int32(uint32(v16) >> 8)
@@ -50638,7 +50638,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																										if v5 != i32(-1) {
 																																											t415 := int32(load32(m.memory, uint64(uint32(v2))+452))
 																																											v10 = t415
-																																											t416 := int32(load32(m.memory, uint64(uint32(v2))+448))
+																																											t416 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+448))
 																																											v18 = t416
 																																											t417 := int32(load16(m.memory, uint64(uint32(v2))+445))
 																																											t418 := int32(m.memory[uint32(v2+i32(447))])
@@ -50748,11 +50748,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																														m.fn16(v2+i32(440), v9)
 																																														t447 := int32(load32(m.memory, uint64(uint32(v2))+452))
 																																														v10 = t447
-																																														t448 := int32(load32(m.memory, uint64(uint32(v2))+448))
+																																														t448 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+448))
 																																														v18 = t448
-																																														t449 := int32(load32(m.memory, uint64(uint32(v2))+444))
+																																														t449 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+444))
 																																														v34 = t449
-																																														t450 := int32(load32(m.memory, uint64(uint32(v2))+440))
+																																														t450 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+440))
 																																														t451 := v34
 																																														v5 = t450
 																																														if v5 != i32(-1) {
@@ -50816,11 +50816,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																m.fn16(v2+i32(440), v9)
 																																																t460 := int32(load32(m.memory, uint64(uint32(v2))+452))
 																																																v6 = t460
-																																																t461 := int32(load32(m.memory, uint64(uint32(v2))+448))
+																																																t461 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+448))
 																																																v33 = t461
-																																																t462 := int32(load32(m.memory, uint64(uint32(v2))+444))
+																																																t462 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+444))
 																																																v36 = t462
-																																																t463 := int32(load32(m.memory, uint64(uint32(v2))+440))
+																																																t463 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+440))
 																																																v0 = t463
 																																																if v0 != i32(-1) {
 																																																	store32(m.memory, uint64(uint32(v2))+640, uint32(v6))
@@ -51020,11 +51020,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																							m.fn16(v2+i32(440), v9)
 																																																							t504 := int32(load32(m.memory, uint64(uint32(v2))+452))
 																																																							v23 = t504
-																																																							t505 := int32(load32(m.memory, uint64(uint32(v2))+448))
+																																																							t505 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+448))
 																																																							v6 = t505
-																																																							t506 := int32(load32(m.memory, uint64(uint32(v2))+444))
+																																																							t506 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+444))
 																																																							v21 = t506
-																																																							t507 := int32(load32(m.memory, uint64(uint32(v2))+440))
+																																																							t507 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+440))
 																																																							v22 = t507
 																																																							if v22 == i32(-1) {
 																																																								if v23 == i32(6) {
@@ -51106,7 +51106,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																										}
 																																																										t534 := int32(load32(m.memory, uint64(uint32(v2))+460))
 																																																										v7 = t534
-																																																										t535 := int32(load32(m.memory, uint64(uint32(v2))+448))
+																																																										t535 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+448))
 																																																										v0 = t535
 																																																										t536 := int64(load64(m.memory, uint64(uint32(v2))+452))
 																																																										store64(m.memory, uint64(uint32(v14))+4, uint64(t536))
@@ -51132,15 +51132,15 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																											}
 																																																											t539 := int32(load32(m.memory, uint64(uint32(v2))+460))
 																																																											v23 = t539
-																																																											t540 := int32(load32(m.memory, uint64(uint32(v2))+456))
+																																																											t540 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+456))
 																																																											v35 = t540
-																																																											t541 := int32(load32(m.memory, uint64(uint32(v2))+452))
+																																																											t541 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+452))
 																																																											v43 = t541
-																																																											t542 := int32(load32(m.memory, uint64(uint32(v2))+448))
+																																																											t542 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+448))
 																																																											v51 = t542
-																																																											t543 := int32(load32(m.memory, uint64(uint32(v2))+400))
+																																																											t543 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+400))
 																																																											v24 = t543
-																																																											t544 := int32(load32(m.memory, uint64(uint32(v2))+392))
+																																																											t544 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+392))
 																																																											if v24 == t544 {
 																																																												t545 := m.g0
 																																																												v0 = t545 - i32(16)
@@ -51238,13 +51238,13 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																			v23 = t565
 																																																			t566 := int32(load32(m.memory, uint64(uint32(v2))+452))
 																																																			v0 = t566
-																																																			t567 := int32(load32(m.memory, uint64(uint32(v2))+448))
+																																																			t567 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+448))
 																																																			v7 = t567
-																																																			t568 := int32(load32(m.memory, uint64(uint32(v2))+444))
+																																																			t568 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+444))
 																																																			v22 = t568
-																																																			t569 := int32(load32(m.memory, uint64(uint32(v2))+396))
+																																																			t569 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+396))
 																																																			v24 = t569
-																																																			t570 := int32(load32(m.memory, uint64(uint32(v2))+400))
+																																																			t570 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+400))
 																																																			v35 = t570
 																																																			if v35 != 0 {
 																																																				v5 = v24
@@ -51409,9 +51409,9 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																			m.fn199(t597, i32(32), p598)
 																																																			t599 := int32(load32(m.memory, uint64(uint32(v8))+24))
 																																																			v38 = t599
-																																																			t600 := int32(load32(m.memory, uint64(uint32(v8))+20))
+																																																			t600 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v8))+20))
 																																																			v21 = t600
-																																																			t601 := int32(load32(m.memory, uint64(uint32(v8))+16))
+																																																			t601 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v8))+16))
 																																																			v24 = t601
 																																																			if v24 == 0 {
 																																																				goto l206
@@ -51519,7 +51519,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																																	m.fn49()
 																																																	t625 := int32(load32(m.memory, uint64(uint32(v8))+4))
 																																																	v38 = t625
-																																																	t626 := int32(load32(m.memory, uint32(v8)))
+																																																	t626 := int32(cocoonLoad32InRange(m.memory, uint32(v8)))
 																																																	v21 = t626
 																																																}
 																																															l206:
@@ -51533,7 +51533,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																															v84 = int64(uint64(v84) >> 25)
 																																															v86 = v84 & i64(127) * i64(72340172838076673)
 																																															v8 = i32(0)
-																																															t628 := int32(load32(m.memory, uint64(uint32(v2))+488))
+																																															t628 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+488))
 																																															v0 = t628
 																																															v38 = i32(0)
 																																														l216:
@@ -51678,11 +51678,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																											store32(m.memory, uint64(uint32(v2))+336, uint32(t654))
 																																											t655 := int32(load32(m.memory, uint64(uint32(v2))+500))
 																																											v18 = t655
-																																											t656 := int32(load32(m.memory, uint64(uint32(v2))+496))
+																																											t656 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+496))
 																																											v6 = t656
-																																											t657 := int32(load32(m.memory, uint64(uint32(v2))+492))
+																																											t657 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+492))
 																																											v5 = t657
-																																											t658 := int32(load32(m.memory, uint64(uint32(v2))+488))
+																																											t658 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+488))
 																																											v0 = t658
 																																											if v0 == 0 {
 																																												goto l164
@@ -51723,11 +51723,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																									store32(m.memory, uint64(uint32(v2))+240, uint32(t667))
 																																									t668 := int32(load32(m.memory, uint64(uint32(v2))+548))
 																																									v10 = t668
-																																									t669 := int32(load32(m.memory, uint64(uint32(v2))+540))
+																																									t669 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+540))
 																																									v16 = t669
-																																									t670 := int32(load32(m.memory, uint64(uint32(v2))+536))
+																																									t670 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+536))
 																																									v5 = t670
-																																									t671 := int32(load32(m.memory, uint64(uint32(v2))+544))
+																																									t671 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+544))
 																																									v3 = t671
 																																									t672 := v3
 																																									if v4 != i32(-2) {
@@ -51768,7 +51768,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																							store32(m.memory, uint64(uint32(v2))+280, uint32(t682))
 																																							t683 := int32(load32(m.memory, uint64(uint32(v2))+228))
 																																							v6 = t683
-																																							t684 := int32(load32(m.memory, uint64(uint32(v2))+220))
+																																							t684 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+220))
 																																							if v6 == t684 {
 																																								t685 := m.g0
 																																								v3 = t685 - i32(16)
@@ -51823,7 +51823,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																						}
 																																						t700 := int32(load32(m.memory, uint64(uint32(v2))+224))
 																																						v3 = t700
-																																						t701 := int32(load32(m.memory, uint64(uint32(v2))+220))
+																																						t701 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+220))
 																																						v0 = t701
 																																						goto l146
 																																					}
@@ -52426,11 +52426,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																														m.fn16(v2+i32(536), v9)
 																														t216 := int32(load32(m.memory, uint64(uint32(v2))+548))
 																														v15 = t216
-																														t217 := int32(load32(m.memory, uint64(uint32(v2))+544))
+																														t217 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+544))
 																														v3 = t217
-																														t218 := int32(load32(m.memory, uint64(uint32(v2))+540))
+																														t218 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+540))
 																														v10 = t218
-																														t219 := int32(load32(m.memory, uint64(uint32(v2))+536))
+																														t219 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+536))
 																														t220 := v10
 																														v5 = t219
 																														if v5 != i32(-1) {
@@ -52458,11 +52458,11 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																																m.fn16(v2+i32(536), v9)
 																																t224 := int32(load32(m.memory, uint64(uint32(v2))+548))
 																																v0 = t224
-																																t225 := int32(load32(m.memory, uint64(uint32(v2))+544))
+																																t225 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+544))
 																																v7 = t225
-																																t226 := int32(load32(m.memory, uint64(uint32(v2))+540))
+																																t226 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+540))
 																																v16 = t226
-																																t227 := int32(load32(m.memory, uint64(uint32(v2))+536))
+																																t227 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+536))
 																																v5 = t227
 																																if v5 == i32(-1) {
 																																	goto l98
@@ -52499,9 +52499,9 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																													}
 																													t231 := int32(load32(m.memory, uint64(uint32(v2))+496))
 																													v16 = t231
-																													t232 := int32(load32(m.memory, uint64(uint32(v2))+488))
+																													t232 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+488))
 																													v7 = t232
-																													t233 := int32(load32(m.memory, uint64(uint32(v2))+492))
+																													t233 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+492))
 																													v5 = t233
 																												}
 																												t234 := int32(load32(m.memory, uint64(uint32(v2))+500))
@@ -52560,9 +52560,9 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																														m.fn16(v2+i32(536), v9)
 																														t243 := int32(load32(m.memory, uint64(uint32(v2))+548))
 																														v6 = t243
-																														t244 := int32(load32(m.memory, uint64(uint32(v2))+544))
+																														t244 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+544))
 																														v7 = t244
-																														t245 := int32(load32(m.memory, uint64(uint32(v2))+540))
+																														t245 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+540))
 																														v10 = t245
 																														{
 																															{
@@ -52764,7 +52764,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																												if v5 != i32(-1) {
 																													t291 := int32(load32(m.memory, uint64(uint32(v2))+548))
 																													v10 = t291
-																													t292 := int32(load32(m.memory, uint64(uint32(v2))+544))
+																													t292 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+544))
 																													v3 = t292
 																													goto l36
 																												}
@@ -52802,9 +52802,9 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																															m.fn16(v2+i32(536), v9)
 																															t295 := int32(load32(m.memory, uint64(uint32(v2))+548))
 																															v7 = t295
-																															t296 := int32(load32(m.memory, uint64(uint32(v2))+544))
+																															t296 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+544))
 																															v6 = t296
-																															t297 := int32(load32(m.memory, uint64(uint32(v2))+540))
+																															t297 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+540))
 																															v19 = t297
 																															{
 																																{
@@ -53314,7 +53314,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																				v10 = t996
 																				t997 := int32(load32(m.memory, uint64(uint32(v2))+448))
 																				v3 = t997
-																				t998 := int32(load32(m.memory, uint64(uint32(v2))+444))
+																				t998 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+444))
 																				v0 = t998
 																				goto l36
 																			}
@@ -53393,9 +53393,9 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 												v6 = t1007
 												t1008 := int32(load32(m.memory, uint64(uint32(v9))+76))
 												v3 = t1008
-												t1009 := int32(load32(m.memory, uint64(uint32(v9))+72))
+												t1009 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+72))
 												v5 = t1009
-												t1010 := int32(load32(m.memory, uint64(uint32(v9))+68))
+												t1010 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+68))
 												v7 = t1010
 												{
 													t1011 := int32(load32(m.memory, uint64(uint32(v9))+64))
@@ -54883,7 +54883,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																store64(m.memory, uint64(uint32(v9))+64, uint64(t1249))
 																t1250 := int32(load32(m.memory, uint64(uint32(v20))+8))
 																v1 = t1250
-																t1251 := int32(load32(m.memory, uint32(v20)))
+																t1251 := int32(cocoonLoad32InRange(m.memory, uint32(v20)))
 																if v1 == t1251 {
 																	m.fn197(v20)
 																}
@@ -55101,7 +55101,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																{
 																	t1344 := int32(load32(m.memory, uint64(uint32(v11))+152))
 																	v21 = t1344
-																	t1345 := int32(load32(m.memory, uint64(uint32(v11))+148))
+																	t1345 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v11))+148))
 																	t1346 := v21
 																	t1347 := v1
 																	v19 = t1345
@@ -55734,7 +55734,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																			{
 																				t1417 := int32(load32(m.memory, uint64(uint32(v12))+76))
 																				v10 = t1417
-																				t1418 := int32(load32(m.memory, uint64(uint32(v12))+72))
+																				t1418 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v12))+72))
 																				t1419 := v10
 																				v25 = t1418
 																				if uint32(t1419) < uint32(v25) {
@@ -55937,7 +55937,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																										if v25 != i32(255) {
 																											t1464 := int32(load32(m.memory, uint64(uint32(v7))+4))
 																											v17 = t1464
-																											t1465 := int32(load32(m.memory, uint32(v7)))
+																											t1465 := int32(cocoonLoad32InRange(m.memory, uint32(v7)))
 																											v15 = t1465
 																											t1466 := int32(load32(m.memory, uint32(v14)))
 																											v12 = t1466
@@ -56036,12 +56036,12 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																									v7 = v11 + i32(128)
 																									t1485 := int32(load32(m.memory, uint64(uint32(v7))+4))
 																									v14 = t1485
-																									t1486 := int32(load32(m.memory, uint32(v7)))
+																									t1486 := int32(cocoonLoad32InRange(m.memory, uint32(v7)))
 																									v17 = t1486
 																									{
 																										t1487 := int32(load32(m.memory, uint64(uint32(v7))+12))
 																										v12 = t1487
-																										t1488 := int32(load32(m.memory, uint64(uint32(v7))+8))
+																										t1488 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+8))
 																										t1489 := v12
 																										v7 = t1488
 																										if uint32(t1489) < uint32(v7) {
@@ -56114,7 +56114,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																											v0 = v11 + i32(128)
 																											t1498 := int32(load32(m.memory, uint64(uint32(v0))+12))
 																											v15 = t1498
-																											t1499 := int32(load32(m.memory, uint64(uint32(v0))+4))
+																											t1499 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+4))
 																											t1500 := v15
 																											v12 = t1499
 																											var p1501 int32
@@ -56256,7 +56256,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																									{
 																										t1526 := int32(load32(m.memory, uint64(uint32(v11))+156))
 																										v5 = t1526
-																										t1527 := int32(load32(m.memory, uint64(uint32(v11))+116))
+																										t1527 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v11))+116))
 																										if uint32(v5) > uint32(t1527-v0) {
 																											m.fn3(v11+i32(116), v0, v5, i32(1), i32(1))
 																											t1528 := int32(load32(m.memory, uint64(uint32(v11))+124))
@@ -56371,7 +56371,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																					{
 																						t1546 := int32(load32(m.memory, uint64(uint32(v11))+156))
 																						v0 = t1546
-																						t1547 := int32(load32(m.memory, uint64(uint32(v11))+116))
+																						t1547 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v11))+116))
 																						if uint32(v0) > uint32(t1547-v14) {
 																							m.fn3(v11+i32(116), v14, v0, i32(1), i32(1))
 																							t1548 := int32(load32(m.memory, uint64(uint32(v11))+124))
@@ -56470,7 +56470,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																	v0 = t1561
 																	t1562 := int32(load32(m.memory, uint64(uint32(v0))+12))
 																	v5 = t1562
-																	t1563 := int32(load32(m.memory, uint64(uint32(v0))+4))
+																	t1563 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+4))
 																	p1564 := t1563
 																	if v5 != 0 {
 																		p1564 = v5
@@ -56569,7 +56569,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																		m.fn3(v11+i32(116), v14, v1, i32(1), i32(1))
 																		t1580 := int32(load32(m.memory, uint64(uint32(v11))+124))
 																		v14 = t1580
-																		t1581 := int32(load32(m.memory, uint64(uint32(v11))+120))
+																		t1581 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v11))+120))
 																		v5 = t1581
 																	}
 																	if v1 != 0 {
@@ -56753,7 +56753,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																	v1 = t1628
 																	t1629 := int32(load32(m.memory, uint64(uint32(v7))+20))
 																	v11 = t1629
-																	t1630 := int32(load32(m.memory, uint64(uint32(v7))+16))
+																	t1630 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+16))
 																	v52 = t1630
 																	v13 = v3
 																	v0 = v5
@@ -56995,9 +56995,9 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 						if p1657 == 0 {
 							t1675 := int32(load32(m.memory, uint64(uint32(v9))+56))
 							v0 = t1675
-							t1676 := int32(load32(m.memory, uint64(uint32(v9))+52))
+							t1676 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+52))
 							v1 = t1676
-							t1677 := int32(load32(m.memory, uint64(uint32(v9))+48))
+							t1677 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v9))+48))
 							v6 = t1677
 							if v7 == i32(3) {
 								goto l518
@@ -57097,7 +57097,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 											v3 = t1702 + p1703
 											t1704 := int32(load32(m.memory, uint64(uint32(v4))+60))
 											v1 = t1704
-											t1705 := int32(load32(m.memory, uint64(uint32(v4))+52))
+											t1705 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 											if v1 == t1705 {
 												m.fn7(v4 + i32(52))
 											}
@@ -57478,7 +57478,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																			t1836 := int32(load32(m.memory, uint64(uint32(v6))+8))
 																			v8 = t1836
 																			v10 = i32(0)
-																			t1837 := int32(load32(m.memory, uint64(uint32(v4))+80))
+																			t1837 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+80))
 																			v3 = t1837
 																			v1 = i32(0)
 																		l530:
@@ -57562,7 +57562,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																					t1857 := int32(load32(m.memory, uint64(uint32(v4))+92))
 																					v11 = t1857
 																					v8 = v11
-																					t1858 := int32(load32(m.memory, uint64(uint32(v4))+80))
+																					t1858 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+80))
 																					v13 = t1858
 																					if v13 == 0 {
 																						goto l521
@@ -57867,7 +57867,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																			t1918 := int32(load32(m.memory, uint64(uint32(v6))+8))
 																			v8 = t1918
 																			v10 = i32(0)
-																			t1919 := int32(load32(m.memory, uint64(uint32(v4))+80))
+																			t1919 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+80))
 																			v3 = t1919
 																			v1 = i32(0)
 																		l549:
@@ -57951,7 +57951,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																					t1939 := int32(load32(m.memory, uint64(uint32(v4))+92))
 																					v14 = t1939
 																					v8 = v14
-																					t1940 := int32(load32(m.memory, uint64(uint32(v4))+80))
+																					t1940 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+80))
 																					v13 = t1940
 																					if v13 == 0 {
 																						goto l540
@@ -58114,7 +58114,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 													v79 = t1965
 													t1966 := int32(load32(m.memory, uint64(uint32(v4))+60))
 													v3 = t1966
-													t1967 := int32(load32(m.memory, uint64(uint32(v4))+52))
+													t1967 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 													if v3 == t1967 {
 														m.fn7(v24)
 													}
@@ -58300,7 +58300,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																			t2017 := int32(load32(m.memory, uint64(uint32(v6))+8))
 																			v8 = t2017
 																			v10 = i32(0)
-																			t2018 := int32(load32(m.memory, uint64(uint32(v4))+80))
+																			t2018 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+80))
 																			v3 = t2018
 																			v1 = i32(0)
 																		l568:
@@ -58384,7 +58384,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																					t2038 := int32(load32(m.memory, uint64(uint32(v4))+92))
 																					v17 = t2038
 																					v8 = v17
-																					t2039 := int32(load32(m.memory, uint64(uint32(v4))+80))
+																					t2039 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+80))
 																					v10 = t2039
 																					if v10 == 0 {
 																						goto l559
@@ -58581,7 +58581,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 															}
 															t2076 := int32(load32(m.memory, uint64(uint32(v4))+60))
 															v6 = t2076
-															t2077 := int32(load32(m.memory, uint64(uint32(v4))+52))
+															t2077 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 															if v6 == t2077 {
 																m.fn7(v4 + i32(52))
 															}
@@ -58747,7 +58747,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 												{
 													t2119 := int32(load32(m.memory, uint64(uint32(v7))+68))
 													v15 = t2119
-													t2120 := int32(load32(m.memory, uint64(uint32(v7))+12))
+													t2120 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v7))+12))
 													var p2121 int32
 													if v15 != i32(0) {
 														p2121 = 1
@@ -58769,7 +58769,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 													v21 = t2126
 													t2127 := int32(load32(m.memory, uint64(uint32(v4))+60))
 													v1 = t2127
-													t2128 := int32(load32(m.memory, uint64(uint32(v4))+52))
+													t2128 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 													if v1 == t2128 {
 														m.fn7(v4 + i32(52))
 													}
@@ -58819,7 +58819,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 														m.fn3(v4+i32(52), v8, i32(14), i32(1), i32(1))
 														t2144 := int32(load32(m.memory, uint64(uint32(v4))+60))
 														v8 = t2144
-														t2145 := int32(load32(m.memory, uint64(uint32(v4))+52))
+														t2145 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 														v10 = t2145
 													}
 													t2146 := int32(load32(m.memory, uint64(uint32(v4))+56))
@@ -59152,7 +59152,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 													v3 = p2247
 													t2248 := int32(load32(m.memory, uint64(uint32(v4))+60))
 													v1 = t2248
-													t2249 := int32(load32(m.memory, uint64(uint32(v4))+52))
+													t2249 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 													if v1 == t2249 {
 														m.fn7(v4 + i32(52))
 													}
@@ -59167,7 +59167,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 														m.fn3(v4+i32(52), v8, i32(15), i32(1), i32(1))
 														t2253 := int32(load32(m.memory, uint64(uint32(v4))+60))
 														v8 = t2253
-														t2254 := int32(load32(m.memory, uint64(uint32(v4))+52))
+														t2254 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 														v6 = t2254
 													}
 													t2255 := int32(load32(m.memory, uint64(uint32(v4))+56))
@@ -59335,7 +59335,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																					if t2304 == i32(-2) {
 																						t2305 := int32(load32(m.memory, uint64(uint32(v4))+60))
 																						v7 = t2305
-																						t2306 := int32(load32(m.memory, uint64(uint32(v4))+52))
+																						t2306 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 																						if v7 == t2306 {
 																							m.fn7(v6)
 																						}
@@ -59438,7 +59438,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																store32(m.memory, uint64(uint32(t2328))+60, uint32(v7))
 																t2329 := int32(load32(m.memory, uint64(uint32(v4))+56))
 																v15 = t2329
-																t2330 := int32(load32(m.memory, uint64(uint32(v4))+52))
+																t2330 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 																v24 = t2330
 																if uint32(v24-v7) <= uint32(i32(11)) {
 																	v13 = i32(0)
@@ -59499,7 +59499,7 @@ func (m *Module) Xcocoon_obfuscate_traces(v0, v1 int32) int32 {
 																store32(m.memory, uint64(uint32(t2342))+60, uint32(v6))
 																t2343 := int32(load32(m.memory, uint64(uint32(v4))+56))
 																v15 = t2343
-																t2344 := int32(load32(m.memory, uint64(uint32(v4))+52))
+																t2344 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+52))
 																v24 = t2344
 																if uint32(v24-v6) <= uint32(i32(6)) {
 																	v13 = i32(0)
@@ -59762,11 +59762,11 @@ func (m *Module) Xcocoon_obfuscate_sql(v0, v1 int32) int32 {
 				m.fn118(v6, v0, v1)
 				t4 := int32(load32(m.memory, uint64(uint32(v2))+40))
 				v3 = t4
-				t5 := int32(load32(m.memory, uint64(uint32(v2))+36))
+				t5 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+36))
 				v1 = t5
-				t6 := int32(load32(m.memory, uint64(uint32(v2))+32))
+				t6 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+32))
 				v5 = t6
-				t7 := int32(load32(m.memory, uint64(uint32(v2))+28))
+				t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+28))
 				t8 := v5
 				v4 = t7
 				if v4 != i32(-1) {
@@ -60339,7 +60339,7 @@ func (m *Module) fn250(v0, v1 int32) int32 {
 	var v2, v3 int32
 	t0 := int32(load32(m.memory, uint64(uint32(v0))+4))
 	v2 = t0
-	t1 := int32(load32(m.memory, uint32(v0)))
+	t1 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 	v3 = t1
 	{
 		t2 := int32(load32(m.memory, uint64(uint32(v0))+8))
@@ -61144,7 +61144,7 @@ func (m *Module) fn272(v0, v1 int32) {
 					m.fn3(v2+i32(16), i32(0), v3, i32(1), i32(1))
 					t6 := int32(load32(m.memory, uint64(uint32(v2))+24))
 					v5 = t6
-					t7 := int32(load32(m.memory, uint64(uint32(v2))+20))
+					t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+20))
 					memory_copy(m.memory, uint32(v5+t7), uint32(v4), uint32(v3))
 				}
 				store32(m.memory, uint64(uint32(v2))+24, uint32(v3+v5))
@@ -61215,7 +61215,7 @@ func (m *Module) fn273(v0, v1 int32) {
 					m.fn3(v3+i32(20), i32(0), v2, i32(1), i32(1))
 					t6 := int32(load32(m.memory, uint64(uint32(v3))+28))
 					v4 = t6
-					t7 := int32(load32(m.memory, uint64(uint32(v3))+24))
+					t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+24))
 					memory_copy(m.memory, uint32(t7+v4), uint32(v5), uint32(v2))
 				}
 			l0:
@@ -61254,7 +61254,7 @@ func (m *Module) fn275(v0, v1 int32) {
 	var v2, v3 int32
 	t0 := int32(load32(m.memory, uint64(uint32(v1))+4))
 	v2 = t0
-	t1 := int32(load32(m.memory, uint32(v1)))
+	t1 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 	v3 = t1
 	t2 := m.fn4(i32(8), i32(4))
 	v1 = t2
@@ -61289,7 +61289,7 @@ func (m *Module) fn278(v0, v1 int32) int32 {
 	}
 	t7 := int32(load32(m.memory, uint64(uint32(v1))+4))
 	v3 = t7
-	t8 := int32(load32(m.memory, uint32(v1)))
+	t8 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 	v1 = t8
 	t9 := int32(load32(m.memory, uint64(uint32(v0))+12))
 	t10 := int32(load32(m.memory, uint32(t9)))
@@ -61447,7 +61447,7 @@ func (m *Module) fn286(v0, v1 int32) {
 		}
 		t6 := int32(load32(m.memory, uint64(uint32(v4))+4))
 		v6 = t6
-		t7 := int32(load32(m.memory, uint32(v4)))
+		t7 := int32(cocoonLoad32InRange(m.memory, uint32(v4)))
 		t8 := int32(load32(m.memory, uint64(uint32(v1))+8))
 		t9 := v2
 		v5 = t8
@@ -63174,4 +63174,16 @@ func cocoon_table_slice(table []any, low, high uint64) []any {
 		panic("out of bounds table access")
 	}
 	return table[low:high:len(table)]
+}
+
+//go:nosplit
+func cocoonLoad32InRange[T uint32 | uint64](mem []byte, addr T) uint32 {
+	if !unalignedOK {
+		return binary.LittleEndian.Uint32(mem[addr:])
+	}
+	val := *(*uint32)(unsafe.Add(unsafe.Pointer(unsafe.SliceData(mem)), uintptr(addr)))
+	if big {
+		return bits.ReverseBytes32(val)
+	}
+	return val
 }

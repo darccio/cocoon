@@ -145,9 +145,20 @@ func Rewrite(source []byte, expected []string) ([]byte, error) {
 	}
 	removeDeadReturns(file)
 	reusePublicationMemory(file)
+	containedHelper := elideContainedLoads(file)
 	var output bytes.Buffer
 	if err := format.Node(&output, fset, file); err != nil {
 		return nil, fmt.Errorf("format hardened Go: %w", err)
+	}
+	if containedHelper != nil {
+		output.WriteByte('\n')
+		output.Write(containedHelper)
+		output.WriteByte('\n')
+		formatted, err := format.Source(output.Bytes())
+		if err != nil {
+			return nil, fmt.Errorf("format contained load helper: %w", err)
+		}
+		return formatted, nil
 	}
 	return output.Bytes(), nil
 }

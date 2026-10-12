@@ -692,11 +692,11 @@ func (m *Module) fn14(v0 int32) int32 {
 	var v1, v2, v3, v4, v5, v6 int32
 	t0 := int32(load32(m.memory, uint64(uint32(v0))+12))
 	v5 = t0
-	t1 := int32(load32(m.memory, uint64(uint32(v0))+8))
+	t1 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+8))
 	v1 = t1
-	t2 := int32(load32(m.memory, uint64(uint32(v0))+4))
+	t2 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v0))+4))
 	v2 = t2
-	t3 := int32(load32(m.memory, uint32(v0)))
+	t3 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 	v0 = t3
 	t4 := int32(m.memory[uint32(i32(1051060))])
 	if t4 != i32(1) {
@@ -1543,7 +1543,7 @@ func (m *Module) fn18(v0, v1, v2 int32) int32 {
 			v8 = v11 & i32(0x1fffff)
 			t83 := int32(load32(m.memory, uint64(uint32(v0))+4))
 			v6 = t83
-			t84 := int32(load32(m.memory, uint32(v0)))
+			t84 := int32(cocoonLoad32InRange(m.memory, uint32(v0)))
 			v0 = t84
 		l23:
 			if uint32(v5&i32(0xffff)) < uint32(v4&i32(0xffff)) {
@@ -2339,7 +2339,7 @@ func (m *Module) fn21(v0 int32) int32 {
 						}
 						t132 := int32(load32(m.memory, uint64(uint32(v8))+12))
 						v7 = t132
-						t133 := int32(load32(m.memory, uint64(uint32(v8))+8))
+						t133 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v8))+8))
 						v4 = t133
 						t134 := int32(load32(m.memory, uint32(i32(1051524))))
 						v0 = v4 + t134
@@ -3324,7 +3324,7 @@ func (m *Module) fn29(v0, v1, v2 int32) {
 										}
 										t7 := int32(load32(m.memory, uint64(uint32(v4))+12))
 										v3 = t7
-										t8 := int32(load32(m.memory, uint64(uint32(v4))+8))
+										t8 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+8))
 										v1 = t8
 										v2 = i32(2)
 										goto l3
@@ -3710,7 +3710,7 @@ func (m *Module) fn35(v0, v1 int32) {
 					m.fn13(v2+i32(16), i32(0), v3)
 					t6 := int32(load32(m.memory, uint64(uint32(v2))+24))
 					v5 = t6
-					t7 := int32(load32(m.memory, uint64(uint32(v2))+20))
+					t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+20))
 					memory_copy(m.memory, uint32(v5+t7), uint32(v4), uint32(v3))
 				}
 				store32(m.memory, uint64(uint32(v2))+24, uint32(v3+v5))
@@ -3781,7 +3781,7 @@ func (m *Module) fn36(v0, v1 int32) {
 					m.fn13(v3+i32(20), i32(0), v2)
 					t6 := int32(load32(m.memory, uint64(uint32(v3))+28))
 					v4 = t6
-					t7 := int32(load32(m.memory, uint64(uint32(v3))+24))
+					t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v3))+24))
 					memory_copy(m.memory, uint32(t7+v4), uint32(v5), uint32(v2))
 				}
 			l0:
@@ -3903,7 +3903,7 @@ func (m *Module) fn40(v0, v1 int32) {
 	var v2, v3 int32
 	t0 := int32(load32(m.memory, uint64(uint32(v1))+4))
 	v2 = t0
-	t1 := int32(load32(m.memory, uint32(v1)))
+	t1 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 	v3 = t1
 	t2 := m.fn3(i32(8), i32(4))
 	v1 = t2
@@ -3938,7 +3938,7 @@ func (m *Module) fn43(v0, v1 int32) int32 {
 	}
 	t7 := int32(load32(m.memory, uint64(uint32(v1))+4))
 	v3 = t7
-	t8 := int32(load32(m.memory, uint32(v1)))
+	t8 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 	v1 = t8
 	t9 := int32(load32(m.memory, uint64(uint32(v0))+12))
 	t10 := int32(load32(m.memory, uint32(t9)))
@@ -4175,7 +4175,7 @@ func (m *Module) fn54(v0, v1 int32) {
 		}
 		t6 := int32(load32(m.memory, uint64(uint32(v4))+4))
 		v6 = t6
-		t7 := int32(load32(m.memory, uint32(v4)))
+		t7 := int32(cocoonLoad32InRange(m.memory, uint32(v4)))
 		t8 := int32(load32(m.memory, uint64(uint32(v1))+8))
 		t9 := v2
 		v5 = t8
@@ -4319,11 +4319,11 @@ func (m *Module) Xcocoon_stream_write(v0 int64, v1, v2 int32) int32 {
 			m.fn29(v5, v1, v2)
 			t4 := int32(load32(m.memory, uint64(uint32(v4))+16))
 			v6 = t4
-			t5 := int32(load32(m.memory, uint64(uint32(v4))+8))
+			t5 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+8))
 			v2 = t5
-			t6 := int32(load32(m.memory, uint64(uint32(v4))+12))
+			t6 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+12))
 			v3 = t6
-			t7 := int32(load32(m.memory, uint64(uint32(v4))+4))
+			t7 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+4))
 			t8 := v3
 			v7 = t7
 			if v7 != i32(-1) {
@@ -4335,7 +4335,7 @@ func (m *Module) Xcocoon_stream_write(v0 int64, v1, v2 int32) int32 {
 			m.fn22(v5, t9, t10, v0)
 			t11 := int32(load32(m.memory, uint64(uint32(v4))+8))
 			v1 = t11
-			t12 := int32(load32(m.memory, uint64(uint32(v4))+4))
+			t12 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+4))
 			v7 = t12
 			if v7 == i32(-1) {
 				store32(m.memory, uint64(uint32(v4))+28, uint32(v6))
@@ -4529,7 +4529,7 @@ func (m *Module) Xcocoon_stream_write(v0 int64, v1, v2 int32) int32 {
 					v2 = t51
 					t52 := int32(load32(m.memory, uint64(uint32(v4))+16))
 					v6 = t52
-					t53 := int32(load32(m.memory, uint64(uint32(v4))+12))
+					t53 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+12))
 					p2 = t53
 					goto l0
 				}
@@ -4539,7 +4539,7 @@ func (m *Module) Xcocoon_stream_write(v0 int64, v1, v2 int32) int32 {
 			}
 			t13 := int32(load32(m.memory, uint64(uint32(v4))+16))
 			v6 = t13
-			t14 := int32(load32(m.memory, uint64(uint32(v4))+12))
+			t14 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v4))+12))
 			v5 = t14
 			if v2 == 0 {
 				goto l2
@@ -4794,7 +4794,7 @@ func (m *Module) Xcocoon_stream_end(v0 int64) int32 {
 				m.fn22(v1, t3, t4, v0)
 				t5 := int32(load32(m.memory, uint64(uint32(v1))+4))
 				v2 = t5
-				t6 := int32(load32(m.memory, uint32(v1)))
+				t6 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 				v4 = t6
 				if v4 != i32(-1) {
 					t7 := int64(load64(m.memory, uint64(uint32(v1))+8))
@@ -4974,7 +4974,7 @@ func (m *Module) Xcocoon_stream_close(v0 int64) int32 {
 							m.fn6(v2 + i32(24))
 							t32 := int32(load32(m.memory, uint64(uint32(v2))+28))
 							v3 = t32
-							t33 := int32(load32(m.memory, uint64(uint32(v2))+24))
+							t33 := int32(cocoonLoad32InRange(m.memory, uint64(uint32(v2))+24))
 							v1 = t33
 							t34 := int64(load64(m.memory, uint64(uint32(v2))+32))
 							p6 = t34
@@ -5225,7 +5225,7 @@ func (m *Module) fn68(v0, v1 int32) int32 {
 					v9 = v3 & i32(0x1fffff)
 					t20 := int32(load32(m.memory, uint64(uint32(v1))+4))
 					v3 = t20
-					t21 := int32(load32(m.memory, uint32(v1)))
+					t21 := int32(cocoonLoad32InRange(m.memory, uint32(v1)))
 					v1 = t21
 				l5:
 					{
@@ -5524,4 +5524,16 @@ func cocoon_table_slice(table []any, low, high uint64) []any {
 		panic("out of bounds table access")
 	}
 	return table[low:high:len(table)]
+}
+
+//go:nosplit
+func cocoonLoad32InRange[T uint32 | uint64](mem []byte, addr T) uint32 {
+	if !unalignedOK {
+		return binary.LittleEndian.Uint32(mem[addr:])
+	}
+	val := *(*uint32)(unsafe.Add(unsafe.Pointer(unsafe.SliceData(mem)), uintptr(addr)))
+	if big {
+		return bits.ReverseBytes32(val)
+	}
+	return val
 }
