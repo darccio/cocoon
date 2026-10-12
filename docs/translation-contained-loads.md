@@ -67,7 +67,9 @@ Accept only these addresses, preserving their original expressions:
 The base is zero-extended, not an arbitrary wrapping i32 expression. The largest
 possible inclusive endpoint is `2 * MaxUint32 + 3`, which fits uint64. Do not
 normalize the widened addition into wrapping arithmetic. Track facts by the
-bound local's declaration identity and maximum successful offset endpoint.
+bound local's declaration identity together with its bound name and maximum
+successful offset endpoint. Grouped parameters or variables share a declaration
+node but are distinct bindings; they must never share facts or invalidation.
 For a later eligible read on the same unchanged base, remove its check only
 when `later_offset + 3 <= previous_maximum_endpoint`. Keep the first check and
 every new maximum, at their original positions. A successful endpoint check
@@ -83,6 +85,13 @@ the assignment changes it. Multi-assignments, compound assignments, inc/dec,
 receiver/header writes, stores, imports, growth, bulk operations, defer/go, and
 unproved statements clear all facts. Do not forward loaded values, remove guest
 reads, cache the header, or infer disjointness of memory addresses.
+
+Prove base nonescape for the entire method before creating facts. Exclude bases
+whose address is taken or which a function literal captures, even before the
+first checked read. A callback could retain that binding and change it later;
+clearing facts at the earlier escape is insufficient. Methods containing a
+`go` statement are ineligible. This is a conservative eligibility restriction,
+not concurrency support or a change to the trusted host ownership precondition.
 
 Use a collision-free private helper only for proved later reads. Its reserved
 name anywhere in the input, including local scopes, leaves this pass inactive

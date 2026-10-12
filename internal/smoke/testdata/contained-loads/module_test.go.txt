@@ -1,0 +1,290 @@
+package wasm
+
+import (
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"os"
+	"runtime"
+	"strings"
+	"testing"
+)
+
+type containedEvent struct {
+	Kind   uint32 `json:"kind"`
+	Before uint32 `json:"before"`
+	Length uint32 `json:"length"`
+}
+
+type containedCase struct {
+	Export string           `json:"export"`
+	Trap   string           `json:"trap"`
+	Memory []byte           `json:"memory"`
+	Events []containedEvent `json:"events"`
+	Base   uint32           `json:"base"`
+	Flag   uint32           `json:"flag"`
+	Result uint32           `json:"result"`
+	Prefix uint32           `json:"prefix"`
+}
+
+type containedHost struct {
+	module   *Module
+	callback func()
+	events   []containedEvent
+}
+
+func (host *containedHost) Init(value any) { host.module = value.(*Module) }
+
+func (host *containedHost) Xtouch() {
+	memory := *host.module.Xmemory().Slice()
+	host.events = append(host.events, containedEvent{1, binary.LittleEndian.Uint32(memory), uint32(len(memory))})
+	if host.callback != nil {
+		host.callback()
+		return
+	}
+	binary.LittleEndian.PutUint32(memory, 0x11223345)
+}
+
+func (host *containedHost) Ximpure(value int32) int32 {
+	memory := *host.module.Xmemory().Slice()
+	host.events = append(host.events, containedEvent{2, binary.LittleEndian.Uint32(memory), uint32(len(memory))})
+	if host.callback != nil {
+		host.callback()
+	}
+	return value
+}
+
+func containedBytes(length int) []byte {
+	data := make([]byte, length)
+	for index := range data {
+		data[index] = byte(index*7 + 3)
+	}
+	return data
+}
+
+func callContained(module *Module, name string, base, flag int32) (result uint32, trap string) {
+	defer func() {
+		if value := recover(); value != nil {
+			if fault, ok := value.(runtime.Error); ok && strings.Contains(fault.Error(), "out of range") {
+				trap = "memory"
+			} else {
+				trap = fmt.Sprintf("%T: %v", value, value)
+			}
+		}
+	}()
+	var answer int32
+	switch name {
+	case "covered":
+		answer = module.Xcovered(base)
+	case "triple":
+		answer = module.Xtriple(base)
+	case "rising":
+		answer = module.Xrising(base)
+	case "rebind":
+		answer = module.Xrebind(base)
+	case "wrapped":
+		answer = module.Xwrapped(base)
+	case "imported":
+		answer = module.Ximported(base)
+	case "stored":
+		answer = module.Xstored(base)
+	case "conditional":
+		answer = module.Xconditional(base, flag)
+	case "grown":
+		answer = module.Xgrown(base)
+	case "two_bases":
+		answer = module.Xtwo_bases(base, flag)
+	case "shadow":
+		answer = module.XshadowFunc(base)
+	case "label":
+		answer = module.Xlabel(base, flag)
+	case "global":
+		answer = module.XglobalBase()
+	default:
+		panic("unknown contained export " + name)
+	}
+	return uint32(answer), ""
+}
+
+func TestContainedLoadOracle(t *testing.T) {
+	data, err := os.ReadFile("cases.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cases []containedCase
+	if err := json.Unmarshal(data, &cases); err != nil {
+		t.Fatal(err)
+	}
+	if len(cases) < 400 {
+		t.Fatal("contained-load missing bounded independent cases", len(cases))
+	}
+	for _, entry := range cases {
+		host := new(containedHost)
+		module := New(host)
+		copy(*module.Xmemory().Slice(), containedBytes(65536))
+		answer, trap := callContained(module, entry.Export, int32(entry.Base), int32(entry.Flag))
+		memory := *module.Xmemory().Slice()
+		if answer != entry.Result || trap != entry.Trap || uint32(module.Xprefix()) != entry.Prefix || !bytes.Equal(memory, entry.Memory) {
+			t.Fatalf("contained-load oracle mismatch: %s base=%x flag=%d result=%x/%x trap=%q/%q prefix=%d/%d memory=%v lengths=%d/%d", entry.Export, entry.Base, entry.Flag, answer, entry.Result, trap, entry.Trap, module.Xprefix(), entry.Prefix, bytes.Equal(memory, entry.Memory), len(memory), len(entry.Memory))
+		}
+		if len(host.events) != len(entry.Events) {
+			t.Fatal("contained-load event count mismatch", host.events, entry.Events)
+		}
+		for index, event := range entry.Events {
+			if host.events[index] != event {
+				t.Fatal("contained-load event order mismatch", host.events, entry.Events)
+			}
+		}
+	}
+}
+
+func TestContainedLoadLogicalLength(t *testing.T) {
+	for _, name := range []string{"covered", "triple", "rising"} {
+		for length := 0; length <= 20; length++ {
+			for base := 0; base <= 3; base++ {
+				module := New(new(containedHost))
+				backing := containedBytes(64)
+				*module.Xmemory().Slice() = backing[:length]
+				answer, trap := callContained(module, name, int32(base), 0)
+				wantTrap := base+12 > length
+				if (trap == "memory") != wantTrap || trap != "" && trap != "memory" {
+					t.Fatalf("contained-load logical length mismatch: %s len=%d cap=%d base=%d trap=%q expected=%v", name, length, cap(backing), base, trap, wantTrap)
+				}
+				if !wantTrap {
+					low := binary.LittleEndian.Uint32(backing[base:])
+					middle := binary.LittleEndian.Uint32(backing[base+4:])
+					high := binary.LittleEndian.Uint32(backing[base+8:])
+					want := high*3 + low*5
+					if name == "triple" {
+						want = middle*3 + high*5 + low*7
+					}
+					if name == "rising" {
+						want = low*3 + middle*5 + high*7
+					}
+					if answer != want {
+						t.Fatal("contained-load weighted result mismatch", name, answer, want)
+					}
+				}
+				if !bytes.Equal(backing, containedBytes(64)) || module.Xprefix() != 1 {
+					t.Fatal("contained-load trap prefix mismatch")
+				}
+			}
+		}
+	}
+}
+
+func TestContainedLoadHeaderBarrier(t *testing.T) {
+	for _, replace := range []bool{false, true} {
+		host := new(containedHost)
+		module := New(host)
+		old := containedBytes(64)
+		*module.Xmemory().Slice() = old
+		host.callback = func() {
+			backing := old
+			if replace {
+				backing = containedBytes(64)
+			}
+			*module.Xmemory().Slice() = backing[:3]
+		}
+		if _, trap := callContained(module, "imported", 0, 0); trap != "memory" || len(host.events) != 1 || module.Xprefix() != 1 {
+			t.Fatalf("contained-load import barrier mismatch: replace=%v trap=%q events=%v", replace, trap, host.events)
+		}
+		if host.events[0] != (containedEvent{1, binary.LittleEndian.Uint32(old), 64}) || !bytes.Equal(old, containedBytes(64)) {
+			t.Fatal("contained-load import prefix mismatch")
+		}
+		if (&old[0] != &(*module.Xmemory().Slice())[0]) != replace {
+			t.Fatal("contained-load replacement path mismatch")
+		}
+	}
+	host := new(containedHost)
+	module := New(host)
+	old := containedBytes(64)
+	*module.Xmemory().Slice() = old
+	host.callback = func() {
+		replacement := containedBytes(64)
+		binary.LittleEndian.PutUint32(replacement, 12345)
+		*module.Xmemory().Slice() = replacement
+	}
+	answer, trap := callContained(module, "imported", 0, 0)
+	if trap != "" || answer != binary.LittleEndian.Uint32(old[8:])*3+12345*5 || !bytes.Equal(old, containedBytes(64)) {
+		t.Fatal("contained-load live backing mismatch", answer, trap)
+	}
+}
+
+func TestContainedLoadShadowBarrier(t *testing.T) {
+	host := new(containedHost)
+	module := New(host)
+	backing := containedBytes(64)
+	*module.Xmemory().Slice() = backing[:16]
+	host.callback = func() { *module.Xmemory().Slice() = backing[:3] }
+	if _, trap := callContained(module, "shadow", 0, 0); trap != "memory" || len(host.events) != 1 || host.events[0].Kind != 2 {
+		t.Fatalf("contained-load shadow purity mismatch: trap=%q events=%v", trap, host.events)
+	}
+}
+
+func TestContainedLoadSelectionBarriers(t *testing.T) {
+	for _, entry := range []struct {
+		name   string
+		length int
+		flag   int32
+	}{
+		{"rebind", 12, 0}, {"conditional", 3, 0}, {"label", 3, 0},
+	} {
+		module := New(new(containedHost))
+		*module.Xmemory().Slice() = containedBytes(64)[:entry.length]
+		if _, trap := callContained(module, entry.name, 0, entry.flag); trap != "memory" {
+			t.Fatal("contained-load selection barrier mismatch", entry, trap)
+		}
+	}
+	module := New(new(containedHost))
+	backing := containedBytes(64)
+	*module.Xmemory().Slice() = backing
+	containedBase = 1
+	answer, trap := callContained(module, "global", 0, 0)
+	if trap != "" || answer != binary.LittleEndian.Uint32(backing[9:])*3+binary.LittleEndian.Uint32(backing[1:])*5 {
+		t.Fatal("contained-load global exclusion mismatch")
+	}
+	for _, base := range []int32{-1, -4, -12, 0x7fffffff} {
+		if _, trap := callContained(module, "covered", base, 0); trap != "memory" {
+			t.Fatal("contained-load widened address mismatch", base, trap)
+		}
+	}
+	host := new(containedHost)
+	module = New(host)
+	*module.Xmemory().Slice() = backing[:7]
+	if _, trap := callContained(module, "imported", 0, 0); trap != "memory" || len(host.events) != 0 || module.Xprefix() != 1 {
+		t.Fatal("contained-load first trap/import prefix mismatch")
+	}
+}
+
+func TestContainedLoadGrowthStorage(t *testing.T) {
+	for _, spare := range []bool{false, true} {
+		module := New(new(containedHost))
+		capacity := 65536
+		if spare {
+			capacity *= 3
+		}
+		backing := make([]byte, 65536, capacity)
+		copy(backing, containedBytes(65536))
+		*module.Xmemory().Slice() = backing
+		answer, trap := callContained(module, "grown", 0, 0)
+		memory := *module.Xmemory().Slice()
+		if trap != "" || answer != binary.LittleEndian.Uint32(backing[8:])*3+binary.LittleEndian.Uint32(backing)*5 || len(memory) != 131072 || (&memory[0] == &backing[0]) != spare || !bytes.Equal(memory[65536:], make([]byte, 65536)) {
+			t.Fatal("contained-load growth storage mismatch", spare, answer, trap)
+		}
+	}
+}
+
+func TestContainedLoadDistinctBases(t *testing.T) {
+	module := New(new(containedHost))
+	backing := containedBytes(128)
+	*module.Xmemory().Slice() = backing[:16]
+	if _, trap := callContained(module, "two_bases", 0, 64); trap != "memory" || module.Xprefix() != 1 || !bytes.Equal(backing, containedBytes(128)) {
+		t.Fatal("contained-load grouped parameter fact mismatch", trap)
+	}
+	answer, trap := callContained(module, "two_bases", 4, 0)
+	if trap != "" || answer != binary.LittleEndian.Uint32(backing[12:])*3+binary.LittleEndian.Uint32(backing)*5 {
+		t.Fatal("contained-load distinct base weighted mismatch", answer, trap)
+	}
+}
