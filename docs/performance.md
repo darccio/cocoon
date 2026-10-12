@@ -4,6 +4,179 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Bounded numerical feasibility: certified intervals (2026-10-12)
+
+**Positive numerical proof; online construction and M1 remain unqualified.**
+The fixed offline procedure returns 57 non-singleton certificates in 92
+attempts across 23 original exponent fields, including positive and negative
+logical bins. One certificate includes all 8,192 NearbyUniqueCycle inputs.
+Every accepted transfer trace verifies independently; actual native amd64
+and 386 produce identical bank bytes. This meets the separately committed
+[private feasibility specification](certified-interval-feasibility.md), not
+a scalar latency or production cache acceptance rule.
+
+The rational constructor is expensive: the complete bank takes about 12 ms,
+or 70 ms with required independent verification, and allocates about 6.35 MB
+or 22.95 MB respectively. Its immutable offline bank covers 0% of BroadHoldout
+and only 0.043% of Increasing. No cache, caller substitution, runtime change
+or public contract is retained. **M1 performance remains unaccepted.**
+
+The [readable evidence record](measurements/certified-interval-feasibility-2026-10-12.md),
+[compressed evidence](measurements/certified-interval-feasibility-2026-10-12.tar.gz)
+and [SHA-256](measurements/certified-interval-feasibility-2026-10-12.tar.gz.sha256)
+retain the private source, exact graph/certificates/traces, all 84 raw cost
+rows, native/Wasm checks, numerical faults, setup failures, reviews, conditions
+and gate/build logs. No seed, capacity, request or sample was retuned or
+discarded. All production artifacts/locks remain unchanged.
+
+### Entry, soundness and finite checks
+
+[PR #8](https://github.com/darccio/cocoon/pull/8) merged at `aeaf01b` after all
+four CI checks passed, and local main was updated. Signed specification
+`8c8791b` preceded ignored implementation and defines no new public contract.
+Guest, host and adversarial entry/applied reviews precede measurement. The
+complete translated source and original Wasm remain pinned to
+`626550ca…dcc298` and `ae0119ca…8c6333`; the actual admitted resource's
+handle/slot/generation, occupied record, current memory and constructor words
+bind the exact default configuration. The read probe leaves memory unchanged
+and returns owned configuration/protobuf data.
+
+The graph preserves 76 slots and 30 rounded operations, including the two
+affine operations. An integer translation proves reduced-input containment
+within a fixed exponent/carry cell. Exact dyadic rational signed-corner extrema
+and direct outward binary64 rounding give containment by induction; strict
+`[k,k+1)` containment proves the exact nonsaturating int32 bin. No sampled
+endpoint agreement, mathematical-ln monotonicity, approximation or big.Float
+double-rounding is used. Source/graph drift is fatal; unsupported inputs,
+configuration mismatch or exhausted request budgets return uncertainty.
+
+The independent checker binds every source/node/literal/edge itself, recomputes
+all four signed corners from previously verified slots, and uses separate
+integer nearest-even rounding with exact comparison/adjacency for outward
+bounds. It checks all 57 accepted traces. Compiled full OriginalLog bits and
+OriginalBin are distinguished from the graph-generated point trace; the
+independent point trace also agrees at every primitive slot. The finite driver
+covers all 2,046 normal exponent fields on both carry sides plus 29 targeted
+inputs. Original Wasm supplies fresh singleton logical bins, Count and complete
+protobufs; it supplies no intermediate float trace or exhaustive universal proof.
+
+Each final native architecture uses 13,329 whole evaluations (including
+selected faults), 626 tiny members also counted in that whole ledger, and
+521 original-Wasm singleton requests, below fixed 16,384/262,144/2,048 limits.
+Bank SHA-256 is `7cbaa190712acef7949eb7cb61724721f43c226499d9904d4a61cf3be7778686`
+on both architectures. Nine compiled same-ELF numerical fault modes each exit
+1 at their required concrete assertion: inward bounds, wrong signed extrema,
+carry contribution, inclusive upper boundary, negative truncation, wrong bin,
+wrong configuration, a changed source literal and promotion after budget
+uncertainty. Compiler/startup failures earn no fault-detection credit; separate
+healthy source-drift rejection tests pass.
+
+### Bounds and negative outcomes
+
+Of 92 frozen requests, 57 succeed initially, 30 reject exponent-cell crossings
+from six powers of two, and five reject the affine bin boundary around seed
+16. Refinement never rescues those seven seeds; the original five-request cap
+remains. Constructor totals are 1,860 rounded nodes, 5,704 exact endpoint
+operations and 3,720 directed conversions, including failed work. Constructor
+maximum explicit integer length is 1,075 bits. The independent accepted-trace
+arithmetic/rounder ledger reaches 235 bits; its separately guarded dyadic
+decoder can form a 1,075-bit denominator before rational reduction, so 235
+is not an overall scratch-width maximum. Each accepted checker trace uses 76 slots, 30 rounded nodes,
+120 corner operations and 60 directed conversions.
+
+Graph representation is 7,249/7,225 bytes on amd64/386. Complete builder logical
+workspace, including the fixed attempt report and handoff copies, is
+47,964/47,192 bytes. Maximum export buffer capacity plus that workspace is
+56,156/55,384 bytes, below 64 KiB. Actual bank plus canonical encoding is
+2,814/2,554 bytes, below 4 KiB. These are logical representation/explicit
+integer-width bounds, not hard Go heap, stack, RSS or CPU-instruction limits.
+Allocating math/big, source ASTs and compiler/library scratch remain separate.
+
+GC-disabled single-operation observations record 6,349,272 bytes allocated for
+bank construction and 23,043,488 with verification before collection. A full
+individual checker observation allocates 392,448 bytes, while steady timed
+samples are about 290,839 B/op. Forced-GC deltas can be negative as pools and
+old setup objects disappear; they are not a retained-bank size or peak RSS.
+Raw before/after/collected MemStats are retained. No hard bounded-process or
+cheap per-miss constructor claim follows.
+
+### Isolated cost observations and offline locality
+
+Official Go 1.26.8, CGO=0, GOAMD64=v1, PGO off, actual GOMAXPROCS=1; Ryzen
+5800HS, Linux 7.2.8, powersave with boost enabled and no imposed affinity.
+All source, binary and toolchain hashes freeze before 2026-10-12
+19:10:20–19:11:47 UTC measurement. No build, lint, fuzz, profile or reviewer
+tools overlap it. Seven fresh-process samples per scope in each of two rotated
+and reversed orders retain all 84 rows. These are absolute cost observations,
+with no latency comparison, significance test or promotion rule.
+
+| Timed scope | Screening median | Confirmation median | Confirmation B/op | allocs/op |
+| --- | ---: | ---: | ---: | ---: |
+| Complete bank, no independent checker | 12.413 ms | 12.257 ms | 6,349,379 | 161,936 |
+| Complete bank with all required checks | 69.354 ms | 69.607 ms | 22,946,569 | 574,813 |
+| Accepted seed0 interval around 42 | 197.945 µs | 199.829 µs | 93,359 | 2,611 |
+| Early rejected seed3 exponent crossing | 8.847 µs | 8.841 µs | 3,313 | 5 |
+| Fully evaluated seed16 boundary rejection | 204.270 µs | 200.786 µs | 93,343 | 2,609 |
+| Full individual independent checker | 978.811 µs | 975.270 µs | 290,839 | 7,246 |
+
+Full-bank scopes use 32 iterations, individual scopes 512, early rejection
+65,536. The framework's initial 1x probe, scope warm-up, source extraction and
+witness construction are untimed and disclosed. Individual checks retain the
+complete required source/node binding. Source preparation has separate raw
+duration/allocation metrics: the confirmation Accepted42 median is 142.905 ms
+and 40,916,976 allocated bytes, outside ns/op/B/op. No cold-start or bounded
+online setup advantage is claimed. Process provenance keeps PID/PPID/command
+names; unrelated shell-wrapper arguments are omitted explicitly.
+
+Coverage uses the immutable prebuilt bank with no eviction, on-demand fill,
+per-miss certification or stateful caller. Every 1,024-input phase and both
+passes are retained; first/revisit totals are identical, not a warm-up gain.
+
+| Frozen corpus | Certified hits per pass | Hit rate |
+| --- | ---: | ---: |
+| Repeated | 8,192 / 8,192 | 100% |
+| NearbyUniqueCycle | 8,192 / 8,192 | 100% |
+| UniqueCycle | 9 / 8,192 | 0.110% |
+| MostlyUniqueCycle | 633 / 8,192 | 7.727% |
+| Phases | 768 / 8,192 | 9.375% |
+| NegativeBins | 1,024 / 8,192 | 12.5% |
+| BroadHoldout | 0 / 8,192 | 0% |
+| Increasing, one distinct pass | 1,806 / 4,194,304 | 0.043% |
+
+All 229,376 parameter-mismatch and 262,144 source-mismatch lookups have zero
+certified hits per architecture. Misses return uncertified; the coverage
+driver invokes no original computation for them.
+Coverage does not predict a full-call gain.
+
+### Retention, qualification and next decision
+
+Retain only the specification and proof/cost evidence. Reject promotion of this
+rational reference as an online constructor or this sparse offline bank as a
+scalar improvement. Review fixes include complete workspace/export capacity,
+preflight integer/graph bounds, distinct fatal status, primitive comparisons
+and actual P1 accounting. Earlier oversized author checks, a default-cache
+setup failure, the corrected checker compiler failure and pre-review builds
+remain separate from the final bounded driver. A reviewer incorrectly inferred
+seven cell failures; raw reason records corrected it without changing requests.
+
+All required `make check`, `race`, `rust`, `cross`, `smoke`, `fuzz` and
+`integration` pass on unchanged production, followed by two identical builds
+of all three proof packages and generated runtime: all 61 fingerprints match.
+Check uses Go 1.26.8 with official golangci-lint 2.13.1/49 strict linters;
+other gates use system Go 1.27.2 and Rust 1.97.0. Private native proof/consumer
+overlays receive their separate executed amd64/386 checks. These gates qualify
+unchanged production and the diagnostic evidence, not a shipping optimization.
+
+Next separately specify a fast bounded constructor or a lookup-cost control,
+including its trusted rounding argument, setup/retention and miss costs. Only
+if warranted should it proceed to a guest integration ceiling and an eligibility
+predicate independent of these diagnostic whole-source identities. Preserve
+negative-bin, broad and SQL holdout guards and per-call admission, ownership,
+epochs, memory/reply validation, poisoning and draining Close. No new scalar,
+SQL, batch or streaming latency claim is made: the recorded streaming throughput
+observations remain [the structural controls below](#structural-scalar-ceiling-exact-log-oracle-2026-10-12).
+No representative private SDK profile or native arm64/big-endian proof is claimed.
+
 ## Structural scalar ceiling: exact log oracle (2026-10-12)
 
 **Positive diagnostic ceiling; no production implementation qualified.**

@@ -1,12 +1,15 @@
 # Private bounded numerical feasibility proof
 
-Status: specification before implementation, 2026-10-12. This is an offline
+Status: specification signed as `8c8791b` before implementation, 2026-10-12;
+the [completed proof and cost observations](performance.md#bounded-numerical-feasibility-certified-intervals-2026-10-12)
+meet its numerical rule. Online construction and M1 remain unqualified.
+This is an offline
 diagnostic for one pinned mapping configuration. It defines no public API,
 cache, compiler transformation or changed runtime contract. PR #8 merged at
 `aeaf01b341a85024804e9ae1abe43af90d36e4d1` after all four CI checks passed;
-local main reproduces the previously validated tree. Commit this specification
-after guest, host and adversarial review and exact staged validation before
-implementing the ignored proof.
+local main reproduces the previously validated tree. This specification was
+committed after guest, host and adversarial review and exact staged validation
+before implementing the ignored proof; that checkpoint is retained in the evidence.
 
 ## Measured reason and question
 

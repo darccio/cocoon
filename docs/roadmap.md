@@ -24,8 +24,13 @@ phase-0 experiment also retains evidence only: its scalar gain appears in
 confirmation but fails the predeclared repeated untouched comparison. The
 subsequent exact-log oracle establishes a larger scalar ceiling, about 19% in
 both fixed-prefix sets, without establishing a bounded implementation. Pure
-outlining and fallback-heavy inputs regress. The next step is a private
-certified-interval feasibility proof; M1 performance remains unaccepted.
+outlining and fallback-heavy inputs regress. [PR #8](https://github.com/darccio/cocoon/pull/8)
+merged at `aeaf01b` after four green CI checks, and local main was updated.
+The signed private specification `8c8791b` preceded a positive offline interval
+proof: 57 independently checked certificates, identical native amd64/386 banks,
+and all required gates/reproductions pass. Construction plus verification costs
+about 70 ms and sparse/broad coverage remains poor. Next separately specify a
+fast bounded constructor or lookup-cost control; M1 remains unaccepted.
 
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
@@ -347,23 +352,42 @@ interval membership. All gates on unchanged production and two identical
 actual-mode fixture/runtime tests and native proofs. No production change or
 public contract is retained.
 
-Next commit a private bounded feasibility specification before implementing
-any certified-interval prototype. Prove the pinned floating-point membership
-and fallback conditions first, then measure hit/miss rates, lookup/certification
-cost and bounded-memory ceiling; park it if costs erase the benefit. The
+The private bounded feasibility specification was signed as `8c8791b` before
+implementing its diagnostic. Floating-point membership and fallback checks
+pass; its rational constructor and sparse offline bank remain unqualified for
+online use. Any fast constructor/lookup experiment needs a separate spec. The
 unsupported 70.74 ns oracle still misses scalar's absolute and diagnostic
 fresh-reference limits. See
 [results, provenance and limits](performance.md#structural-scalar-ceiling-exact-log-oracle-2026-10-12).
 A typed-return ABI remains a separate compatibility proposal requiring explicit
 operator approval before implementation.
 
-The next private step is specified in
+The completed private step is specified in
 [bounded numerical feasibility](certified-interval-feasibility.md): an offline
 exact-rational certificate proof for one pinned configuration, fixed seeds,
 bounded work/logical storage and independent rounding/native/Wasm checks.
-Implement that proof after the reviewed specification checkpoint. Its first
-decision is sound nontrivial interval coverage and honest construction cost;
-it adds no production cache, public contract or M1 acceptance.
+It returns 57 non-singleton certificates in 92 attempts across 23 original
+exponent fields and both bin signs; one covers all 8,192 NearbyUniqueCycle
+values. Every accepted trace verifies independently, actual native amd64/386
+bank bytes agree, 521 fresh original-Wasm requests per architecture pass,
+and nine compiled numerical faults each fail their intended assertion.
+Final combined ledgers remain below the fixed bounds; no seed or cap retuning.
+
+Keep the negatives: complete construction takes 12.257 ms, 6.35 MB allocated;
+with required verification, 69.607 ms and 22.95 MB. The logical bank plus
+encoding is below 4 KiB and builder workspace below 64 KiB; neither bounds
+the allocating reference's Go heap/RSS. Offline-bank hits are 100% for repeated
+and nearby, 0% broad, and 0.043% Increasing, with zero mismatched-config hits.
+All seven production gates and two unchanged 61-file proof/runtime builds
+pass; production and public contracts remain unchanged. See
+[full proof, costs and coverage](performance.md#bounded-numerical-feasibility-certified-intervals-2026-10-12).
+
+Next separately specify and measure a fast bounded constructor or lookup-cost
+control, including its trusted rounding proof, setup/retention and miss cost.
+Only then consider a guest integration ceiling and a production predicate
+independent of these diagnostic source identities. Preserve negative-bin,
+broad/SQL guards and all checked per-call obligations. This round adds no cache,
+scalar latency gain, new streaming claim or M1 acceptance.
 
 #### 1. Low-copy batching
 
@@ -428,9 +452,10 @@ M1 performance remains unaccepted. See [conditions, raw samples and limits](perf
 The later 2026-10-12 exact-log oracle above establishes a larger avoided-work
 ceiling, about 19% on checked fixed-prefix scalar versus untouched and about
 22% versus its identical disabled control. It does not promote either rejected
-exact-value cache or establish certified membership. Next specify a bounded
-interval feasibility proof before implementing a prototype; oracle locality
-alone remains insufficient. Preserve broad-input and SQL regressions in the
+exact-value cache or establish certified membership. The later bounded
+interval proof establishes numerical membership with expensive construction
+and sparse offline coverage; next separately specify a fast constructor or
+lookup-cost control. Preserve broad-input and SQL regressions in the
 decision, and keep this separate from original adaptive M1 acceptance. The
 requirements below remain; exact-value caching on repeated batches does not
 solve standalone scalar cost.
