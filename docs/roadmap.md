@@ -14,6 +14,13 @@ The repository now uses ordinary `.git` metadata. The sandbox workaround
 `.cocoon-git` has been migrated, with all history preserved. No special Git
 environment variables are required.
 
+[PR #7](https://github.com/darccio/cocoon/pull/7) merged at `6be3980` after
+licenses, native amd64/arm64 quality and end-to-end CI passed. Local `main`
+fast-forwarded to `origin/main` before the next experiment. Its conservative
+contained-load pass remains qualified; its adjacent read/write scalar probe
+remains a no-go. The subsequent checked unit-reply phase-0 round also retains
+evidence only, as recorded under track 4. M1 performance remains unaccepted.
+
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
 have passed locally. Rebuilding both original proof packages and the streaming
@@ -289,9 +296,13 @@ Fresh profiles and a three-site pinned prototype remove exactly the duplicate
 store checks, but 826 paired rows establish only a 0.4–0.5% raw guest gain;
 standalone scalar remains undetected and the broad scalar holdout has adverse
 comparisons. Keep evidence only, without a production spec or broader predicate.
-Next measure the existing-ABI checked unit-reply call-shape/specialization
-ceiling before deciding whether larger typed-return work is justified. See
-[outcomes, controls and refreshed streaming rates](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12).
+The subsequent existing-ABI checked unit-reply round below is also a no-go:
+default scalar has no detected primary gain and SQL holdouts regress repeatedly.
+See [the complete new evidence](performance.md#checked-unit-replies-existing-abi-phase-0-2026-10-12)
+and the earlier [read/write outcomes](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12).
+Next use a representative consuming-application profile or another exact
+compiler-backed hypothesis. A typed-return ABI remains a separate compatibility
+proposal requiring explicit operator approval before implementation.
 
 #### 1. Low-copy batching
 
@@ -469,9 +480,40 @@ The original entry requirements remain guardrails for future extensions:
 
 #### 4. Typed-return ABI
 
+The 2026-10-12 existing-ABI checked unit-reply phase-0 round is a no-go.
+Fresh ordinary Go 1.26.8 profiles put ResultView at 11.17% cumulative scalar
+samples; the unit-only component is about 8.6 ns. These overlapping/isolated
+scopes are not removable scalar shares. A source-pinned authored runtime/emitter
+overlay preserves canonical descriptor/range/limit/status/empty checks, one
+reply Memory query and the independent post-operation memory/poison boundary.
+All three facades regenerate from the authored emitter, with unchanged guest
+Wasm. Native amd64/386 query/error/lifetime and propagated generated-consumer
+proofs pass; four deliberate mutants fail semantic assertions on both.
+
+All 430 frozen hashes match through 924 paired rows. The component improves
+18.72%/18.80%, but default scalar 87.41→87.03 / 88.38→88.59 ns has no detected
+gain over untouched production (.456/1.000). It beats the slower call-shape
+control, which itself regresses about 1.30% in both rounds. Varied scalar gains
+about 1.1%, while varied SQL loses 2.28%/3.31% and SQL holdout loses 2.18%/2.53%
+against baseline, with holdout losses also repeating against control. The
+premeasurement promotion rule fails. Retain evidence only; no production spec,
+implementation or new public contract follows.
+
+P16 streaming uses three real linked variants because timed Close invokes
+ResultUnit. All confirmation differences are undetected, including adverse
+fixed 16-home medians; a one-home holdout screening loss against control also
+remains recorded. Untouched confirmation writes/s are about 1.32 million with
+one home/9.27 million with 16 homes for fixed chunks, and 1.48/9.45 million for
+the variable/empty-chunk holdout. These are full-lifetime observations, not
+strict capacity ceilings or P1/default-stream equivalence. P1 streaming was
+not measured. Current scalar still misses both absolute and fresh reference
+limits, so M1 remains unaccepted. See
+[all comparisons, conditions and negatives](performance.md#checked-unit-replies-existing-abi-phase-0-2026-10-12).
+
 - Measure the reply-validation share before designing a new ABI. Explore a
   payload-free successful unit return and direct scalar returns, with explicit
-  status/error handling. The measured share limits the possible scalar gain.
+  status/error handling. Use profiles to choose a matched checked prototype;
+  establish its attainable full-facade gain with controls and holdouts.
 - Produce a versioned schema, compatibility/migration plan, and generator/runtime
   design for review before implementation. Keep ABI 3's canonical descriptor
   validation unchanged; this is not permission to skip existing checks.
@@ -496,9 +538,10 @@ roles: fixed P16 one-home confirmation rates are about 1.35 million writes/s,
 versus 10.4 million with 16 homes, with no candidate effect claimed.
 No implementation/spec/public contract follows; M1 remains unaccepted.
 Preserve [the complete evidence and limits](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12)
-and keep the existing production predicates narrow. Next measure a checked
-unit-reply ceiling within ABI 3; a new ABI requires compatibility specification
-and explicit operator approval before implementation.
+and keep the existing production predicates narrow. The checked unit-reply
+ceiling within ABI 3 is now measured under track 4 and is also a no-go; a new ABI
+requires a compatibility specification and explicit operator approval before
+implementation.
 
 The 2026-10-12 matching-profile round qualifies a conservative contained-load
 bounds hardener pass. The private predicate and phase-0 evidence are committed

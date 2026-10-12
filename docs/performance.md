@@ -4,6 +4,242 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Checked unit replies: existing-ABI phase 0 (2026-10-12)
+
+**No-go for the measured default scalar hypothesis.** A checked `ResultUnit`
+specialization improves the isolated reply component and varied scalar, but
+neither round establishes a default scalar gain over the untouched facade.
+Varied SQL and its holdout regress repeatedly. The premeasurement rule requires
+default scalar to improve against both the untouched facade and the call-shape
+control in both rounds, without repeated same-comparator guard losses. It fails.
+Retain evidence only, with production at merged `6be3980`. No production
+specification, implementation, public API/ABI/schema change or artifact change
+follows. **M1 performance remains unaccepted.**
+
+The [readable record](measurements/unit-reply-phase0-2026-10-12.md),
+[compressed evidence](measurements/unit-reply-phase0-2026-10-12.tar.gz) and
+[SHA-256](measurements/unit-reply-phase0-2026-10-12.tar.gz.sha256) preserve every
+one of 924 successful raw samples and custom metrics, exact source overlays and
+regenerated facades, commands, conditions, fresh independent reference, profiles,
+21 SSA dumps, ordinary assembly, executable proofs/mutants, reviews and
+procedural negatives. No sample or outlier was dropped or selected for retiming.
+Earlier screening gains are not added to this round.
+
+### Matching profiles, call shape and checked prototype
+
+Entry is clean `6be39801bd208e74416578912e9344be06e856b6`, after all four PR #7
+checks pass, its signed commits are merged, and local `main` fast-forwards to
+`origin/main`. Guest, host and adversarial source reviews precede the experiment.
+Six sequential ordinary P1 CPU diagnostics cover default scalar, raw guest, SQL,
+batch, trace and the synthetic runtime reply component. Each requests ten
+seconds; the component reaches testing's one-billion-iteration cap and runs
+about 8.6 seconds, reporting 8.597 ns/op. Scalar attributes 32.67% flat/41.00%
+cumulative samples to `fn176`, 55.58% cumulative to the guest export and 11.17%
+cumulative to `ResultView`. These overlapping categories and profiled times are
+context, not removable shares, additive savings or acceptance measurements.
+
+The untouched generated scalar method calls `ResultView`, then rejects a
+nonempty successful unit reply. Destructors already call `ResultUnit`, whose
+original body delegates to `ResultView`. The call-shape control changes only
+the authored generator's ordinary unit tails to call existing `ResultUnit`.
+The probe uses that same facade shape with a specialized runtime method and a
+private cold tail. All three facades are regenerated from authored generator
+overlays; baseline regeneration reproduces the tracked facades exactly.
+Ordinary unit tails change for Datadog Add/AddMany, compute TestTrap and streaming
+Fault. Input encoding, constructors, nonunit methods, typed Batch, library
+admission, Resource ownership and `Instance.Call` remain unchanged.
+
+The probe obtains current `Memory()` once for the reply, checks the descriptor's
+full eight bytes against logical length, decodes little-endian pointer/size,
+checks MaxOutput, then checks the payload range, including empty payload pointers.
+Only checked OK/size-zero succeeds directly. Other paths use the captured memory
+and decoded fields in the cold tail, preserving range-before-status-before-unit
+shape ordering and existing concrete errors/owned opaque messages. Memory is an
+observable interface method: a fallback through `ResultView` or `Call.Range`
+would query it again and is not equivalent. Descriptor address caching, full
+call-state reset, direct panic containment, separate current post-call Memory
+and MaxMemory check, immediate poisoning/epochs, once-only destruction, terminal
+admission/draining Close and home replacement semantics are preserved.
+
+`Range`, `ResultView` and the generated checked Call boundary have unchanged
+source bodies. Ordinary machine-code counts for `fn176` remain 5,462 bytes,
+128-byte frame and 78 static panic-bounds sites; `fn96` remains 110,236 bytes,
+856-byte frame and 1,452 sites. The scalar export remains 3,004 bytes/112-byte
+frame/57 sites. ResultView stays 605 bytes/104-byte frame/168 instructions;
+the unit caller closure changes from 143 bytes/42 instructions to 92/25 in both
+control and probe. Probe ResultUnit is 489 bytes/96-byte frame/128 instructions,
+plus a 350-byte/64-byte-frame cold tail, versus the original 124-byte/32-byte-frame
+wrapper. Static counts do not isolate causal nanoseconds or exclude changes in
+inlining, symbol placement and linkage.
+
+### Executable proof and procedural negatives
+
+All three actual variants pass runtime, generator and all three consumer suites,
+including original-Wasm/wazero differential and state/invalid-input oracles.
+An additional ignored runtime oracle compares both original callbacks and
+ResultUnit against independent expected outcomes. Thirty wire cases and
+memory-query/panic/lifetime tests check concrete error fields/messages/ownership,
+descriptor/payload logical bounds and spare capacity, widened arithmetic,
+MaxOutput precedence, all statuses including opaque error bytes, alternating
+memory, independent post-MaxMemory precedence, call reset, healthy expected
+errors, immediate protocol poisoning, stale resources, aliases, once-only Close
+and prevention of subsequent execution. All three runtime and generated mock
+consumer roles pass on native amd64 and native 386 with Go 1.26.8/CGO disabled.
+Four safe mutants fail explicit semantic assertions on both: skipping the empty
+range, rejecting nonempty OK before bounds, rereading memory in the cold tail,
+and dropping post-MaxMemory enforcement while retaining its query. Compile or
+startup failures cannot satisfy mutant rejection. No native arm64 claim follows.
+
+The generator fixture's child normally overrides GOFLAGS and loses a parent
+overlay. Initial successful parent checks do not establish candidate runtime
+coverage in that child. Proof-only fixture copies propagate each role's overlay;
+raw logs identify the child compiler, arch and actual overlay. A separate initial
+proof driver uses the wrong working directory, causing module setup to fail
+before compiling the child; its raw log and original driver are retained. The
+corrected propagated fixtures all pass. This procedural failure is not a
+candidate semantic failure. Initial machine-analysis indentation and
+receiver-unqualified SSA dump selectors fail before useful output; corrected
+scripts and all original records are preserved. Host-only pprof line rendering
+finds no frames in the intentionally raw guest profile; a resume driver retains
+the two completed profiles and runs only the four remaining diagnostics.
+
+### Conditions and all time comparisons
+
+Freeze 430 fingerprints after final executable proof and review. All match
+through 924 samples, independently audited against raw output, summary and
+derived aliases. Timing is isolated from every local build/test/lint/fuzz/profile
+and reviewer tool, 13:58:06–14:12:26 UTC. Use Linux 7.2.8/amd64, Ryzen 7 5800HS
+(8 physical/16 logical cores), unpinned CPUs 0–15, powersave governor with boost,
+default GC/memory/debug settings, CGO disabled, GOAMD64=v1 and explicit PGO off.
+Frequency snapshots are recorded; no fixed-clock or absence-of-unrelated-system-
+work claim follows. Seven alternating 500 ms passes and seven reversed-order
+one-second passes use fresh processes and the unchanged original harnesses.
+Each pass has 18 groups/66 processes. The 280 matched rows report actual P1 and
+168 full-stream rows report actual P16. Remaining 476 original/raw/component rows
+have framework GOMAXPROCS=16 and no in-window custom metric; suffix 16 alone
+does not prove processor instrumentation or parallel scalar contention.
+
+The old system comparison path now contains Go 1.26.9, and system quality Go
+is 1.27.2. Preflight 1.26.9 builds are discarded before any profiling/timing and
+their metadata retained. Download official Go 1.26.8 using its published archive
+size 66,897,291 and SHA-256
+`d0f743b33e8d8945e6b1f432edd15785c70507121d6e2a723b21285eddf8b57b`;
+all measurement, proof and fresh reference commands use
+`.cache/toolchains/go1.26.8/go/bin/go`, prepended to PATH for child compilers.
+Official GOROOT/distribution differs from the earlier distro build: old frozen
+sources match, but the ELF changes from `74af2903…` to `c73daeca…`. Do not compare
+old/new times across that toolchain change. All new roles share the exact compiler.
+
+The following table gives medians, percent time changes and exploratory,
+unadjusted benchstat p-values for both comparisons. Nondetection is not
+equivalence; broad upward medians and single-round results remain visible.
+Reference medians and every other custom/allocation metric are in the bundle.
+
+| Workload | Screen baseline → probe, ns/op | Δ; p | Confirm baseline → probe, ns/op | Δ; p | Probe/control screen; confirm (Δ, p) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Original SQL | 2,138 → 2,138 | +0.00%; 0.618 | 2,168 → 2,153 | -0.69%; 0.535 | -1.88%, 0.006; -2.05%, 0.318 |
+| Original scalar | 87.41 → 87.03 | -0.43%; 0.456 | 88.38 → 88.59 | +0.24%; 1.000 | -1.72%, 0.024; -1.05%, 0.026 |
+| Original batch 1k | 37,976 → 37,854 | -0.32%; 0.902 | 38,132 → 38,276 | +0.38%; 0.209 | -0.40%, 1.000; -0.02%, 0.620 |
+| Original trace 1k | 2,567,620 → 2,584,938 | +0.67%; 1.000 | 2,629,788 → 2,617,113 | -0.48%; 1.000 | -2.79%, 0.001; -2.38%, 0.001 |
+| Varied scalar | 88.32 → 87.28 | -1.18%; 0.001 | 89.51 → 88.5 | -1.13%; 0.026 | -2.36%, 0.001; -2.00%, 0.001 |
+| Varied SQL | 2,679 → 2,740 | +2.28%; 0.001 | 2,715 → 2,805 | +3.31%; 0.003 | +0.66%, 0.176; +2.04%, 0.026 |
+| Negative bins | 88.2 → 87.4 | -0.91%; 0.001 | 88.88 → 88.07 | -0.91%; 0.128 | -2.09%, 0.001; -2.45%, 0.026 |
+| SQL holdout P1 | 5,471 → 5,590 | +2.18%; 0.024 | 5,490 → 5,629 | +2.53%; 0.026 | +2.12%, 0.001; +1.42%, 0.038 |
+| Increasing P1 | 89.3 → 88.58 | -0.81%; 0.017 | 89.41 → 89.6 | +0.21%; 0.710 | -1.80%, 0.026; -1.08%, 0.001 |
+| Broad scalar P1 | 88.7 → 89.23 | +0.60%; 0.259 | 89.38 → 89.63 | +0.28%; 0.456 | -0.70%, 0.012; -0.93%, 0.073 |
+| Repeated batch 1024 P1 | 38,930 → 39,007 | +0.20%; 0.535 | 39,230 → 39,265 | +0.09%; 1.000 | +0.14%, 0.119; +0.29%, 0.786 |
+| Broad batch 8192 P1 | 312,642 → 312,108 | -0.17%; 0.053 | 314,238 → 313,712 | -0.17%; 0.383 | -0.25%, 0.073; -0.28%, 0.535 |
+| Raw guest diagnostic | 53 → 52.74 | -0.49%; 0.003 | 53.3 → 53.2 | -0.19%; 0.620 | -0.85%, 0.001; -0.76%, 0.165 |
+| Fixed stream, one home P16 | 189,165 → 188,216 | -0.50%; 0.068 | 193,869 → 193,982 | +0.06%; 1.000 | +0.14%, 0.332; -0.25%, 1.000 |
+| Fixed stream, 16 homes P16 | 24,077 → 23,991 | -0.36%; 0.209 | 27,630 → 28,981 | +4.89%; 0.535 | +0.02%, 0.710; +5.67%, 0.805 |
+| Holdout stream, one home P16 | 227,851 → 228,136 | +0.13%; 0.710 | 232,545 → 234,993 | +1.05%; 0.318 | +1.41%, 0.002; -0.13%, 0.710 |
+| Holdout stream, 16 homes P16 | 32,383 → 31,400 | -3.04%; 0.001 | 36,341 → 34,380 | -5.40%; 0.535 | -2.33%, 0.001; -4.52%, 0.620 |
+| ReplyUnit component | 8.6 → 6.99 | -18.72%; 0.001 | 8.684 → 7.051 | -18.80%; 0.001 | -18.58%, 0.001; -18.65%, 0.001 |
+
+Default scalar beats the slower call-shape control but not untouched production.
+The control itself regresses 1.30% in both default scalar rounds (.001/.017),
+and 3.57%/1.95% in trace (.007/.001). Probe/control trace gains therefore do not
+establish an untouched-facade benefit. Varied scalar has a repeatable 1.18%/1.13%
+primary gain; negative-bin and increasing gains do not confirm against baseline.
+No batch primary comparison establishes a gain. Varied SQL loses repeatedly
+against baseline, with a confirmation-only loss against control; SQL holdout
+loses against both comparators in both rounds. SQL still uses unchanged
+ResultView, so source/linkage effects are material and no unit-instruction causal
+attribution follows. Raw guest's screening gain does not confirm despite identical
+guest code and bypassing the reply path. The component's 1.610/1.633 ns reduction
+omits guest/admission/ownership/execution/recovery/post-memory work and cannot be
+subtracted from separately calibrated scalar timings. Scalar and component
+remain allocation-free in all roles.
+
+### P16 streaming observations and current M1 limits
+
+Streaming uses real baseline/control/probe binaries because timed Close already
+invokes ResultUnit. Each leaf times a complete 16 KiB New/Write/End/Close lifetime,
+nominal 64-byte chunks and Retain32, using standalone methods, owned replies and
+disposal. Library opening, lazy-home warmup, corpus construction and the full
+oracle are outside timing. Fixed has 256 writes plus End, 257 outputs,
+16,392 owned bytes/nine retention groups and 250 Go allocations per stream.
+The four-pattern holdout averages 343.5 variable/empty writes plus End, 344.5
+outputs, 16,390 owned bytes/11 groups and 268 allocations. Sixteen-home leaves
+report configured homes=16 and independent stateless pool=1; the pool slot is
+not another resource lane. Default resource-home count is one.
+
+Direct median writes/s metrics exclude End; these are observed full-lifetime
+rates, not strict capacity ceilings, fairness, RSS or live-instance guarantees.
+
+| Corpus/topology | Screen baseline / control / probe writes/s | Confirm baseline / control / probe writes/s |
+| --- | ---: | ---: |
+| Fixed, one home | 1,353,316 / 1,362,104 / 1,360,137 | 1,320,480 / 1,316,362 / 1,319,708 |
+| Fixed, 16 homes | 10,632,482 / 10,672,623 / 10,670,765 | 9,265,249 / 9,334,311 / 8,833,492 |
+| Holdout, one home | 1,507,564 / 1,526,863 / 1,505,678 | 1,477,134 / 1,459,879 / 1,461,748 |
+| Holdout, 16 homes | 10,607,379 / 10,685,009 / 10,939,531 | 9,452,007 / 9,540,167 / 9,991,199 |
+
+All confirmation stream differences are undetected, including fixed 16-home
+cost medians +4.89% against baseline/+5.67% against control (.535/.805). One-home
+holdout has a screening loss against control +1.41% (.002), while its primary
+comparison is undetected and the loss does not confirm. Sixteen-home holdout's
+screening gains against both controls do not confirm. No accepted throughput
+gain or equivalence follows. P1/default streaming is unmeasured here; any
+production proposal would require separate P1/P16 streaming qualification.
+
+Fresh independent ABI2 reference uses its own locked Rust 1.97.0 shim,
+Binaryen 133, wasm2go 0.4.16 and own hardener, with a previously absent target
+directory. All ten build/correctness commands and 48 functional corpus leaves
+pass; 56 authored fingerprints remain unchanged. Its Wasm `8bda5ff7…` and module
+`5ff25314…` reproduce; the same official Go 1.26.8 consumer ELF is `5c4f361a…`.
+No Cocoon implementation is transplanted. Borrowed ABI2/error semantics,
+background context/four instances and original batch/trace corpus differences
+limit comparison; matched success corpora do not imply contract equivalence.
+
+| Original scope | Current untouched screen / confirm | Fresh reference | Reference × 1.10 |
+| --- | ---: | ---: | ---: |
+| Scalar | 87.41 / 88.38 ns | 55.24 / 55.66 ns | 60.764 / 61.226 ns |
+| SQL | 2.138 / 2.168 µs | 1.968 / 1.986 µs | 2.1648 / 2.1846 µs |
+
+Untouched scalar misses the absolute 55.44 ns and both fresh caps; reference
+overhead is 58.24%/58.78%. SQL meets the absolute 2.2154 µs and fresh median caps,
+with only 26.8/16.6 ns fresh margins. This does not establish durable SQL
+acceptance or rescue scalar. Rejected probe times are not production outcomes.
+
+All six required gates (`make check`, `race`, `rust`, `cross`, `smoke`, `fuzz`)
+plus `make integration` pass after measurement. Check uses official Go 1.26.8
+and unchanged project-pinned golangci-lint 2.13.1; race/cross/smoke/fuzz/integration
+use system Go 1.27.2, with Rust 1.97.0 native tests/all-feature Clippy. The initial
+Go 1.27.2 check passes tests/vet/format but its pinned linter cannot decode
+export-data version 5 with its maximum version 4 reader. The original failed log
+and separate successful retry driver are retained; no dependency/linter patch or
+benchmark retiming follows. Sequential exact staged-snapshot tests on both Go
+versions, vet and compatible-compiler formatting/lint are required before the
+evidence commit; their post-archive logs remain separate from timing evidence.
+
+Two additional full builds of all three proofs and runtime generation reproduce
+all 61 proof/runtime/harness fingerprints exactly against committed entry
+`6be3980`, including modules, Wasm, facades, shims and locks. Every one of the
+430 frozen timing fingerprints still matches after the gates and reproductions.
+The failed probe's authored overlays/proofs are archived for diagnosis; production
+code and artifacts stay unchanged. A future new typed-return ABI still needs a
+versioned compatibility/migration specification and explicit operator approval.
+
 ## Scalar read and write bounds: phase 0 (2026-10-12)
 
 **No-go for the measured standalone scalar hypothesis.** Removing three
