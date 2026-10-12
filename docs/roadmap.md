@@ -14,6 +14,19 @@ The repository now uses ordinary `.git` metadata. The sandbox workaround
 `.cocoon-git` has been migrated, with all history preserved. No special Git
 environment variables are required.
 
+[PR #7](https://github.com/darccio/cocoon/pull/7) merged at `6be3980` after
+licenses, native amd64/arm64 quality and end-to-end CI passed. Local `main`
+fast-forwarded to `origin/main` before the next experiment. Its conservative
+contained-load pass remains qualified; its adjacent read/write scalar probe
+remains a no-go. The subsequent checked unit-reply phase-0 round also retains
+evidence only, as recorded under track 4. The subsequent covered store32
+phase-0 experiment also retains evidence only: its scalar gain appears in
+confirmation but fails the predeclared repeated untouched comparison. The
+subsequent exact-log oracle establishes a larger scalar ceiling, about 19% in
+both fixed-prefix sets, without establishing a bounded implementation. Pure
+outlining and fallback-heavy inputs regress. The next step is a private
+certified-interval feasibility proof; M1 performance remains unaccepted.
+
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
 have passed locally. Rebuilding both original proof packages and the streaming
@@ -277,9 +290,9 @@ before committing to larger designs.
 The low-copy host encoding stage is qualified below. Exact-value bin reuse has
 a phase-0 no-go for both measured defaults. Translation analysis has produced
 qualified publication-tail and contained-load passes, while compiled wazero loses the private
-same-Wasm control. Next inspect matching profiles and compiler output for
-another exact translation pattern; do not broaden the retained pass without
-new proof and qualification. Typed returns still need a compatibility
+same-Wasm control. The latest structural ceiling below sets the next bounded
+feasibility proof; do not broaden the retained translation pass without new
+proof and qualification. Typed returns still need a compatibility
 decision before implementation; the session decision is recorded in track 3.
 Translation analysis and the alternative-backend comparison are diagnostic
 tracks; use their results to decide whether larger compiler or runtime work is justified.
@@ -289,9 +302,60 @@ Fresh profiles and a three-site pinned prototype remove exactly the duplicate
 store checks, but 826 paired rows establish only a 0.4–0.5% raw guest gain;
 standalone scalar remains undetected and the broad scalar holdout has adverse
 comparisons. Keep evidence only, without a production spec or broader predicate.
-Next measure the existing-ABI checked unit-reply call-shape/specialization
-ceiling before deciding whether larger typed-return work is justified. See
-[outcomes, controls and refreshed streaming rates](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12).
+The subsequent existing-ABI checked unit-reply round below is also a no-go:
+default scalar has no detected primary gain and SQL holdouts regress repeatedly.
+See [the complete new evidence](performance.md#checked-unit-replies-existing-abi-phase-0-2026-10-12)
+and the earlier [read/write outcomes](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12).
+The subsequent covered store32 phase-0 round is also a no-go under its
+predeclared rule. Two source-pinned descending-store checks are removed while
+all writes and first/new-maximum guards remain. Native amd64/386 proofs pass;
+all 411 frozen hashes match through 966 rows. Original scalar screening
+87.81→88.03 ns is undetected (.620); confirmation 88.02→86.71 ns gains 1.49%
+(.005). Both beat the copied-check control, but repeated untouched gain is
+required. Increasing scalar gains against both controls and repeated batch
+gains against baseline; these do not replace the original scalar requirement.
+Keep positive and negative evidence without a private production spec or pass.
+
+P1/P16 full-stream brackets use byte-identical binaries; all comparisons are
+undetected, including adverse fixed 16-home medians. Untouched confirmation
+writes/s are about 1.59M fixed / 1.71M holdout at P1; P16 one home is 1.31M /
+1.46M and 16 homes is 9.49M / 9.33M. These are lifetime workload observations,
+not maximum capacity bounds, causal guest gains or Batch-session equivalence.
+Current original scalar misses absolute/fresh limits, and SQL also misses
+confirmation's fresh limit (2,173 ns versus 2,158.2 ns). M1 stays unaccepted.
+See [all outcomes and limits](performance.md#covered-store32-bounds-phase-0-2026-10-12).
+The two-site probe is parked. With no representative application available,
+the next separately preregistered structural diagnostic measures avoided
+numeric work in the public synthetic Datadog fixture. It extracts only the
+exact pure-log block and uses an unsupported 64 MiB precomputed table, with
+enabled/disabled modes in one byte-identical binary. All 520 frozen hashes
+match through 1,232 rows. Original checked fixed-prefix scalar improves
+87.49→70.26 / 87.74→70.74 ns (19.69%/19.38%, both .001); gains against the
+disabled control are 22.30%/21.72% (both .001). The predeclared 10% ceiling rule
+passes all four comparisons. This is neither a production cache nor an
+original adaptive M1 acceptance measurement.
+
+Keep its negatives: pure outlining slows scalar 2.46%/1.63%; enabled negative
+bins lose 2.87%/3.45%, broad scalar 3.40%/2.55%, broad batch 10.15%/9.51%, and
+SQL holdout 1.71%/1.49% versus untouched, all detected in both sets. The same
+ELF disabled comparison is mostly undetected on misses; misses are not free.
+The caller frame grows eight bytes, and the table/setup differs from untouched.
+Exact native amd64/386 proofs and complete finite original-Wasm histories pass;
+they do not replay all 4M/8M timed values through Wasm or certify arbitrary
+interval membership. All gates on unchanged production and two identical
+61-file proof/runtime builds pass; diagnostic overlays receive separate
+actual-mode fixture/runtime tests and native proofs. No production change or
+public contract is retained.
+
+Next commit a private bounded feasibility specification before implementing
+any certified-interval prototype. Prove the pinned floating-point membership
+and fallback conditions first, then measure hit/miss rates, lookup/certification
+cost and bounded-memory ceiling; park it if costs erase the benefit. The
+unsupported 70.74 ns oracle still misses scalar's absolute and diagnostic
+fresh-reference limits. See
+[results, provenance and limits](performance.md#structural-scalar-ceiling-exact-log-oracle-2026-10-12).
+A typed-return ABI remains a separate compatibility proposal requiring explicit
+operator approval before implementation.
 
 #### 1. Low-copy batching
 
@@ -353,10 +417,15 @@ contract follows. All quality gates/integration and repeated proof/lock builds
 pass; the fresh spike scalar remains 57.48 ns versus 91.22 ns untouched Cocoon.
 M1 performance remains unaccepted. See [conditions, raw samples and limits](performance.md#exact-bin-reuse-phase-0-no-go-2026-10-11).
 
-The next decision is whether to specify a certified interval experiment with
-a credible pinned-floating-point proof, or start translation analysis. Oracle
-locality alone is insufficient. The requirements below remain for future work;
-exact-value caching on repeated batches does not solve standalone scalar cost.
+The later 2026-10-12 exact-log oracle above establishes a larger avoided-work
+ceiling, about 19% on checked fixed-prefix scalar versus untouched and about
+22% versus its identical disabled control. It does not promote either rejected
+exact-value cache or establish certified membership. Next specify a bounded
+interval feasibility proof before implementing a prototype; oracle locality
+alone remains insufficient. Preserve broad-input and SQL regressions in the
+decision, and keep this separate from original adaptive M1 acceptance. The
+requirements below remain; exact-value caching on repeated batches does not
+solve standalone scalar cost.
 
 - Measure mapping cost and value/bin locality first. An exact cache keyed by
   value bits and all mapping parameters can avoid repeated logarithms, but the
@@ -469,9 +538,40 @@ The original entry requirements remain guardrails for future extensions:
 
 #### 4. Typed-return ABI
 
+The 2026-10-12 existing-ABI checked unit-reply phase-0 round is a no-go.
+Fresh ordinary Go 1.26.8 profiles put ResultView at 11.17% cumulative scalar
+samples; the unit-only component is about 8.6 ns. These overlapping/isolated
+scopes are not removable scalar shares. A source-pinned authored runtime/emitter
+overlay preserves canonical descriptor/range/limit/status/empty checks, one
+reply Memory query and the independent post-operation memory/poison boundary.
+All three facades regenerate from the authored emitter, with unchanged guest
+Wasm. Native amd64/386 query/error/lifetime and propagated generated-consumer
+proofs pass; four deliberate mutants fail semantic assertions on both.
+
+All 430 frozen hashes match through 924 paired rows. The component improves
+18.72%/18.80%, but default scalar 87.41→87.03 / 88.38→88.59 ns has no detected
+gain over untouched production (.456/1.000). It beats the slower call-shape
+control, which itself regresses about 1.30% in both rounds. Varied scalar gains
+about 1.1%, while varied SQL loses 2.28%/3.31% and SQL holdout loses 2.18%/2.53%
+against baseline, with holdout losses also repeating against control. The
+premeasurement promotion rule fails. Retain evidence only; no production spec,
+implementation or new public contract follows.
+
+P16 streaming uses three real linked variants because timed Close invokes
+ResultUnit. All confirmation differences are undetected, including adverse
+fixed 16-home medians; a one-home holdout screening loss against control also
+remains recorded. Untouched confirmation writes/s are about 1.32 million with
+one home/9.27 million with 16 homes for fixed chunks, and 1.48/9.45 million for
+the variable/empty-chunk holdout. These are full-lifetime observations, not
+strict capacity ceilings or P1/default-stream equivalence. P1 streaming was
+not measured. Current scalar still misses both absolute and fresh reference
+limits, so M1 remains unaccepted. See
+[all comparisons, conditions and negatives](performance.md#checked-unit-replies-existing-abi-phase-0-2026-10-12).
+
 - Measure the reply-validation share before designing a new ABI. Explore a
   payload-free successful unit return and direct scalar returns, with explicit
-  status/error handling. The measured share limits the possible scalar gain.
+  status/error handling. Use profiles to choose a matched checked prototype;
+  establish its attainable full-facade gain with controls and holdouts.
 - Produce a versioned schema, compatibility/migration plan, and generator/runtime
   design for review before implementation. Keep ABI 3's canonical descriptor
   validation unchanged; this is not permission to skip existing checks.
@@ -496,9 +596,10 @@ roles: fixed P16 one-home confirmation rates are about 1.35 million writes/s,
 versus 10.4 million with 16 homes, with no candidate effect claimed.
 No implementation/spec/public contract follows; M1 remains unaccepted.
 Preserve [the complete evidence and limits](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12)
-and keep the existing production predicates narrow. Next measure a checked
-unit-reply ceiling within ABI 3; a new ABI requires compatibility specification
-and explicit operator approval before implementation.
+and keep the existing production predicates narrow. The checked unit-reply
+ceiling within ABI 3 is now measured under track 4 and is also a no-go; a new ABI
+requires a compatibility specification and explicit operator approval before
+implementation.
 
 The 2026-10-12 matching-profile round qualifies a conservative contained-load
 bounds hardener pass. The private predicate and phase-0 evidence are committed
@@ -523,9 +624,10 @@ native text shrinks 9,012 B but the test executable grows 89,312 B in debug meta
 M1 remains unaccepted: SQL meets its absolute/fresh-reference limits while
 scalar 87.87/88.11 ns misses both. No public contract changes.
 See [paired outcomes and negatives](performance.md#contained-load-bounds-production-qualification-2026-10-12)
-and [the private predicate/proof](translation-contained-loads.md). Next inspect
-matching scalar profiles/compiler output for another exact pattern, or measure
-the typed-return share before a compatibility specification and operator approval.
+and [the private predicate/proof](translation-contained-loads.md). The later
+exact-log structural ceiling above sets the next bounded feasibility proof.
+Other translation patterns and typed returns remain separate experiments;
+typed returns need a compatibility specification and operator approval.
 Keep this predicate narrow and retain streaming guards. Arm64 still needs native
 hardware; no earlier screening percentages are added to this qualification.
 
@@ -592,8 +694,9 @@ gain or default-stream acceptance claim.
 
 See [scope](backend-control.md) and
 [paired results, provenance, limits, and compressed evidence](performance.md#same-wasm-backend-control-diagnostic-no-go-2026-10-11).
-Next resume track 5's matching-profile analysis. A context/call-carrier control
-would be a separate private experiment; this result cannot predict its outcome.
+Next follow the later structural ceiling's bounded feasibility decision above.
+A context/call-carrier control would be a separate private experiment; this
+result cannot predict its outcome.
 Any supported backend proposal still requires a public-contract decision.
 
 - Compare the same pinned Wasm in compiled wazero against translated Go using
