@@ -357,6 +357,14 @@ fresh-reference limits. See
 A typed-return ABI remains a separate compatibility proposal requiring explicit
 operator approval before implementation.
 
+The next private step is specified in
+[bounded numerical feasibility](certified-interval-feasibility.md): an offline
+exact-rational certificate proof for one pinned configuration, fixed seeds,
+bounded work/logical storage and independent rounding/native/Wasm checks.
+Implement that proof after the reviewed specification checkpoint. Its first
+decision is sound nontrivial interval coverage and honest construction cost;
+it adds no production cache, public contract or M1 acceptance.
+
 #### 1. Low-copy batching
 
 The 2026-10-11 entry measurements are recorded in the performance notes and
