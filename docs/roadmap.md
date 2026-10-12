@@ -1,7 +1,7 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-11. The synchronous M1 framework and Datadog proof were released privately
+2026-10-12. The synchronous M1 framework and Datadog proof were released privately
 as v0.1.0. The quality pass and five performance passes are complete, including
 the nine-round multi-agent loop, the PGO/resource-call follow-up, and exact
 numeric-lowering investigation.
@@ -263,7 +263,8 @@ with [samples and limits](performance.md#default-streaming-cost-investigation-20
 No production change or new contract follows from that investigation. The
 subsequent low-copy host encoding round qualified matched inputs and
 standalone/streaming holdouts with a freshly rebuilt independent spike, as
-recorded in track 1. Current next work is track 5's matching-profile analysis.
+recorded in track 1. Track 5's next matching-profile analysis now has a promising
+contained-load phase-0 result and a private production specification.
 
 The entry baseline matrix compares scalar versus batch calls, repeated
 values, distinct nearby values, mostly unique values, and negative-bin values.
@@ -471,6 +472,26 @@ The original entry requirements remain guardrails for future extensions:
 
 #### 5. Translation optimizations
 
+The 2026-10-12 matching-profile round identifies contained `load32` endpoint
+checks on one unchanged local base within a straight-line block. Its private
+hash-pinned probe keeps every guest read and first/new-maximum check at their
+original positions. Original, varied and holdout SQL gains repeat against both
+untouched and copied-checked controls (about 3–5%); original/repeated batch gains
+are smaller. Broad batch screening versus baseline is undetected. Standalone
+scalar and trace benefits remain unestablished; recheck's +1.07% confirmation
+trace cost is retained. All 770 raw rows and 189 frozen hashes are preserved.
+
+This is a GO for a narrowly specified production experiment, not qualification
+of generated overlays. Production source and all 61 reproduced proof/runtime
+artifacts remain unchanged at this checkpoint. The six gates plus integration,
+native amd64/386 diagnostic proofs pass before timing. Three semantic mutants
+fail the executable oracle, confirming the intended fault detection.
+See [measurements, proof scope and negatives](performance.md#contained-load-bounds-phase-0-2026-10-12)
+and [the private predicate](translation-contained-loads.md). Commit the predicate
+before implementing it in the authored hardener, regenerate every proof/lock,
+and repeat paired production qualification with a fresh independent reference.
+M1 performance remains unaccepted; no public contract is introduced.
+
 The 2026-10-11 production round retains a conservative publication-tail hardener
 pass. Its private structural predicate was committed before implementation and
 new timing; it validates bound helpers/types, addresses, construction/ownership,
@@ -490,8 +511,8 @@ scalar loss occurs, but code placement/control effects prevent a scalar latency
 claim. M1 performance remains unaccepted. This adds no public contract.
 
 See [conditions, negatives, rates, and complete evidence](performance.md#publication-memory-views-production-qualification-2026-10-11)
-and [the private specification](translation-memory-views.md). Next: use matching
-profiles to choose another demonstrated translation pattern. Track 6's
+and [the private specification](translation-memory-views.md). The next matching
+profile analysis is recorded above; it does not broaden this retained predicate. Track 6's
 same-Wasm control is complete and negative for its measured configuration.
 Treat further work as a separate measured experiment; do not broaden the
 retained predicate based on this batch result or add screening gains together.
