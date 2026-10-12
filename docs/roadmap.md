@@ -19,7 +19,10 @@ licenses, native amd64/arm64 quality and end-to-end CI passed. Local `main`
 fast-forwarded to `origin/main` before the next experiment. Its conservative
 contained-load pass remains qualified; its adjacent read/write scalar probe
 remains a no-go. The subsequent checked unit-reply phase-0 round also retains
-evidence only, as recorded under track 4. M1 performance remains unaccepted.
+evidence only, as recorded under track 4. The subsequent covered store32
+phase-0 experiment also retains evidence only: its scalar gain appears in
+confirmation but fails the predeclared repeated untouched comparison. M1
+performance remains unaccepted.
 
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
@@ -300,9 +303,28 @@ The subsequent existing-ABI checked unit-reply round below is also a no-go:
 default scalar has no detected primary gain and SQL holdouts regress repeatedly.
 See [the complete new evidence](performance.md#checked-unit-replies-existing-abi-phase-0-2026-10-12)
 and the earlier [read/write outcomes](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12).
-Next use a representative consuming-application profile or another exact
-compiler-backed hypothesis. A typed-return ABI remains a separate compatibility
-proposal requiring explicit operator approval before implementation.
+The subsequent covered store32 phase-0 round is also a no-go under its
+predeclared rule. Two source-pinned descending-store checks are removed while
+all writes and first/new-maximum guards remain. Native amd64/386 proofs pass;
+all 411 frozen hashes match through 966 rows. Original scalar screening
+87.81→88.03 ns is undetected (.620); confirmation 88.02→86.71 ns gains 1.49%
+(.005). Both beat the copied-check control, but repeated untouched gain is
+required. Increasing scalar gains against both controls and repeated batch
+gains against baseline; these do not replace the original scalar requirement.
+Keep positive and negative evidence without a private production spec or pass.
+
+P1/P16 full-stream brackets use byte-identical binaries; all comparisons are
+undetected, including adverse fixed 16-home medians. Untouched confirmation
+writes/s are about 1.59M fixed / 1.71M holdout at P1; P16 one home is 1.31M /
+1.46M and 16 homes is 9.49M / 9.33M. These are lifetime workload observations,
+not maximum capacity bounds, causal guest gains or Batch-session equivalence.
+Current original scalar misses absolute/fresh limits, and SQL also misses
+confirmation's fresh limit (2,173 ns versus 2,158.2 ns). M1 stays unaccepted.
+See [all outcomes and limits](performance.md#covered-store32-bounds-phase-0-2026-10-12).
+Next use a representative consuming-application profile or a separately
+preregistered source-independent compiler hypothesis; this exact two-site
+probe is parked. A typed-return ABI remains a separate compatibility proposal
+requiring explicit operator approval before implementation.
 
 #### 1. Low-copy batching
 
