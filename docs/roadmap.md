@@ -29,8 +29,13 @@ merged at `aeaf01b` after four green CI checks, and local main was updated.
 The signed private specification `8c8791b` preceded a positive offline interval
 proof: 57 independently checked certificates, identical native amd64/386 banks,
 and all required gates/reproductions pass. Construction plus verification costs
-about 70 ms and sparse/broad coverage remains poor. Next separately specify a
-fast bounded constructor or lookup-cost control; M1 remains unaccepted.
+about 70 ms and sparse/broad coverage remains poor. The subsequent signed
+private specification `45d50ac` tests native construction and complete mapping
+costs. Numerical proofs and zero-allocation candidate/lookup scopes pass, but
+the fixed one-slot policy fails every repeated direct-control guard. Increasing
+costs 36.96/33.51 ns per input versus 14.39/14.32 ns directly; broad and negative
+bins cost about 0.8 µs. Park this policy without tuning. Production remains
+unchanged, and M1 remains unaccepted.
 
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
@@ -355,7 +360,9 @@ public contract is retained.
 The private bounded feasibility specification was signed as `8c8791b` before
 implementing its diagnostic. Floating-point membership and fallback checks
 pass; its rational constructor and sparse offline bank remain unqualified for
-online use. Any fast constructor/lookup experiment needs a separate spec. The
+online use. The separately specified fast-constructor/lookup experiment below
+also fails its complete mapping cost rule and is parked. Any materially different
+direction needs its own reviewed specification. The
 unsupported 70.74 ns oracle still misses scalar's absolute and diagnostic
 fresh-reference limits. See
 [results, provenance and limits](performance.md#structural-scalar-ceiling-exact-log-oracle-2026-10-12).
@@ -382,18 +389,33 @@ All seven production gates and two unchanged 61-file proof/runtime builds
 pass; production and public contracts remain unchanged. See
 [full proof, costs and coverage](performance.md#bounded-numerical-feasibility-certified-intervals-2026-10-12).
 
-Next separately specify and measure a fast bounded constructor or lookup-cost
-control, including its trusted rounding proof, setup/retention and miss cost.
-The next private round is specified in
+The completed subsequent private round is specified in
 [fast interval construction and mapping costs](fast-certified-interval-cost.md):
 owned source-bound native enclosures, an independent containment verifier,
-and one fixed numeric slot with every proposal/fallback cost included. Its
-predeclared numerical/allocation/economic rules park the candidate on failure;
-review and commit the specification before ignored implementation.
-Only then consider a guest integration ceiling and a production predicate
-independent of these diagnostic source identities. Preserve negative-bin,
-broad/SQL guards and all checked per-call obligations. This round adds no cache,
-scalar latency gain, new streaming claim or M1 acceptance.
+and one fixed numeric slot with every proposal/fallback cost included. Signed
+`45d50ac` precedes implementation. Actual amd64/386 proofs, all accepted traces,
+complete 4M/8M lockstep replays and compiled numerical faults pass. Final proof
+ledgers are 15,908/16,384 whole evaluations and 521 Wasm requests per architecture.
+Native accepted construction costs 927.1 ns, full bank 61.966 µs; individual
+candidates/lookups allocate zero, while the bank has one 4,864-byte allocation.
+The full checker remains expensive at 1.081 ms.
+
+Keep the economic no-go: Increasing hits 98.860%/99.310%, but loses
+156.85%/134.01% against direct. Screening's disabled-control gain is only
+9.88%, below the frozen 10% rule. Broad and negative bins have zero hits and
+large losses versus both controls. Even Repeated/Nearby near-perfect reuse loses
+against direct, although it wins against the slower disabled wrapper. All
+546 samples and 48 exploratory comparisons are retained. All seven gates
+and two unchanged 61-file proof/runtime reproductions pass. See
+[proof, costs, guards and provenance](performance.md#fast-interval-construction-and-mapping-costs-2026-10-12).
+
+Park this exact candidate without a width, retry, capacity or bypass rescue.
+No guest integration ceiling or production predicate is warranted by these
+results. A materially different policy or structural cost question needs its
+own reviewed specification and complete direct/disabled controls before
+implementation. Preserve broad/negative/SQL guards and all checked per-call
+obligations. Production, public contracts and existing streaming throughput
+observations remain unchanged; M1 remains unaccepted.
 
 #### 1. Low-copy batching
 
@@ -460,8 +482,10 @@ ceiling, about 19% on checked fixed-prefix scalar versus untouched and about
 22% versus its identical disabled control. It does not promote either rejected
 exact-value cache or establish certified membership. The later bounded
 interval proof establishes numerical membership with expensive construction
-and sparse offline coverage; next separately specify a fast constructor or
-lookup-cost control. Preserve broad-input and SQL regressions in the
+and sparse offline coverage. The subsequently specified fast constructor proves
+the same intervals cheaply, but its fixed one-slot mapping policy fails the
+complete cost rule and is parked. A materially different direction requires
+a separate reviewed specification. Preserve broad-input and SQL regressions in the
 decision, and keep this separate from original adaptive M1 acceptance. The
 requirements below remain; exact-value caching on repeated batches does not
 solve standalone scalar cost.

@@ -4,6 +4,202 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Fast interval construction and mapping costs (2026-10-12)
+
+**Numerical proof passes; the fixed one-slot policy is a no-go.** Native
+construction is much cheaper than the rational reference, but complete mapping
+is slower than the unchanged original on every corpus in both sets. Increasing
+hits 98.860%/99.310%, yet costs 36.96/33.51 ns per input versus
+14.39/14.32 ns directly. Broad and negative-bin workloads have no hits and cost
+about 0.8 µs per input. The predeclared economic rule fails; park this exact
+candidate without changing widths, retries, capacity or bypass policy.
+**M1 performance remains unaccepted.**
+
+Signed [private specification](fast-certified-interval-cost.md) `45d50ac`
+preceded ignored implementation. It remains the unchanged historical checkpoint;
+this section records its execution result. The
+[readable evidence record](measurements/fast-certified-interval-cost-2026-10-12.md),
+[compressed evidence](measurements/fast-certified-interval-cost-2026-10-12.tar.gz)
+and [SHA-256](measurements/fast-certified-interval-cost-2026-10-12.tar.gz.sha256)
+retain all private authored/generated sources, independent proof, native/Wasm
+checks, complete replay ledgers, all 546 raw rows, 48 statistical comparisons,
+reviews, conditions and gate/build logs. No production cache, compiler pass,
+guest/runtime change or public contract is retained.
+
+### Construction, ownership and proof
+
+The prepared model copies the original 76-node/30-rounded-operation graph,
+configuration and source/program identities into private fixed numeric arrays.
+Preparation independently binds every source node, edge and literal and checks
+the generated straight-line program. Returned snapshots are values; changing
+or releasing the caller's graph cannot change the model. No AST, map, source
+substring or guest memory view is retained by it. Immutability covers legal
+callers, not arbitrary unsafe or same-package memory corruption. Model/query
+identity checks remain real timed work. They are not permission to hoist future
+live resource reads or checked per-call obligations.
+
+Each native operation evaluates separately rounded finite extremal corners,
+uses all four signed corners for multiplication/division, and takes one outward
+adjacent value on each side. It rejects zero-containing divisors, nonfinite
+corners/enclosures and uncertain strict bins. The induction argument is in the
+specification. The new independent adapter computes exact rational directed
+bounds from *verified claimed native operands*; comparison with the old globally
+tighter trace is explicitly insufficient and its regression test fails that
+shortcut. The previous four reference files remain byte identical. There is
+no new ln approximation, reassociation, epsilon, source-order or seed change;
+the proof certifies the current source mapping, not mathematical ln.
+
+Final native amd64/386 drivers each use 15,908/16,384 whole evaluations,
+114 tiny members also charged to whole, and 521/2,048 fresh original-Wasm
+singleton bin/Count/protobuf requests. All 4,121 adversarial singleton traces,
+unique guest source/ownership/allocation witnesses and 57 fixed-bank traces
+verify independently. All 2,046 normal exponent fields on both carry sides,
+seams, thresholds, low-word transitions, bounds and identity/ownership cases
+pass. Nine compiled numerical fault modes per architecture each exit 1 with
+their concrete assertion marker; compiler/startup failures earn no credit.
+Authoring setup and error-category failures remain in the archive.
+
+Both architectures reproduce the prior bank SHA-256
+`7cbaa190712acef7949eb7cb61724721f43c226499d9904d4a61cf3be7778686`:
+57 non-singleton certificates in 92 attempts, 30 cell and five boundary
+rejections, 23 original exponent fields, both bin signs and full Nearby coverage.
+Generator reproduction is byte exact. Machine code uses separate ADD/SUB/MUL/DIV
+instructions with no fused multiply/add in the transfer helper; a runtime
+rounding witness returns zero where math.FMA returns `-2^-54`.
+
+Owned models occupy 4,208/4,204 bytes, and bank plus encoding 2,814/2,554 bytes
+on amd64/386. Active builder workspace plus observer export capacity is
+56,240/53,152 bytes, below 64 KiB; the amd64 one-slot state is 104 bytes.
+Later preparation and summary evidence serialization allocates outside that
+bounded numeric scope; these figures do not cap every JSON record.
+These separately bounded logical representations include padding/capacity,
+but establish no hard Go heap, stack or RSS limit. Unrolled code is
+7,805/9,868 bytes; certify frames are 4,384/4,396 bytes, with separate helper
+frames and bank construction frames of 21,424/19,708 bytes. Integer checker
+temporaries remain guarded by 4,096 bits, including the separately accounted
+1,075-bit raw dyadic decoder; the old 235-bit arithmetic observation is not a
+maximum for every new widened trace.
+
+### Isolated component costs
+
+Official Go 1.26.8, CGO=0, GOAMD64=v1, PGO off and actual P1; Ryzen 5800HS,
+Linux 7.2.8, powersave with boost enabled, no imposed affinity. Sources,
+compiler/linker/toolchain, spec, six ELF identities, original artifacts and
+expected replay digests froze before measurement at
+20:39:30–20:48:45 UTC. Seven fresh-process samples per cell in each rotated
+and reversed set retain all 546 rows. No build, lint, fuzz, profile, memory
+observation or reviewer tools overlap those samples. PID/PPID/command-only
+process and CPU/load conditions are retained.
+
+| Component | Screening median | Confirmation median | Confirmation B/op | allocs/op |
+| --- | ---: | ---: | ---: | ---: |
+| Native accepted42 candidate | 895.5 ns | 927.1 ns | 0 | 0 |
+| Native early cell rejection | 287.9 ns | 287.8 ns | 0 | 0 |
+| Native evaluated boundary rejection | 901.3 ns | 922.4 ns | 0 | 0 |
+| Native complete fixed bank | 61.399 µs | 61.966 µs | 4,864 | 1 |
+| Rational accepted42 candidate | 196.301 µs | 204.660 µs | 93,360 | 2,611 |
+| Rational early cell rejection | 8.434 µs | 8.515 µs | 3,321 | 6 |
+| Rational evaluated boundary rejection | 197.285 µs | 203.744 µs | 93,350 | 2,610 |
+| Rational complete fixed bank | 12.626 ms | 12.920 ms | 6,349,362 | 161,935 |
+| Full independent containment checker | 992.355 µs | 1,081.053 µs | 292,853 | 7,270 |
+| One-slot hit / miss / mismatch | 30.42 / 30.20 / 26.18 ns | 31.09 / 31.04 / 27.50 ns | 0 | 0 |
+| Fixed-bank first / last hit / miss | 34.08 / 75.99 / 77.57 ns | 33.84 / 72.42 / 78.41 ns | 0 | 0 |
+
+Native individual scopes use 65,536 iterations; rational accepted/boundary
+scopes 512, rational cell rejection 65,536, bank scopes 16, checker 128 and
+lookups 1,048,576. Initial framework probes, scope warm-ups and source/model
+preparation are excluded and disclosed. Source/model preparation across all
+rows has a separate median 144.183 ms and 41,237,552 allocated bytes; observed
+durations span 130.364–217.359 ms. The independent checker remains allocating
+and expensive; its universal proof is not replaced by free trusted setup.
+
+All warmed individual native candidate, lookup and complete replay samples
+allocate zero bytes. Whole native bank construction allocates one escaping
+observer trace, even with nil observer on the shared path. The separate
+GC-disabled observation confirms 4,864 bytes for that operation, versus
+6,349,416 for the rational bank and 394,480 for one full containment check.
+Negative forced-GC deltas are not retained-bank measurements or peak RSS.
+For the explanatory `C/(O-H)` estimate, direct Repeated loop costs
+14.05/14.41 ns but one-slot lookup alone costs 30.42/31.09 ns. Thus `O-H`
+is negative and these measured scopes give no finite favorable reuse count.
+Different argument/control/loop shapes prevent adding components into a
+complete-call prediction; the complete replay is the decision evidence.
+
+### Complete mapping and stop rule
+
+Every replay starts empty with a prepared model. Identity and membership precede
+point-domain checks on misses; exact one bypasses proposals. Eligible misses
+try all five frozen widths on uncertainty, install only on success and otherwise
+use full OriginalBin while preserving old valid state. No locality detector,
+backoff, capacity/width sweep or corpus-specific bypass is present. Timers
+include reset, lookup, rejection/refinement, fallback, installation and ordered
+digest consumption. Enabled/disabled/direct share one ELF. Source preparation,
+input creation and prevalidated digest loading remain outside and visible.
+
+Before timing, all eight corpora at both complete 4M/8M prefixes compare every
+enabled/disabled output with compiled OriginalBin on each native architecture:
+100,663,296 inputs per architecture. Counters, all refinements/reasons and
+digests reconcile and match between architectures. These explicitly declared
+replays use a separate five-proposals-per-input ledger, not the finite proof
+driver's 16,384 limit. They do not replay millions of stateful Wasm calls;
+finite fresh-Wasm checks provide the separate resource oracle. Unsupported
+points are not assumed to have logical bin zero.
+
+All times below are **pure mapping ns/input**, including loop/digest work,
+not checked Add, session, SQL, batch or streaming latency.
+
+| Corpus | Screen direct | Screen disabled | Screen enabled | Confirm direct | Confirm disabled | Confirm enabled |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Increasing | 14.39 | 41.01 | 36.96 | 14.32 | 40.34 | 33.51 |
+| Repeated | 14.05 | 40.05 | 22.70 | 14.41 | 39.79 | 22.37 |
+| UniqueCycle | 14.27 | 40.42 | 636.80 | 14.21 | 39.85 | 637.40 |
+| NearbyUniqueCycle | 14.26 | 40.48 | 22.28 | 14.32 | 40.18 | 22.38 |
+| MostlyUniqueCycle | 14.24 | 40.60 | 128.40 | 14.22 | 39.93 | 127.80 |
+| Phases | 14.19 | 39.78 | 436.30 | 14.12 | 40.31 | 437.90 |
+| BroadHoldout | 14.16 | 39.94 | 841.60 | 14.19 | 39.69 | 840.60 |
+| NegativeBins | 14.12 | 40.02 | 796.10 | 14.38 | 40.06 | 798.10 |
+
+Increasing enabled versus direct regresses 156.85%/134.01%. Its improvement
+against disabled is only 9.88% in screening, below the required 10%, and
+16.93% in confirmation. Broad regresses 5,843.50%/5,823.89% versus direct and
+2,007.16%/2,017.91% versus disabled; NegativeBins loses
+5,538.10%/5,450.07% and 1,889.26%/1,892.26% respectively. Every other corpus
+also breaches the repeated 2% direct-control guard, including near-perfect-reuse
+Repeated and Nearby. Their gains over disabled cannot override direct losses.
+The disabled wrapper's roughly 40 ns versus 14 ns direct cost is itself a
+negative. All 48 comparisons, including direct versus disabled, are retained;
+all have exploratory unadjusted p=.001 except Increasing enabled versus
+disabled screening at .004. No multiplicity-adjusted, representative traffic
+or production latency conclusion is claimed.
+
+Increasing makes 78,577/112,262 proposals with 5,950/11,611 exact fallbacks;
+its high hit rate cannot amortize wrapper and construction costs. Broad makes
+4,387,840/8,775,680 proposals and NegativeBins 4,194,304/8,388,608, with zero
+hits. A successful new certificate can therefore be wasted on the next input.
+Every 1,024-input phase and complete replay count is retained.
+
+Retain the signed specification and readable/private proof/cost evidence;
+reject this exact policy's online/guest integration promotion. All seven
+required gates pass on unchanged production, with two all-three-fixture/runtime
+builds reproducing all 61 fingerprints. Check uses Go 1.26.8 and official
+golangci-lint 2.13.1/49 strict linters; other gates use system Go 1.27.2 and
+Rust 1.97.0. Exact staged validation qualifies each local signed commit.
+There is no new full checked scalar, SQL, batch or streaming comparison:
+their production implementation is unchanged. Earlier structural streaming
+observations remain 1.353M versus 10.050M writes/s at P16 for one versus
+sixteen homes, with 1.514M/10.466M holdouts; these are observed rates, not hard
+capacity ceilings or new results from this numeric round.
+
+The fast constructor solves the rational-cost blocker at these logical bounds,
+but fails the complete mapping cost rule. Park it without a rescue. Any
+materially different policy needs a new reviewed specification and complete
+direct/disabled controls before implementation. The prior unsupported 70.74 ns
+checked oracle still exceeds scalar's absolute/fresh-reference limits; retain
+that ceiling and prioritize a separately specified structural cost question,
+not another inferred scalar win. No native arm64/big-endian or private SDK
+workload claim is made; all checked ownership, epoch, memory/reply, poisoning
+and draining Close contracts remain intact.
+
 ## Bounded numerical feasibility: certified intervals (2026-10-12)
 
 **Positive numerical proof; online construction and M1 remain unqualified.**
@@ -167,10 +363,11 @@ other gates use system Go 1.27.2 and Rust 1.97.0. Private native proof/consumer
 overlays receive their separate executed amd64/386 checks. These gates qualify
 unchanged production and the diagnostic evidence, not a shipping optimization.
 
-Next separately specify a fast bounded constructor or a lookup-cost control,
-including its trusted rounding argument, setup/retention and miss costs. Only
-if warranted should it proceed to a guest integration ceiling and an eligibility
-predicate independent of these diagnostic whole-source identities. Preserve
+The subsequent separately specified
+[fast constructor and mapping experiment](#fast-interval-construction-and-mapping-costs-2026-10-12)
+passes numerical checks but fails its complete cost rule. Its fixed policy is
+parked; a materially different direction needs another reviewed specification.
+No guest integration ceiling or production eligibility predicate follows. Preserve
 negative-bin, broad and SQL holdout guards and per-call admission, ownership,
 epochs, memory/reply validation, poisoning and draining Close. No new scalar,
 SQL, batch or streaming latency claim is made: the recorded streaming throughput
