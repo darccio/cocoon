@@ -263,8 +263,8 @@ with [samples and limits](performance.md#default-streaming-cost-investigation-20
 No production change or new contract follows from that investigation. The
 subsequent low-copy host encoding round qualified matched inputs and
 standalone/streaming holdouts with a freshly rebuilt independent spike, as
-recorded in track 1. Track 5's next matching-profile analysis now has a promising
-contained-load phase-0 result and a private production specification.
+recorded in track 1. Track 5 now also qualifies a conservative contained-load
+bounds pass; standalone scalar still prevents M1 performance acceptance.
 
 The entry baseline matrix compares scalar versus batch calls, repeated
 values, distinct nearby values, mostly unique values, and negative-bin values.
@@ -276,7 +276,7 @@ before committing to larger designs.
 
 The low-copy host encoding stage is qualified below. Exact-value bin reuse has
 a phase-0 no-go for both measured defaults. Translation analysis has produced
-the qualified publication-tail pass, while compiled wazero loses the private
+qualified publication-tail and contained-load passes, while compiled wazero loses the private
 same-Wasm control. Next inspect matching profiles and compiler output for
 another exact translation pattern; do not broaden the retained pass without
 new proof and qualification. Typed returns still need a compatibility
@@ -472,25 +472,34 @@ The original entry requirements remain guardrails for future extensions:
 
 #### 5. Translation optimizations
 
-The 2026-10-12 matching-profile round identifies contained `load32` endpoint
-checks on one unchanged local base within a straight-line block. Its private
-hash-pinned probe keeps every guest read and first/new-maximum check at their
-original positions. Original, varied and holdout SQL gains repeat against both
-untouched and copied-checked controls (about 3–5%); original/repeated batch gains
-are smaller. Broad batch screening versus baseline is undetected. Standalone
-scalar and trace benefits remain unestablished; recheck's +1.07% confirmation
-trace cost is retained. All 770 raw rows and 189 frozen hashes are preserved.
+The 2026-10-12 matching-profile round qualifies a conservative contained-load
+bounds hardener pass. The private predicate and phase-0 evidence are committed
+in `be8f6e0` before the authored candidate `22cdc0a`. Full binding/construction,
+type, effect and nonescape guards retain the first/new-maximum checks in place
+and every guest read. Generate 318 Datadog, 99 compute and 20 streaming selected
+reads, with all modules/locks regenerated; no hash/function/payload selector.
 
-This is a GO for a narrowly specified production experiment, not qualification
-of generated overlays. Production source and all 61 reproduced proof/runtime
-artifacts remain unchanged at this checkpoint. The six gates plus integration,
-native amd64/386 diagnostic proofs pass before timing. Three semantic mutants
-fail the executable oracle, confirming the intended fault detection.
-See [measurements, proof scope and negatives](performance.md#contained-load-bounds-phase-0-2026-10-12)
-and [the private predicate](translation-contained-loads.md). Commit the predicate
-before implementing it in the authored hardener, regenerate every proof/lock,
-and repeat paired production qualification with a fresh independent reference.
-M1 performance remains unaccepted; no public contract is introduced.
+Fresh 826-row qualification repeats varied SQL −6.76%/−4.56% and SQL holdout
+−3.93%/−3.97%, with all three measured batches repeating smaller gains versus
+baseline. Original SQL confirmation (.073) and original batch confirmation
+versus recheck (.053) are undetected. Trace improves about 4%, but the restored
+check control also improves about 1.5%; no per-check causal attribution follows.
+Standalone scalar gains/losses are undetected. One-home fixed streaming has
++1.88%/+1.68% medians (.165/.053), and the one-home holdout's detected screening
+loss does not confirm. These negatives do not establish streaming equivalence.
+
+All 167 frozen fingerprints match through timing; all six gates plus integration,
+native amd64/386 proofs/consumers, three runtime-rejected semantic mutants, two
+identical 61-artifact rebuilds and exact staged validation pass. Summed guest
+native text shrinks 9,012 B but the test executable grows 89,312 B in debug metadata.
+M1 remains unaccepted: SQL meets its absolute/fresh-reference limits while
+scalar 87.87/88.11 ns misses both. No public contract changes.
+See [paired outcomes and negatives](performance.md#contained-load-bounds-production-qualification-2026-10-12)
+and [the private predicate/proof](translation-contained-loads.md). Next inspect
+matching scalar profiles/compiler output for another exact pattern, or measure
+the typed-return share before a compatibility specification and operator approval.
+Keep this predicate narrow and retain streaming guards. Arm64 still needs native
+hardware; no earlier screening percentages are added to this qualification.
 
 The 2026-10-11 production round retains a conservative publication-tail hardener
 pass. Its private structural predicate was committed before implementation and

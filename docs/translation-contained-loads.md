@@ -1,5 +1,19 @@
 # Contained load bounds
 
+The 2026-10-12 production qualification retains the conservative authored pass
+in `22cdc0a`, following the measured private specification in `be8f6e0`.
+Varied SQL and the SQL holdout repeat detected gains; original SQL confirmation
+is undetected. Batches repeat smaller gains. No standalone scalar improvement
+or streaming gain is established, and the one-home streaming upward medians
+remain unresolved negatives. M1 performance remains unaccepted.
+
+The pass selects 318 Datadog, 99 compute and 20 streaming reads. All three
+proof modules and locks regenerate from authored sources; executable weighted
+WAT/native proofs, amd64/386 consumers, the full gates plus integration, two
+identical proof/runtime rebuilds and exact staged validation pass. It adds no
+public contract. See [production outcomes and limits](performance.md#contained-load-bounds-production-qualification-2026-10-12)
+and [compressed evidence](measurements/contained-loads-production-2026-10-12.tar.gz).
+
 The 2026-10-12 phase-0 probe removes a later `load32` bounds check only when a
 successful earlier read in the same straight-line region already proves its
 entire byte range. SQL repeats a 3–5% improvement; batch benefits are smaller.
@@ -24,7 +38,7 @@ that check. The recheck control has the same selected calls. Function numbers,
 line numbers, payload identities, source hashes, and benchmark outcomes are
 diagnostic provenance only; they must not select production candidates.
 
-This specification precedes production implementation. It adds no API, ABI,
+This predicate was committed before production implementation. It adds no API, ABI,
 manifest option, ownership rule, or host contract. Per-call admission, memory
 limits/reset, canonical reply validation, immediate poisoning, ownership/epochs,
 and draining Close all remain unchanged. The existing publication-view predicate
