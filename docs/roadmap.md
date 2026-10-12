@@ -384,6 +384,12 @@ pass; production and public contracts remain unchanged. See
 
 Next separately specify and measure a fast bounded constructor or lookup-cost
 control, including its trusted rounding proof, setup/retention and miss cost.
+The next private round is specified in
+[fast interval construction and mapping costs](fast-certified-interval-cost.md):
+owned source-bound native enclosures, an independent containment verifier,
+and one fixed numeric slot with every proposal/fallback cost included. Its
+predeclared numerical/allocation/economic rules park the candidate on failure;
+review and commit the specification before ignored implementation.
 Only then consider a guest integration ceiling and a production predicate
 independent of these diagnostic source identities. Preserve negative-bin,
 broad/SQL guards and all checked per-call obligations. This round adds no cache,
