@@ -284,6 +284,15 @@ decision before implementation; the session decision is recorded in track 3.
 Translation analysis and the alternative-backend comparison are diagnostic
 tracks; use their results to decide whether larger compiler or runtime work is justified.
 
+The next scalar phase-0 round parks adjacent numeric read/write guard reuse.
+Fresh profiles and a three-site pinned prototype remove exactly the duplicate
+store checks, but 826 paired rows establish only a 0.4–0.5% raw guest gain;
+standalone scalar remains undetected and the broad scalar holdout has adverse
+comparisons. Keep evidence only, without a production spec or broader predicate.
+Next measure the existing-ABI checked unit-reply call-shape/specialization
+ceiling before deciding whether larger typed-return work is justified. See
+[outcomes, controls and refreshed streaming rates](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12).
+
 #### 1. Low-copy batching
 
 The 2026-10-11 entry measurements are recorded in the performance notes and
@@ -471,6 +480,25 @@ The original entry requirements remain guardrails for future extensions:
   end-to-end gain warrants the additional contract and maintenance cost.
 
 #### 5. Translation optimizations
+
+The subsequent 2026-10-12 scalar read/write phase-0 probe is a no-go. Ordinary
+Go 1.26.8 profiles and matching SSA/assembly demonstrate three surviving adjacent
+load64/store64 guards. Pinned overlays preserve first checks, all accesses,
+rounding and endian/fallback semantics; native amd64/386 helper proofs pass and
+two semantic mutants fail runtime assertions. All 274 frozen fingerprints match
+through 826 rows.
+Raw guest improves about 0.4–0.5% against both controls, but default scalar
+87.69→87.51 / 87.64→87.43 ns has no detected gain versus either control.
+Broad scalar has a screening loss versus unchanged and a confirmation loss
+versus copied-check; these are different comparators. SQL/control effects do
+not rescue the declared scalar rule. Streaming uses identical binaries in both
+roles: fixed P16 one-home confirmation rates are about 1.35 million writes/s,
+versus 10.4 million with 16 homes, with no candidate effect claimed.
+No implementation/spec/public contract follows; M1 remains unaccepted.
+Preserve [the complete evidence and limits](performance.md#scalar-read-and-write-bounds-phase-0-2026-10-12)
+and keep the existing production predicates narrow. Next measure a checked
+unit-reply ceiling within ABI 3; a new ABI requires compatibility specification
+and explicit operator approval before implementation.
 
 The 2026-10-12 matching-profile round qualifies a conservative contained-load
 bounds hardener pass. The private predicate and phase-0 evidence are committed
