@@ -4,6 +4,138 @@ Cocoon preserves terminal admission/drain, shared ownership validation, epoch
 invalidation, bounded/canonical result checks, and full input validation.
 Benchmarks are a gate to investigate, not a reason to remove those checks.
 
+## Successful-unit transport ceiling (2026-10-13)
+
+**The private joint transport ceiling is a no-go.** The unsupported oracle
+removes successful guest publication and host unit-wire validation, retaining
+one observable reply Memory query and the complete remaining checked envelope.
+Adaptive scalar improves only 3.15%/3.79% versus bare and 2.15%/3.08% versus
+augmented source-untouched original, below the frozen repeated 10% requirement.
+Original, varied and holdout SQL regress in both sets. **M1 remains unaccepted.**
+Park this exact question without flag/helper/layout/cache tuning or retiming.
+No production implementation or supported public contract is retained.
+
+Signed [private spec](unit-transport-ceiling.md) `bf01a1a` preceded ignored
+implementation. It remains the unchanged historical checkpoint. The
+[readable record](measurements/unit-transport-ceiling-2026-10-13.md),
+[exact-byte evidence](measurements/unit-transport-ceiling-2026-10-13.tar.gz) and
+[SHA-256](measurements/unit-transport-ceiling-2026-10-13.tar.gz.sha256) retain the
+AST cause/generated clone, source/proof/mutant/assembly/review records, every
+raw sample/metric/process log, conditions and all 90 exploratory comparisons.
+Any future supported transport requires a separate version/compatibility/
+migration proposal and explicit operator approval before implementation.
+
+### Scope and controls
+
+Only the guest Add-success descriptor-pointer, vector-length and descriptor-
+length stores are conditional. STATE release, buffer init/borrow, generation
+lookup, exact mathematics/counters/collapse/errors and stack restoration remain.
+The pointer-read expression and its bounds remain; the compiler sinks its pure
+value load into disabled publication. The actual enabled machine omission
+includes that publication-dependent load. The host preserves one real Memory
+interface CALL, both callbacks, admission/ownership/locks/reset/recovery and
+independent post-Memory/MaxMemory/poison/drain. Disabled every-status and enabled
+non-OK invoke original ResultView once. Enabled OK deliberately accepts some
+malformed ABI 3 successes and leaves stale output metadata; proof canaries
+record that divergence. This is the ceiling of the tested dynamic scaffold,
+not a mathematical maximum, safe ABI 3 implementation or generic typed-return
+proof. Augmented original is source untouched, with changed linkage; bare and
+same-ELF scaffold remain independent mandatory controls.
+
+### Complete scalar and guards
+
+| Scope/set | Bare | Augmented original | Checked scaffold | Oracle |
+| --- | ---: | ---: | ---: | ---: |
+| Adaptive screening, ns/call | 88.29 | 87.39 | 91.23 | 85.51 |
+| Adaptive confirmation, ns/call | 88.89 | 88.24 | 91.93 | 85.52 |
+| Fixed 4M screening, ns/input | 130.20 | 142.30 | 162.60 | 153.60 |
+| Fixed 8M confirmation, ns/input | 88.93 | 88.03 | 91.13 | 84.82 |
+
+Adaptive gains versus the slower scaffold are 6.27%/6.97%; all six adaptive
+comparisons have p=.001 but miss 10%. Fixed screening has adverse +17.95%/
++7.91% medians versus bare/original (p=.805/.710), and only a 5.55% scaffold
+gain (p=.383). Its pooled observations span 84.71–205.9 ns/input: a retained
+negative precision result, without filtering or retiming. Confirmation gains
+4.62%/3.65%/6.93% (all p=.001), also below the rule. Every primary predicate
+fails. Repeated/nearby/broad/negative corpora do not rescue it. All scalar roles
+allocate zero bytes/allocations in the adaptive timer; logical memory remains
+1,179,648 bytes there. Untimed witnesses/encoding are separate, with no heap/RSS
+bound inferred from linear-memory lengths.
+
+Original SQL loses 2.54%/2.45% (p=.024/.001), varied SQL 4.11%/4.38% and SQL
+holdout 4.43%/4.47% (all p=.001) against bare. These repeated collateral guards
+reject independently. Original batch +1.95%/+0.20%, trace +1.17%/+1.56% and
+broad batch +0.55%/+0.26% remain adverse undetected medians. Broad trace has
++1.82% screening loss (p=.002), then noisy +27.22% confirmation (p=.902).
+Default P1 fixed stream loses 0.66% in screening (p=.026), then undetected
+0.28% in confirmation; P16 fixed one-home confirmation loses 5.70% (p=.535).
+All other negatives, allocations and full metrics remain in the readable table
+and raw rows. Nondetection is not equivalence; p-values are exploratory,
+unadjusted seven-sample comparisons with multiple-testing limitations.
+
+### Conditions, reference and streaming observations
+
+Official Go 1.26.8, CGO disabled, GOAMD64=v1, PGO off, actual P1 scalar/SQL/
+batch/trace and actual P1/P16 streaming. Ryzen 7 5800HS, Linux 7.2.8-1-default,
+powersave/boost enabled, no imposed affinity. All 481 frozen identities match
+through 980 rows at 07:14:56–07:29:24 UTC: seven fresh-process samples per cell,
+rotated 500 ms screening and reversed 1 s confirmation, with equal 4M/8M fixed
+prefixes. Fixed ns/op measures the whole prefix; ns/input and points/op=N are
+separate. Adaptive N differs and each sample compares Count/full protobuf with
+its own exact-N original replay outside timing. No build/test/lint/fuzz/profile/
+memory observation or reviewer tools overlap. Process-name/CPU conditions do
+not establish exclusive use of the desktop; all precision negatives remain.
+
+The fresh independent locked Rust/Binaryen/Wasm2Go/own-hardener reference
+reproduces its Wasm/module and passes original/wazero oracles. Its ABI 2,
+borrowed/background/four-home/error-checking differences remain context, not
+removable cost. Scalar 55.07/55.12 ns gives fresh 110% limits 60.577/60.632 ns;
+even the unsupported oracle misses those by 41.16%/41.05%, and historical
+55.44 ns by 54.24%/54.26%. Augmented original SQL 2.178/2.178 µs meets this
+scope's absolute 2.2154 µs and fresh 2.1956/2.1813 µs limits, but its repeated
+losses still reject. Contextual reference pairs were explicitly excluded from
+code-regression guards before data. This is no safe M1 requalification.
+
+Untouched P16 one/16-home writes/s are 1.276/5.962 million fixed and
+0.885/5.208 million holdout in screening; confirmation is 1.254/9.618 million
+fixed and 1.183/10.208 million holdout. Confirmation ratios are 7.67×/8.63×;
+retain the lower screening rates and substantial uncertainty. Complete streams
+include construction, 256 nominal 64-byte chunks, owned outputs, End and
+close, with finite 32-output groups. These are observations of the retained
+home-distribution feature, not hard maximum ceilings, a new oracle throughput
+gain or new acceptance. Distinct streaming ELFs bracket unused private-runtime
+linkage effects; their source is unchanged.
+
+### Proof and qualification
+
+The AST generator's source/binding/drift and mechanical-clone proofs pass.
+Final native amd64/386 replays each execute 301,989,888 Add calls across all
+roles/corpora/prefixes: every input returns the expected nil error and final Count/
+complete protobufs agree. Exact corpus arrays, complete input hashes and owned
+goldens remain. Initial builds/replays before an untimed corpus-export addition
+remain separate from final qualification. Finite Go consistency is not full-N
+Wasm or universal proof. The bounded driver uses 582 actual Wasm operation
+exports per architecture (15 constructors, 552 methods, 15 destructors), with
+identity/init/reserve/output base calls separately recorded. Count 8,233 and
+full protobufs agree after unchanged AddMany growth/collapse setup, domain
+edges, invalid-tail atomicity, stale/fresh/independent handles and actual
+owned-error/reply objects. Logical growth is 1,245,184→1,507,328 bytes.
+
+Native amd64/386 query/backing/panic, non-OK precedence/owned-error, call-state/
+host-marker reset, post-MaxMemory, immediate detected-poison/epochs/no next
+callback, alias close and drain proofs pass. All eight executed semantic
+mutants fail their intended assertions; compiler/startup failures earn no
+credit. Ordinary frozen assembly retains the interface query and per-loop mode
+load; no profile/instrumentation is timed. Guest, host and adversarial entry,
+specification, applied and independent result reviews are retained.
+
+All seven production gates pass: check (49 strict pinned 2.13.1 linters), race,
+rust, cross, smoke, fuzz and integration. Make check uses official Go 1.26.8;
+other Go gates use system 1.27.2, with Rust 1.97.0. Two complete builds of all
+three fixtures and generated runtime reproduce all 61 artifact/lock/harness
+fingerprints. Exact staged validation and signed local docs commits complete
+retention; no source/API change or publication follows. M1 remains unaccepted.
+
 ## Fast interval construction and mapping costs (2026-10-12)
 
 **Numerical proof passes; the fixed one-slot policy is a no-go.** Native

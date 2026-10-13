@@ -1,7 +1,7 @@
 # Cocoon roadmap
 
 This is the resume point for future development conversations. Updated
-2026-10-12. The synchronous M1 framework and Datadog proof were released privately
+2026-10-13. The synchronous M1 framework and Datadog proof were released privately
 as v0.1.0. The quality pass and five performance passes are complete, including
 the nine-round multi-agent loop, the PGO/resource-call follow-up, and exact
 numeric-lowering investigation.
@@ -36,6 +36,16 @@ the fixed one-slot policy fails every repeated direct-control guard. Increasing
 costs 36.96/33.51 ns per input versus 14.39/14.32 ns directly; broad and negative
 bins cost about 0.8 µs. Park this policy without tuning. Production remains
 unchanged, and M1 remains unaccepted.
+
+The subsequent signed private specification `bf01a1a` measures one joint
+successful-unit publication/validation ceiling. Native amd64/386 source/state,
+query/fault/lifetime proofs pass; all 980 frozen samples are retained. The
+unsupported oracle improves adaptive scalar only 3.15%/3.79% versus bare and
+2.15%/3.08% versus augmented original, below the required 10%. Fixed screening
+does not establish a gain; repeated original/varied/holdout SQL losses also
+reject. Park this exact transport question without helper, flag or layout
+rescue. All seven gates and two 61-file proof/runtime reproductions pass.
+Retain evidence only; no production/public ABI change or M1 acceptance follows.
 
 Go tests, vet, race checks, 49 strict linters, native Rust tests and Clippy,
 Wasm verification, differential fuzzing, and cross-platform test compilation
@@ -601,6 +611,32 @@ The original entry requirements remain guardrails for future extensions:
 
 #### 4. Typed-return ABI
 
+The 2026-10-13 [joint successful-unit transport ceiling](unit-transport-ceiling.md)
+is also a no-go. Its authored, source-pinned guest clone omits exactly three
+success publication stores and its private host omits successful wire checks,
+while retaining one observable reply Memory query and the complete remaining
+admission/ownership/callback/lock/reset/recovery/post-memory/poison envelope.
+It deliberately violates ABI 3; explicit successful-wire canaries demonstrate
+the lost checks. Disabled/non-OK paths use original ResultView exactly once.
+Source correspondence, native amd64/386 full 4M/8M final Count/protobuf replays,
+582 bounded actual Wasm exports per architecture and eight executed semantic
+mutants pass. This neither approves a supported API nor proves a generic ABI.
+
+All 481 frozen identities match through 980 rows. Adaptive oracle medians
+85.51/85.52 ns beat bare 88.29/88.89 ns by 3.15%/3.79%, augmented original
+87.39/88.24 ns by 2.15%/3.08%, and the slower scaffold by 6.27%/6.97%.
+All miss the repeated 10% rule. Fixed Increasing screening is noisy and does
+not establish a gain; confirmation gains only 4.62%/3.65%/6.93% versus the
+three controls. Original/varied/holdout SQL losses repeat; all negatives remain.
+P1/P16 streaming brackets preserve their uncertainty. Untouched P16 confirmation
+writes/s are 1.254/9.618 million fixed and 1.183/10.208 million holdout for
+one/16 homes, with substantially lower screening 16-home observations.
+These are observed complete-lifetime rates, not hard capacity ceilings or a
+new unit-oracle throughput gain. M1 remains unaccepted; park this exact question.
+See [conditions, all samples and proof limits](performance.md#successful-unit-transport-ceiling-2026-10-13).
+Any materially different supported ABI still requires a compatibility/migration
+specification and explicit operator approval before implementation.
+
 The 2026-10-12 existing-ABI checked unit-reply phase-0 round is a no-go.
 Fresh ordinary Go 1.26.8 profiles put ResultView at 11.17% cumulative scalar
 samples; the unit-only component is about 8.6 ns. These overlapping/isolated
@@ -631,8 +667,8 @@ not measured. Current scalar still misses both absolute and fresh reference
 limits, so M1 remains unaccepted. See
 [all comparisons, conditions and negatives](performance.md#checked-unit-replies-existing-abi-phase-0-2026-10-12).
 
-- Measure the reply-validation share before designing a new ABI. Explore a
-  payload-free successful unit return and direct scalar returns, with explicit
+- Preserve both retained unit-reply no-gos before designing a new ABI. A
+  materially different candidate may explore direct scalar returns, with explicit
   status/error handling. Use profiles to choose a matched checked prototype;
   establish its attainable full-facade gain with controls and holdouts.
 - Produce a versioned schema, compatibility/migration plan, and generator/runtime
