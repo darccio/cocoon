@@ -100,8 +100,9 @@ Untouched P16 one/16-home writes/s are 1.276/5.962 million fixed and
 0.885/5.208 million holdout in screening; confirmation is 1.254/9.618 million
 fixed and 1.183/10.208 million holdout. Confirmation ratios are 7.67×/8.63×;
 retain the lower screening rates and substantial uncertainty. Complete streams
-include construction, 256 nominal 64-byte chunks, owned outputs, End and
-close, with finite 32-output groups. These are observations of the retained
+include construction, owned outputs, End and close, with finite 32-output groups.
+Fixed performs 256 writes of 64 bytes; the holdout varies and empties chunks,
+averaging 343.5 writes per stream over the same nominal input size. These are observations of the retained
 home-distribution feature, not hard maximum ceilings, a new oracle throughput
 gain or new acceptance. Distinct streaming ELFs bracket unused private-runtime
 linkage effects; their source is unchanged.

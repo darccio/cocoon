@@ -152,9 +152,11 @@ This matrix is not a new safe full-M1 qualification. M1 remains unaccepted.
 
 ## Complete streaming and serialization observations
 
-Every operation includes construction, 256 nominal 64-byte chunks, owned outputs,
-End and disposal, retaining finite 32-output groups. Holdout varies/empties
-chunks. These unselected production methods retain all standalone checks.
+Every operation includes construction, owned outputs, End and disposal,
+retaining finite 32-output groups. Fixed performs 256 writes of 64 bytes;
+the holdout varies and empties chunks, averaging 343.5 writes per stream over
+the same nominal input size. The archive preserves its original nominal-chunk
+wording and exact raw metrics; this clarification does not change any sample. These unselected production methods retain all standalone checks.
 ActualP1 one-home and actual P16 one/16-home topology are measured explicitly;
 the testing-name suffix is not the actual processor count.
 
